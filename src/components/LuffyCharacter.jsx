@@ -14,7 +14,7 @@ const BOUNDS = {
   minX: -7.0,
   maxX:  7.0,
   minZ: -22.0,
-  maxZ:  22.0,
+  maxZ:  28.0, // ✨ INCREASED from 22.0 to 28.0
 }
 
 /** Movement feel */
@@ -30,10 +30,10 @@ const MOVE = {
 
 /** Camera feel */
 const CAM = {
-  normalDist:   13.0,  // distance behind Luffy
-  normalHeight:  5.8,  // height above Luffy
-  runDist:      16.0,  // camera pulls back when running
-  runHeight:     7.0,
+  normalDist:   8.0,  // distance behind Luffy
+  normalHeight:  3.2,  // height above Luffy
+  runDist:      11.0,  // camera pulls back when running
+  runHeight:     3.8,
   posLerp:       0.055, // how smoothly camera position follows
   lookLerp:      0.08,  // how smoothly camera look target follows
   lookOffset:    1.85,  // how high above Luffy camera looks
@@ -514,7 +514,7 @@ class RotationController {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// POSITION CONTROLLER
+// POSITION CONTROLLER (UPDATED WITH COLLISIONS & HEIGHT)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class PositionController {
@@ -524,9 +524,78 @@ class PositionController {
 
   update(group, vel, dt) {
     const p = group.position
-    p.x = clamp(p.x + vel.x * dt, BOUNDS.minX, BOUNDS.maxX)
-    p.z = clamp(p.z + vel.z * dt, BOUNDS.minZ, BOUNDS.maxZ)
-    p.y = 0.15
+    let nextX = p.x + vel.x * dt
+    let nextZ = p.z + vel.z * dt
+
+    // 1. SHIP EXTERNAL BOUNDARIES
+    nextX = clamp(nextX, BOUNDS.minX, BOUNDS.maxX)
+    nextZ = clamp(nextZ, BOUNDS.minZ, BOUNDS.maxZ)
+
+    // 2. SOLID OBSTACLES (The invisible boxes Luffy can't walk through)
+    // 2. SOLID OBSTACLES (The invisible boxes Luffy can't walk through)
+    const OBSTACLES = [
+      // Mikan Tree Planter Box
+      { minX: -8.0, maxX: -3.5, minZ: 16.5, maxZ: 21.0 },
+      // Ship Wheel Column
+      { minX: -1.0, maxX: 1.0,  minZ: 18.8, maxZ: 20.8 },
+      // Main Mast
+      { minX: -1.2, maxX: 1.2,  minZ: -4.2, maxZ: -1.8 },
+      // Fore Mast
+      { minX: -0.8, maxX: 0.8,  minZ: -20.0, maxZ: -18.0 },
+      
+      // ✨ NEW: LIBRARY & SURVEY ROOM ARCHITECTURE ✨
+      // Left exterior wall
+      { minX: -6.2, maxX: -5.7, minZ: 21.6, maxZ: 27.6 },
+      // Right exterior wall
+      { minX: 5.7,  maxX: 6.2,  minZ: 21.6, maxZ: 27.6 },
+      // Back exterior wall (windows)
+      { minX: -6.2, maxX: 6.2,  minZ: 27.3, maxZ: 27.6 },
+      // Front Wall (Left of the door)
+      { minX: -6.0, maxX: -1.0, minZ: 21.4, maxZ: 21.8 },
+      // Front Wall (Right of the door)
+      { minX: 1.0,  maxX: 6.0,  minZ: 21.4, maxZ: 21.8 },
+      // Interior Prop: Bookshelf
+      { minX: -5.7, maxX: -4.0, minZ: 22.5, maxZ: 26.5 },
+      // Interior Prop: Nami's Desk
+      { minX: -2.0, maxX: 2.0,  minZ: 25.2, maxZ: 27.0 },
+    ]
+
+    for (const obs of OBSTACLES) {
+      // If the next step puts Luffy inside an obstacle box...
+      if (nextX > obs.minX && nextX < obs.maxX && nextZ > obs.minZ && nextZ < obs.maxZ) {
+        // Cancel movement on the axis that caused the collision
+        if (p.x <= obs.minX || p.x >= obs.maxX) nextX = p.x
+        if (p.z <= obs.minZ || p.z >= obs.maxZ) nextZ = p.z
+      }
+    }
+
+    // Apply the X and Z movement
+    p.x = nextX
+    p.z = nextZ
+
+    // 3. ELEVATION (Y-AXIS) CONTROL
+    // The Slide (Walk up/down the ramp)
+    if (p.x >= -3.8 && p.x <= -1.5 && p.z >= 9.0 && p.z <= 15.0) {
+      // Calculate how far up the ramp he is (0 = bottom, 1 = top)
+      const slopeProgress = (p.z - 9.0) / (15.0 - 9.0) 
+      p.y = 0.15 + clamp(slopeProgress, 0, 1) * 2.5
+    } 
+    // Quarterdeck (Rear stairs/raised deck)
+    else if (p.z > 13.0) {
+      p.y = 2.65 
+    }
+    // Forecastle (Front stairs/raised deck)
+    else if (p.z < -13.0) {
+      p.y = 2.65 
+    }
+    // The Basement Hatch (Slight bump up when walking over it)
+    else if (p.x > -1.75 && p.x < 1.75 && p.z > 3.75 && p.z < 6.25) {
+      p.y = 0.28
+    }
+    // Main Deck (Default flat grass/wood floor)
+    else {
+      p.y = 0.15 
+    }
   }
 }
 

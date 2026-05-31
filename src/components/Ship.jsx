@@ -1,6 +1,7 @@
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { useTexture } from '@react-three/drei'
+// Update this line at the top of your file
+import { useTexture, Text } from '@react-three/drei'
 import { RigidBody, CuboidCollider, CylinderCollider } from '@react-three/rapier'
 import * as THREE from 'three'
 import { AnimatedSail } from './AboutSection.jsx'
@@ -566,9 +567,303 @@ function Lantern({ position }) {
   )
 }
 
+
+
+
+
+// ─────────────────────────────────────────────────────────────────────
+// NAMI'S MIKAN (TANGERINE) TREE (FIXED PHYSICS)
+// ─────────────────────────────────────────────────────────────────────
+function MikanTree({ position, scale = 1 }) {
+  return (
+    <group position={position} scale={scale}>
+      {/* Trunk */}
+      <mesh position={[0, 0.6, 0]} castShadow>
+        <cylinderGeometry args={[0.08, 0.14, 1.2, 8]} />
+        <meshStandardMaterial color="#4a2e15" roughness={0.9} />
+      </mesh>
+
+      {/* Main Leaf Cluster */}
+      <mesh position={[0, 1.4, 0]} castShadow>
+        <icosahedronGeometry args={[0.7, 1]} />
+        <meshStandardMaterial color="#2e7d32" roughness={0.8} />
+      </mesh>
+      
+      {/* Secondary Leaf Clusters */}
+      <mesh position={[-0.3, 1.2, 0.3]} castShadow>
+        <icosahedronGeometry args={[0.5, 1]} />
+        <meshStandardMaterial color="#1b5e20" roughness={0.8} />
+      </mesh>
+      <mesh position={[0.4, 1.5, -0.2]} castShadow>
+        <icosahedronGeometry args={[0.5, 1]} />
+        <meshStandardMaterial color="#388e3c" roughness={0.8} />
+      </mesh>
+
+      {/* Tangerines */}
+      {[
+        [-0.4, 1.4, 0.5], [0.4, 1.2, 0.4], [0.1, 1.8, 0.3],
+        [-0.2, 1.5, -0.5], [0.5, 1.6, -0.2], [-0.5, 1.1, -0.2]
+      ].map((pos, i) => (
+        <mesh key={i} position={pos} castShadow>
+          <sphereGeometry args={[0.08, 12, 12]} />
+          <meshStandardMaterial color="#ff9800" roughness={0.3} metalness={0.1} />
+        </mesh>
+      ))}
+
+      {/* THE FIX: Just the raw collider inheriting the group's position */}
+      <CuboidCollider args={[0.2, 1.0, 0.2]} position={[0, 1.0, 0]} />
+    </group>
+  )
+}
+
+
+
+// ─────────────────────────────────────────────────────────────────────
+// SLIDE & SWING (FIXED PHYSICS)
+// ─────────────────────────────────────────────────────────────────────
+function SlideAndSwing() {
+  return (
+    <group>
+      {/* ═ THE SWING ═ */}
+      <group position={[2.5, 2, -3]}> 
+        <mesh position={[-0.6, 2, 0]} castShadow>
+          <cylinderGeometry args={[0.03, 0.03, 4]} />
+          <meshStandardMaterial color="#d4a373" roughness={1} />
+        </mesh>
+        <mesh position={[0.6, 2, 0]} castShadow>
+          <cylinderGeometry args={[0.03, 0.03, 4]} />
+          <meshStandardMaterial color="#d4a373" roughness={1} />
+        </mesh>
+        
+        {/* Swing Seat */}
+        <mesh position={[0, 0, 0]} castShadow>
+          <boxGeometry args={[1.6, 0.1, 0.6]} />
+          {/* Note: If WoodMaterial gives an error, use meshStandardMaterial here */}
+          <meshStandardMaterial color="#8b5a2b" roughness={0.9} />
+        </mesh>
+        <CuboidCollider args={[0.8, 0.05, 0.3]} position={[0, 0, 0]} />
+      </group>
+
+      {/* ═ THE SLIDE ═ */}
+      <group position={[-3, 1.6, 12]} rotation={[-0.6, 0, 0]}>
+        {/* Slide Body */}
+        <mesh castShadow receiveShadow>
+          <boxGeometry args={[1.5, 0.2, 6]} />
+          <meshStandardMaterial color="#8b5a2b" roughness={0.8} />
+        </mesh>
+        {/* Left Railing */}
+        <mesh position={[-0.7, 0.2, 0]} castShadow>
+          <boxGeometry args={[0.1, 0.4, 6]} />
+          <meshStandardMaterial color="#5c4033" roughness={0.9} />
+        </mesh>
+        {/* Right Railing */}
+        <mesh position={[0.7, 0.2, 0]} castShadow>
+          <boxGeometry args={[0.1, 0.4, 6]} />
+          <meshStandardMaterial color="#5c4033" roughness={0.9} />
+        </mesh>
+        
+        {/* THE FIX: The collider rotates perfectly with the group */}
+        <CuboidCollider args={[0.75, 0.1, 3]} position={[0, 0, 0]} />
+      </group>
+    </group>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// SOLDIER DOCK SYSTEM HATCHES
+// ─────────────────────────────────────────────────────────────────────
+function SoldierDockHatches() {
+  return (
+    <group>
+      {/* Channel 1: Port Side (Left) - Waver */}
+      <group position={[-8.1, 1.5, 0]} rotation={[0, -Math.PI / 2, 0]}>
+        <mesh castShadow>
+          <cylinderGeometry args={[2.5, 2.5, 0.2, 32]} />
+          <meshStandardMaterial color="#f5f5f5" roughness={0.6} />
+        </mesh>
+        {/* The Giant Number 1 */}
+        <Text position={[0, 0, 0.15]} fontSize={3} color="#d32f2f" outlineWidth={0.05} outlineColor="#000">
+          1
+        </Text>
+      </group>
+
+      {/* Channel 3: Starboard Side (Right) - Shark Submerge */}
+      <group position={[8.1, 1.5, 0]} rotation={[0, Math.PI / 2, 0]}>
+        <mesh castShadow>
+          <cylinderGeometry args={[2.5, 2.5, 0.2, 32]} />
+          <meshStandardMaterial color="#f5f5f5" roughness={0.6} />
+        </mesh>
+        {/* The Giant Number 3 */}
+        <Text position={[0, 0, 0.15]} fontSize={3} color="#1976d2" outlineWidth={0.05} outlineColor="#000">
+          3
+        </Text>
+      </group>
+    </group>
+  )
+}
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────────────
+// COUP DE BURST EXHAUST ENGINE
+// ─────────────────────────────────────────────────────────────────────
+function CoupDeBurst({ position }) {
+  return (
+    <group position={position}>
+      {/* Main Exhaust Barrel */}
+      <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <cylinderGeometry args={[2.2, 2.8, 3.5, 16]} />
+        <meshStandardMaterial color="#4a2e15" roughness={0.9} />
+      </mesh>
+      {/* Heavy Metal Reinforcement Rings */}
+      {[-1.2, 0, 1.2].map((z, i) => (
+        <mesh key={i} position={[0, 0, z]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+          <torusGeometry args={[2.3 + (i * 0.15), 0.15, 12, 24]} />
+          <meshStandardMaterial color="#333" roughness={0.6} metalness={0.7} />
+        </mesh>
+      ))}
+      {/* Dark Hole (The Exhaust Nozzle) */}
+      <mesh position={[0, 0, 1.76]}>
+        <circleGeometry args={[2.0, 24]} />
+        <meshBasicMaterial color="#050505" />
+      </mesh>
+    </group>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// AQUARIUM BAR SKYLIGHT (GLASS FLOOR)
+// ─────────────────────────────────────────────────────────────────────
+function AquariumSkylight({ position }) {
+  return (
+    <group position={position}>
+      {/* Metal Frame Ring */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} castShadow>
+        <ringGeometry args={[2.8, 3.2, 32]} />
+        <meshStandardMaterial color="#666" roughness={0.5} metalness={0.8} />
+      </mesh>
+      {/* Inner Frame Crossbars */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} castShadow>
+        <boxGeometry args={[6.0, 0.2, 0.1]} />
+        <meshStandardMaterial color="#666" roughness={0.5} metalness={0.8} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, Math.PI / 2]} position={[0, -0.02, 0]} castShadow>
+        <boxGeometry args={[6.0, 0.2, 0.1]} />
+        <meshStandardMaterial color="#666" roughness={0.5} metalness={0.8} />
+      </mesh>
+      
+      {/* The Glass Pane */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
+        <circleGeometry args={[2.8, 32]} />
+        <meshStandardMaterial
+          color="#44aaff"
+          transparent
+          opacity={0.35}
+          roughness={0.1}
+          metalness={0.2}
+        />
+      </mesh>
+      
+      {/* Fake Water/Depth Illusion underneath the deck */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.5, 0]}>
+        <circleGeometry args={[2.8, 24]} />
+        <meshStandardMaterial color="#022640" roughness={0.8} />
+      </mesh>
+    </group>
+  )
+}
+
+
+
+
+
+
+
+function LibrarySurveyRoom({ position }) {
+  return (
+    <group position={position}>
+      {/* 1. EXPANDED FLOOR (Red Carpet) */}
+      <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[14.5, 7.5]} /> {/* Increased from 11.6, 5.6 */}
+        <meshStandardMaterial color="#3d2410" /> 
+      </mesh>
+      <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <circleGeometry args={[3.2, 32]} /> {/* Increased size */}
+        <meshStandardMaterial color="#8a1c1c" roughness={0.7} /> 
+      </mesh>
+
+      {/* 2. EXPANDED WALLS */}
+      {/* Back Wall with Large Window */}
+      <mesh position={[0, 2.5, 3.8]} castShadow>
+        <boxGeometry args={[14.5, 5, 0.2]} />
+        <meshStandardMaterial color="#f0ead6" />
+      </mesh>
+
+      {/* Side Walls */}
+      <mesh position={[-7.25, 2.5, 0]} castShadow>
+        <boxGeometry args={[0.2, 5, 7.5]} />
+        <meshStandardMaterial color="#f0ead6" />
+      </mesh>
+      <mesh position={[7.25, 2.5, 0]} castShadow>
+        <boxGeometry args={[0.2, 5, 7.5]} />
+        <meshStandardMaterial color="#f0ead6" />
+      </mesh>
+
+      {/* 3. INTERIOR PROPS - "FILLED" LOOK */}
+      
+      {/* Robin's Bookshelf (Multiple units) */}
+      {[-5.5, -4, 4, 5.5].map((x, i) => (
+        <mesh key={i} position={[x, 1.5, -2]} castShadow>
+          <boxGeometry args={[1.2, 3, 0.5]} />
+          <meshStandardMaterial color="#3d2410" />
+        </mesh>
+      ))}
+
+      {/* Nami's Large Survey Table (Center) */}
+      <group position={[0, 0, 1]}>
+        <mesh position={[0, 1.3, 0]} castShadow>
+          <boxGeometry args={[4.5, 0.2, 2.5]} />
+          <meshStandardMaterial color="#8b5a2b" />
+        </mesh>
+        {/* Telescope on a stand */}
+        <mesh position={[2, 2.2, 0]} rotation={[0, 0, Math.PI / 4]} castShadow>
+          <cylinderGeometry args={[0.2, 0.2, 1.5]} />
+          <meshStandardMaterial color="#444" metalness={0.8} />
+        </mesh>
+      </group>
+
+      {/* Globe Stand */}
+      <mesh position={[5, 1, 2]} castShadow>
+        <sphereGeometry args={[0.8, 32, 32]} />
+        <meshStandardMaterial color="#d4c4a8" />
+      </mesh>
+      
+      {/* 4. ROOF (Pergola style maintained for camera) */}
+      <group position={[0, 5, 0]}>
+        {[-4, -2, 0, 2, 4].map((x, i) => (
+          <mesh key={i} position={[x, 0, 0]} castShadow>
+            <boxGeometry args={[0.3, 0.2, 8]} />
+            <meshStandardMaterial color="#2c1a0c" />
+          </mesh>
+        ))}
+      </group>
+    </group>
+  )
+}
+
+
+
+
+
 // ─────────────────────────────────────────────────────────────────────
 // THE THOUSAND SUNNY — COMPLETE SHIP
 // ─────────────────────────────────────────────────────────────────────
+
+
 export default function Ship({ aboutActive = false }) {
   const shipRef = useRef()
 
@@ -600,7 +895,50 @@ export default function Ship({ aboutActive = false }) {
       ════════════════════════════════════════════════════════════ */}
       {/* Main deck floor */}
       <CuboidCollider args={[8.5, 0.25, 20]} position={[0, 0.1, -1]} />
+      {/* ════════════════════════════════════════════════════════════
+          NEW COLLIDERS (TREES, SLIDE, HATCH, WHEEL)
+      ════════════════════════════════════════════════════════════ */}
+      {/* Mikan Tree Planter & Trunks */}
+      <CuboidCollider args={[2.25, 1.5, 2.25]} position={[-5.8, 3.5, 18.8]} />
+      
+      {/* The Slide (Matches rotation and angle so Luffy walks up/down it) */}
+      <CuboidCollider args={[0.75, 0.2, 3]} position={[-3, 1.6, 12]} rotation={[-0.6, 0, 0]} />
+      
+      {/* The Basement Hatch (Allows Luffy to step up onto the wood panel) */}
+      <CuboidCollider args={[1.75, 0.1, 1.25]} position={[0, 0.46, 5]} />
+      
+      {/* Ship Wheel Column */}
+      <CuboidCollider args={[0.8, 1.0, 0.5]} position={[0, 3.5, 19.8]} />
       {/* Quarterdeck floor */}
+      {/* ════════════════════════════════════════════════════════════
+          NAMI'S MIKAN ORCHARD PLANTER (FIXED PHYSICS)
+      ════════════════════════════════════════════════════════════ */}
+      <MikanTree position={[-6.0, 2.74, 17.5]} scale={1.1} />
+      <MikanTree position={[-4.5, 2.74, 19.0]} scale={0.9} />
+      <MikanTree position={[-7.0, 2.74, 20.0]} scale={1.0} />
+      
+      {/* THE FIX: Changed RigidBody to group */}
+      <group position={[-5.8, 2.8, 18.8]}>
+        {/* Wooden container */}
+        <mesh castShadow receiveShadow>
+          <boxGeometry args={[4.5, 0.3, 4.5]} />
+          {/* Note: Ensure WoodMaterial is defined, or use meshStandardMaterial */}
+          <meshStandardMaterial color="#8b5a2b" roughness={0.9} />
+        </mesh>
+        {/* Dirt */}
+        <mesh position={[0, 0.14, 0]} receiveShadow>
+          <boxGeometry args={[4.3, 0.05, 4.3]} />
+          <meshStandardMaterial color="#3e2723" roughness={1.0} />
+        </mesh>
+        {/* Planter Box Physical Hitbox */}
+        <CuboidCollider args={[2.25, 0.2, 2.25]} position={[0, 0, 0]} />
+      </group>
+
+      {/* ════════════════════════════════════════════════════════════
+          ICONIC EXTERIOR DETAILS
+      ════════════════════════════════════════════════════════════ */}
+      <SlideAndSwing />
+      <SoldierDockHatches />
       <CuboidCollider args={[8.5, 0.25, 6]} position={[0, 2.65, 19]} />
       {/* Forecastle floor */}
       <CuboidCollider args={[8.5, 0.25, 6]} position={[0, 2.65, -19]} />
@@ -688,6 +1026,7 @@ export default function Ship({ aboutActive = false }) {
         <meshStandardMaterial color="#4CAF50" roughness={1.0} metalness={0.0} transparent opacity={0.6} />
       </mesh>
       {/* Grass border trim */}
+      <AquariumSkylight position={[0, 0.54, -7]} />
       {[[-7.6, 0, -3], [7.6, 0, -3], [0, 0, -15.1], [0, 0, 9.1]].map(([x, y, z], i) => {
         const isHoriz = i < 2
         return (
@@ -905,6 +1244,12 @@ export default function Ship({ aboutActive = false }) {
         <boxGeometry args={[18, 4, 4]} />
         <WoodMaterial repeat={[3, 1]} roughness={0.85} />
       </mesh>
+
+        {/* NEW: The Library & Survey Room Architecture */}
+      <LibrarySurveyRoom position={[0, 2.65, 24.5]} />
+
+
+
       {/* Stern decorative transom */}
       <mesh position={[0, 1.5, 26.8]}>
         <boxGeometry args={[17.5, 3, 0.4]} />
@@ -922,6 +1267,9 @@ export default function Ship({ aboutActive = false }) {
         <boxGeometry args={[1.2, 4.5, 0.3]} />
         <meshStandardMaterial color="#3d2410" roughness={0.85} />
       </mesh>
+
+      {/* NEW: The ultimate escape engine */}
+      <CoupDeBurst position={[0, -3.8, 28]} />
 
       {/* ════════════════════════════════════════════════════════════
           BASEMENT HATCH — entry to work section aquarium
