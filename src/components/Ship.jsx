@@ -857,6 +857,591 @@ function LibrarySurveyRoom({ position }) {
 
 
 
+// ─────────────────────────────────────────────────────────────────────
+// SUNNY'S ADAM WOOD FIGUREHEAD PLATFORM — the extended bow platform
+// ─────────────────────────────────────────────────────────────────────
+function BowPlatform({ position }) {
+  return (
+    <group position={position}>
+      {/* Extended bow platform floor */}
+      <mesh castShadow receiveShadow>
+        <boxGeometry args={[10, 0.3, 4]} />
+        <meshStandardMaterial color="#5C3A21" roughness={0.85} />
+      </mesh>
+      {/* Platform railings — left */}
+      <mesh position={[-5.1, 0.7, 0]} castShadow>
+        <boxGeometry args={[0.2, 1.2, 4]} />
+        <meshStandardMaterial color="#c0392b" roughness={0.6} />
+      </mesh>
+      {/* Platform railings — right */}
+      <mesh position={[5.1, 0.7, 0]} castShadow>
+        <boxGeometry args={[0.2, 1.2, 4]} />
+        <meshStandardMaterial color="#c0392b" roughness={0.6} />
+      </mesh>
+      {/* Platform front railing */}
+      <mesh position={[0, 0.7, -2.1]} castShadow>
+        <boxGeometry args={[10, 1.2, 0.2]} />
+        <meshStandardMaterial color="#c0392b" roughness={0.6} />
+      </mesh>
+      {/* Railing balusters — front */}
+      {[-4,-2.5,-1,0,1,2.5,4].map((x, i) => (
+        <mesh key={i} position={[x, 0.5, -2]} castShadow>
+          <boxGeometry args={[0.15, 1.0, 0.15]} />
+          <meshStandardMaterial color="#f5f5f5" roughness={0.8} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// COUP DE VENT CANNON — the giant front cannon on Sunny
+// ─────────────────────────────────────────────────────────────────────
+function CoupDeVentCannon({ position }) {
+  return (
+    <group position={position} rotation={[0.15, 0, 0]}>
+      {/* Main barrel */}
+      <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <cylinderGeometry args={[0.55, 0.72, 5.5, 16]} />
+        <meshStandardMaterial color="#2a2a2a" roughness={0.6} metalness={0.7} />
+      </mesh>
+      {/* Muzzle ring */}
+      <mesh position={[0, 0, -2.8]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <torusGeometry args={[0.58, 0.12, 10, 24]} />
+        <meshStandardMaterial color="#444" roughness={0.5} metalness={0.8} />
+      </mesh>
+      {/* Breech end cap */}
+      <mesh position={[0, 0, 2.8]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <cylinderGeometry args={[0.78, 0.78, 0.4, 16]} />
+        <meshStandardMaterial color="#333" roughness={0.5} metalness={0.8} />
+      </mesh>
+      {/* Reinforcement rings along barrel */}
+      {[-1.8, -0.6, 0.6, 1.8].map((z, i) => (
+        <mesh key={i} position={[0, 0, z]} rotation={[Math.PI/2, 0, 0]} castShadow>
+          <torusGeometry args={[0.62 + i*0.02, 0.07, 8, 20]} />
+          <meshStandardMaterial color="#555" roughness={0.5} metalness={0.7} />
+        </mesh>
+      ))}
+      {/* Cannon mouth dark hole */}
+      <mesh position={[0, 0, -2.95]} rotation={[Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.48, 20]} />
+        <meshBasicMaterial color="#050505" />
+      </mesh>
+      {/* Wooden carriage left */}
+      <mesh position={[-0.85, -0.75, 0]} castShadow>
+        <boxGeometry args={[0.25, 1.0, 4.5]} />
+        <meshStandardMaterial color="#4a2e15" roughness={0.85} />
+      </mesh>
+      {/* Wooden carriage right */}
+      <mesh position={[0.85, -0.75, 0]} castShadow>
+        <boxGeometry args={[0.25, 1.0, 4.5]} />
+        <meshStandardMaterial color="#4a2e15" roughness={0.85} />
+      </mesh>
+      {/* Carriage wheels */}
+      {[-1.5, 1.5].map((z, i) => (
+        <group key={i}>
+          <mesh position={[-1.05, -1.05, z]} rotation={[0, 0, Math.PI/2]} castShadow>
+            <torusGeometry args={[0.35, 0.07, 8, 16]} />
+            <meshStandardMaterial color="#2a1505" roughness={0.8} />
+          </mesh>
+          <mesh position={[1.05, -1.05, z]} rotation={[0, 0, Math.PI/2]} castShadow>
+            <torusGeometry args={[0.35, 0.07, 8, 16]} />
+            <meshStandardMaterial color="#2a1505" roughness={0.8} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// SUNNY'S ICONIC OBSERVATION DECK — the wraparound stern balcony
+// ─────────────────────────────────────────────────────────────────────
+function SternBalcony({ position }) {
+  return (
+    <group position={position}>
+      {/* Balcony floor */}
+      <mesh castShadow receiveShadow>
+        <boxGeometry args={[18, 0.28, 3.5]} />
+        <meshStandardMaterial color="#5C3A21" roughness={0.85} />
+      </mesh>
+      {/* Back railing */}
+      <mesh position={[0, 0.7, 1.8]} castShadow>
+        <boxGeometry args={[18, 1.2, 0.2]} />
+        <meshStandardMaterial color="#c0392b" roughness={0.6} />
+      </mesh>
+      {/* Balusters */}
+      {Array.from({ length: 11 }, (_, i) => (
+        <mesh key={i} position={[-8.2 + i * 1.64, 0.5, 1.75]} castShadow>
+          <boxGeometry args={[0.15, 1.0, 0.15]} />
+          <meshStandardMaterial color="#f5f5f5" roughness={0.8} />
+        </mesh>
+      ))}
+      {/* Decorative stern lanterns */}
+      <Lantern position={[-8, 1.8, 0]} />
+      <Lantern position={[8, 1.8, 0]} />
+      {/* Decorative carved sun panels on stern face */}
+      {[-5, 0, 5].map((x, i) => (
+        <mesh key={i} position={[x, 0, -0.15]} castShadow>
+          <cylinderGeometry args={[0.55, 0.55, 0.12, 6]} rotation={[Math.PI/2, 0, 0]} />
+          <meshStandardMaterial color="#8B6914" roughness={0.5} metalness={0.2} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// CHICKEN VOYAGE PADDLE WHEELS — Sunny's emergency propulsion  
+// ─────────────────────────────────────────────────────────────────────
+function PaddleWheel({ position, side = 1 }) {
+  return (
+    <group position={position}>
+      {/* Main wheel hub */}
+      <mesh rotation={[0, 0, Math.PI/2]} castShadow>
+        <cylinderGeometry args={[2.2, 2.2, 0.5, 20]} />
+        <meshStandardMaterial color="#4a2e15" roughness={0.85} />
+      </mesh>
+      {/* Hub center */}
+      <mesh rotation={[0, 0, Math.PI/2]} castShadow>
+        <cylinderGeometry args={[0.45, 0.45, 0.6, 12]} />
+        <meshStandardMaterial color="#333" roughness={0.5} metalness={0.5} />
+      </mesh>
+      {/* Paddle blades — 8 of them */}
+      {Array.from({ length: 8 }, (_, i) => {
+        const angle = (i * Math.PI * 2) / 8
+        return (
+          <mesh
+            key={i}
+            position={[0, Math.sin(angle) * 1.6, Math.cos(angle) * 1.6]}
+            rotation={[angle, 0, 0]}
+            castShadow
+          >
+            <boxGeometry args={[0.55, 0.25, 0.85]} />
+            <meshStandardMaterial color="#c0392b" roughness={0.7} />
+          </mesh>
+        )
+      })}
+      {/* Spokes */}
+      {Array.from({ length: 4 }, (_, i) => {
+        const angle = (i * Math.PI) / 4 - Math.PI/8
+        return (
+          <mesh key={i} rotation={[angle, 0, 0]} castShadow>
+            <boxGeometry args={[0.55, 4.4, 0.18]} />
+            <meshStandardMaterial color="#5C3A21" roughness={0.85} />
+          </mesh>
+        )
+      })}
+      {/* Housing box */}
+      <mesh position={[side * 0.35, 0, 0]} castShadow>
+        <boxGeometry args={[0.8, 4.8, 4.8]} />
+        <meshStandardMaterial color="#4a2e15" roughness={0.85} transparent opacity={0.5} />
+      </mesh>
+    </group>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// TREASURE CHEST — for atmosphere on deck
+// ─────────────────────────────────────────────────────────────────────
+function TreasureChest({ position, rotation = [0, 0, 0] }) {
+  return (
+    <group position={position} rotation={rotation}>
+      {/* Chest body */}
+      <mesh castShadow receiveShadow>
+        <boxGeometry args={[0.9, 0.55, 0.6]} />
+        <meshStandardMaterial color="#5C3A21" roughness={0.85} />
+      </mesh>
+      {/* Domed lid */}
+      <mesh position={[0, 0.32, 0]} castShadow>
+        <cylinderGeometry args={[0.46, 0.46, 0.28, 20, 1, false, 0, Math.PI]} rotation={[0, 0, Math.PI/2]} />
+        <meshStandardMaterial color="#4a2e15" roughness={0.85} />
+      </mesh>
+      {/* Metal corner banding */}
+      {[[-0.45,0,0],[0.45,0,0],[0,0,-0.3],[0,0,0.3]].map(([x,y,z],i) => (
+        <mesh key={i} position={[x, y, z]} castShadow>
+          <boxGeometry args={i < 2 ? [0.06, 0.58, 0.62] : [0.92, 0.58, 0.06]} />
+          <meshStandardMaterial color="#888" roughness={0.4} metalness={0.6} />
+        </mesh>
+      ))}
+      {/* Front lock */}
+      <mesh position={[0, 0.08, -0.32]} castShadow>
+        <boxGeometry args={[0.2, 0.18, 0.06]} />
+        <meshStandardMaterial color="#c8a020" roughness={0.3} metalness={0.8} />
+      </mesh>
+      {/* Gold keyhole */}
+      <mesh position={[0, 0.08, -0.36]}>
+        <circleGeometry args={[0.04, 8]} />
+        <meshStandardMaterial color="#050505" />
+      </mesh>
+    </group>
+  )
+}
+
+
+
+
+// ─────────────────────────────────────────────────────────────────────
+// SANJI'S KITCHEN + DINING HALL — restaurant-style, stern second floor
+// ─────────────────────────────────────────────────────────────────────
+function KitchenDiningHall({ position }) {
+  return (
+    <group position={position}>
+      {/* Main building shell */}
+      <mesh castShadow receiveShadow>
+        <boxGeometry args={[14, 5.5, 8]} />
+        <meshStandardMaterial color="#c8b89a" roughness={0.85} />
+      </mesh>
+
+      {/* Roof — warm dark wood */}
+      <mesh position={[0, 3.2, 0]} castShadow>
+        <boxGeometry args={[14.8, 0.4, 8.8]} />
+        <meshStandardMaterial color="#3d2410" roughness={0.85} />
+      </mesh>
+      {/* Roof ridge beam */}
+      <mesh position={[0, 4.0, 0]} castShadow>
+        <boxGeometry args={[15, 0.35, 0.35]} />
+        <meshStandardMaterial color="#2a1505" roughness={0.8} />
+      </mesh>
+      {/* Roof slope left */}
+      <mesh position={[-7.2, 3.55, 0]} rotation={[0, 0, 0.42]} castShadow>
+        <boxGeometry args={[0.3, 1.8, 8.8]} />
+        <meshStandardMaterial color="#3d2410" roughness={0.85} />
+      </mesh>
+      {/* Roof slope right */}
+      <mesh position={[7.2, 3.55, 0]} rotation={[0, 0, -0.42]} castShadow>
+        <boxGeometry args={[0.3, 1.8, 8.8]} />
+        <meshStandardMaterial color="#3d2410" roughness={0.85} />
+      </mesh>
+
+      {/* Front wall with big window opening */}
+      <mesh position={[0, 0, -4.1]} castShadow>
+        <boxGeometry args={[14, 5.5, 0.25]} />
+        <meshStandardMaterial color="#b8a88a" roughness={0.85} />
+      </mesh>
+      {/* Large front windows — 3 across */}
+      {[-4.5, 0, 4.5].map((x, i) => (
+        <mesh key={i} position={[x, 0.5, -4.18]}>
+          <boxGeometry args={[3.2, 2.8, 0.08]} />
+          <meshStandardMaterial color="#88ccdd" roughness={0.05} metalness={0.1} transparent opacity={0.55} emissive="#aaddee" emissiveIntensity={0.08} />
+        </mesh>
+      ))}
+      {/* Window frames */}
+      {[-4.5, 0, 4.5].map((x, i) => (
+        <group key={i} position={[x, 0.5, -4.12]}>
+          <mesh><boxGeometry args={[3.3, 0.12, 0.1]} /><meshStandardMaterial color="#3d2410" roughness={0.8} /></mesh>
+          <mesh position={[0, -1.5, 0]}><boxGeometry args={[3.3, 0.12, 0.1]} /><meshStandardMaterial color="#3d2410" roughness={0.8} /></mesh>
+          <mesh position={[-1.6, 0, 0]}><boxGeometry args={[0.12, 3.0, 0.1]} /><meshStandardMaterial color="#3d2410" roughness={0.8} /></mesh>
+          <mesh position={[1.6, 0, 0]}><boxGeometry args={[0.12, 3.0, 0.1]} /><meshStandardMaterial color="#3d2410" roughness={0.8} /></mesh>
+        </group>
+      ))}
+
+      {/* DINING AREA — long table */}
+      <mesh position={[0, -1.5, 1]} castShadow>
+        <boxGeometry args={[10, 0.22, 2.2]} />
+        <meshStandardMaterial color="#6b3d1e" roughness={0.7} />
+      </mesh>
+      {/* Table legs */}
+      {[[-4.2,-1],[4.2,-1],[-4.2,1],[4.2,1]].map(([x,z],i) => (
+        <mesh key={i} position={[x, -2.4, z]} castShadow>
+          <cylinderGeometry args={[0.1,0.1,1.8,8]} />
+          <meshStandardMaterial color="#4a2510" roughness={0.8} />
+        </mesh>
+      ))}
+      {/* Dining chairs — left row */}
+      {[-3.5,-1.5,0.5,2.5].map((x,i) => (
+        <group key={i} position={[x, -2.0, -1.5]}>
+          <mesh castShadow><boxGeometry args={[0.7,0.08,0.7]} /><meshStandardMaterial color="#8B1a1a" roughness={0.7} /></mesh>
+          <mesh position={[0,0.65,0.3]} castShadow><boxGeometry args={[0.7,1.3,0.08]} /><meshStandardMaterial color="#8B1a1a" roughness={0.7} /></mesh>
+        </group>
+      ))}
+      {/* Dining chairs — right row */}
+      {[-3.5,-1.5,0.5,2.5].map((x,i) => (
+        <group key={i} position={[x, -2.0, 2.5]}>
+          <mesh castShadow><boxGeometry args={[0.7,0.08,0.7]} /><meshStandardMaterial color="#8B1a1a" roughness={0.7} /></mesh>
+          <mesh position={[0,0.65,-0.3]} castShadow><boxGeometry args={[0.7,1.3,0.08]} /><meshStandardMaterial color="#8B1a1a" roughness={0.7} /></mesh>
+        </group>
+      ))}
+
+      {/* KITCHEN COUNTER — back wall */}
+      <mesh position={[0, -1.6, 3.5]} castShadow>
+        <boxGeometry args={[12, 1.8, 0.9]} />
+        <meshStandardMaterial color="#5C3A21" roughness={0.8} />
+      </mesh>
+      {/* Counter top */}
+      <mesh position={[0, -0.65, 3.5]} castShadow>
+        <boxGeometry args={[12.2, 0.12, 1.0]} />
+        <meshStandardMaterial color="#888" roughness={0.3} metalness={0.5} />
+      </mesh>
+      {/* Pots on counter */}
+      {[-4, -1.5, 1.5, 4].map((x,i) => (
+        <mesh key={i} position={[x, -0.35, 3.5]} castShadow>
+          <cylinderGeometry args={[0.28,0.22,0.45,12]} />
+          <meshStandardMaterial color={i%2===0?"#555":"#c0392b"} roughness={0.5} metalness={i%2===0?0.6:0.1} />
+        </mesh>
+      ))}
+      {/* Overhead hanging pots rack */}
+      <mesh position={[0, 1.2, 3.2]} castShadow>
+        <boxGeometry args={[10, 0.08, 0.08]} />
+        <meshStandardMaterial color="#555" roughness={0.4} metalness={0.7} />
+      </mesh>
+      {[-3.5,-1.5,0.5,2.5].map((x,i) => (
+        <group key={i} position={[x, 0.8, 3.2]}>
+          <mesh castShadow><cylinderGeometry args={[0.02,0.02,0.45,6]} /><meshStandardMaterial color="#666" roughness={0.4} metalness={0.7} /></mesh>
+          <mesh position={[0,-0.35,0]} castShadow>
+            <cylinderGeometry args={[0.18,0.14,0.32,10]} />
+            <meshStandardMaterial color="#444" roughness={0.5} metalness={0.6} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Side wall decorative wood panels */}
+      {[-6.8, 6.8].map((x,i) => (
+        <group key={i} position={[x, 0, 0]}>
+          {[-1.5, 0.5].map((z,j) => (
+            <mesh key={j} position={[0, 0.2, z]} castShadow>
+              <boxGeometry args={[0.08, 3.5, 1.8]} />
+              <meshStandardMaterial color="#8b5a2b" roughness={0.8} />
+            </mesh>
+          ))}
+        </group>
+      ))}
+
+      {/* Lanterns inside */}
+      <Lantern position={[-5, 1.8, -2]} />
+      <Lantern position={[5,  1.8, -2]} />
+      <Lantern position={[0,  1.8,  2]} />
+    </group>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// DOME CROW'S NEST — proper dome-shaped hut with gym equipment
+// ─────────────────────────────────────────────────────────────────────
+function DomeCrowsNest({ position }) {
+  return (
+    <group position={position}>
+      {/* Platform floor */}
+      <mesh castShadow receiveShadow>
+        <cylinderGeometry args={[2.6, 2.8, 0.45, 24]} />
+        <meshStandardMaterial color="#5C3A21" roughness={0.85} />
+      </mesh>
+      {/* Dome body */}
+      <mesh position={[0, 1.8, 0]} castShadow>
+        <sphereGeometry args={[2.5, 24, 16, 0, Math.PI*2, 0, Math.PI/2]} />
+        <meshStandardMaterial color="#c8b89a" roughness={0.75} side={THREE.DoubleSide} />
+      </mesh>
+      {/* Dome base ring */}
+      <mesh position={[0, 0.3, 0]} castShadow>
+        <cylinderGeometry args={[2.52, 2.52, 0.35, 24]} />
+        <meshStandardMaterial color="#b8a88a" roughness={0.8} />
+      </mesh>
+      {/* Windows — 6 around dome */}
+      {Array.from({length:6},(_,i) => {
+        const angle = (i * Math.PI*2)/6
+        return (
+          <mesh key={i}
+            position={[Math.cos(angle)*2.15, 1.2, Math.sin(angle)*2.15]}
+            rotation={[0, -angle, 0]}
+          >
+            <boxGeometry args={[0.9, 0.75, 0.08]} />
+            <meshStandardMaterial color="#88ccdd" roughness={0.05} metalness={0.1} transparent opacity={0.6} emissive="#aaddee" emissiveIntensity={0.12} />
+          </mesh>
+        )
+      })}
+      {/* Window frames */}
+      {Array.from({length:6},(_,i) => {
+        const angle = (i * Math.PI*2)/6
+        return (
+          <mesh key={i}
+            position={[Math.cos(angle)*2.12, 1.2, Math.sin(angle)*2.12]}
+            rotation={[0, -angle, 0]}
+          >
+            <boxGeometry args={[1.0, 0.88, 0.06]} />
+            <meshStandardMaterial color="#3d2410" roughness={0.8} transparent opacity={0.0} />
+          </mesh>
+        )
+      })}
+      {/* Dome top cap */}
+      <mesh position={[0, 4.0, 0]} castShadow>
+        <sphereGeometry args={[0.35, 12, 12]} />
+        <meshStandardMaterial color="#888" roughness={0.4} metalness={0.6} />
+      </mesh>
+      {/* Flag pole */}
+      <mesh position={[0, 5.5, 0]} castShadow>
+        <cylinderGeometry args={[0.05, 0.05, 3.5, 8]} />
+        <meshStandardMaterial color="#2a1505" roughness={0.8} />
+      </mesh>
+      {/* Straw Hat Jolly Roger flag */}
+      <mesh position={[1.4, 6.8, 0]} rotation={[0, -Math.PI/2, 0]}>
+        <planeGeometry args={[3.0, 1.6]} />
+        <meshStandardMaterial color="#111" side={THREE.DoubleSide} roughness={0.9} />
+      </mesh>
+      {/* Flag skull circle */}
+      <mesh position={[0.6, 6.9, 0.01]}>
+        <circleGeometry args={[0.45, 20]} />
+        <meshStandardMaterial color="#f0f0f0" side={THREE.DoubleSide} />
+      </mesh>
+      {/* Straw hat brim on flag skull */}
+      <mesh position={[0.6, 7.28, 0.02]} rotation={[0.1, 0, 0]}>
+        <torusGeometry args={[0.55, 0.1, 8, 24]} />
+        <meshStandardMaterial color="#c8a020" roughness={0.85} side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* GYM EQUIPMENT inside */}
+      {/* Dumbbell rack */}
+      <mesh position={[0.8, 0.55, 0.5]} castShadow>
+        <boxGeometry args={[1.2, 0.22, 0.4]} />
+        <meshStandardMaterial color="#333" roughness={0.5} metalness={0.6} />
+      </mesh>
+      {[-0.3, 0.3].map((x,i) => (
+        <mesh key={i} position={[x+0.8, 0.78, 0.5]} castShadow>
+          <cylinderGeometry args={[0.22, 0.22, 0.18, 16]} rotation={[0,0,Math.PI/2]} />
+          <meshStandardMaterial color="#444" roughness={0.4} metalness={0.7} />
+        </mesh>
+      ))}
+      {/* Pull-up bar */}
+      <mesh position={[0, 2.8, -1.8]} castShadow>
+        <cylinderGeometry args={[0.06, 0.06, 2.4, 8]} rotation={[0,0,Math.PI/2]} />
+        <meshStandardMaterial color="#666" roughness={0.4} metalness={0.7} />
+      </mesh>
+      {/* Bench */}
+      <mesh position={[-0.8, 0.5, -0.5]} castShadow>
+        <boxGeometry args={[0.5, 0.18, 1.2]} />
+        <meshStandardMaterial color="#5C3A21" roughness={0.8} />
+      </mesh>
+
+      {/* Circular bench around edge */}
+      {Array.from({length:10},(_,i) => {
+        const angle = (i*Math.PI*2)/10
+        return (
+          <mesh key={i} position={[Math.cos(angle)*1.8, 0.42, Math.sin(angle)*1.8]} rotation={[0,-angle,0]} castShadow>
+            <boxGeometry args={[1.1, 0.22, 0.4]} />
+            <meshStandardMaterial color="#5C3A21" roughness={0.85} />
+          </mesh>
+        )
+      })}
+
+      {/* Telescopic equipment */}
+      <mesh position={[0, 1.5, 0]} rotation={[0.3, 0.5, 0]} castShadow>
+        <cylinderGeometry args={[0.12, 0.18, 1.8, 12]} />
+        <meshStandardMaterial color="#444" roughness={0.3} metalness={0.8} />
+      </mesh>
+
+      {/* Railing around platform */}
+      <mesh position={[0, 0.95, 0]} castShadow>
+        <torusGeometry args={[2.62, 0.07, 10, 36]} />
+        <meshStandardMaterial color="#c0392b" roughness={0.6} />
+      </mesh>
+      {Array.from({length:16},(_,i) => {
+        const angle = (i*Math.PI*2)/16
+        return (
+          <mesh key={i} position={[Math.cos(angle)*2.62, 0.65, Math.sin(angle)*2.62]} castShadow>
+            <boxGeometry args={[0.1, 0.85, 0.1]} />
+            <meshStandardMaterial color="#f5f5f5" roughness={0.8} />
+          </mesh>
+        )
+      })}
+    </group>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// LOG POSE PILLAR — navigation instrument behind the helm
+// ─────────────────────────────────────────────────────────────────────
+function LogPosePillar({ position }) {
+  return (
+    <group position={position}>
+      {/* Post */}
+      <mesh castShadow>
+        <cylinderGeometry args={[0.12, 0.15, 1.4, 12]} />
+        <meshStandardMaterial color="#555" roughness={0.4} metalness={0.7} />
+      </mesh>
+      {/* Base plate */}
+      <mesh position={[0, -0.72, 0]} castShadow>
+        <cylinderGeometry args={[0.28, 0.28, 0.1, 12]} />
+        <meshStandardMaterial color="#444" roughness={0.4} metalness={0.7} />
+      </mesh>
+      {/* Log Pose globe housing */}
+      <mesh position={[0, 0.82, 0]} castShadow>
+        <sphereGeometry args={[0.3, 16, 16]} />
+        <meshStandardMaterial color="#b8860b" roughness={0.2} metalness={0.8} />
+      </mesh>
+      {/* Glass dome */}
+      <mesh position={[0, 0.82, 0]}>
+        <sphereGeometry args={[0.28, 14, 14]} />
+        <meshStandardMaterial color="#88ddff" roughness={0.05} metalness={0.1} transparent opacity={0.45} emissive="#44aaff" emissiveIntensity={0.15} />
+      </mesh>
+      {/* Needle */}
+      <mesh position={[0.05, 0.92, 0]} rotation={[0,0,0.4]} castShadow>
+        <boxGeometry args={[0.04, 0.28, 0.03]} />
+        <meshStandardMaterial color="#c0392b" roughness={0.4} metalness={0.3} />
+      </mesh>
+      {/* Decorative rings on post */}
+      {[0.2, -0.2].map((y,i) => (
+        <mesh key={i} position={[0, y, 0]} castShadow>
+          <torusGeometry args={[0.14, 0.025, 8, 16]} />
+          <meshStandardMaterial color="#b8860b" roughness={0.3} metalness={0.8} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// ROBIN'S FLOWER GARDEN — observation deck flowers
+// ─────────────────────────────────────────────────────────────────────
+function FlowerGarden({ position }) {
+  const flowers = [
+    { p:[0,0,0], color:'#e91e63', stemH:0.55 },
+    { p:[0.7,0,0.4], color:'#9c27b0', stemH:0.45 },
+    { p:[-0.6,0,0.5], color:'#ff5722', stemH:0.6 },
+    { p:[0.3,0,0.9], color:'#ffeb3b', stemH:0.5 },
+    { p:[-0.9,0,0.2], color:'#ff9800', stemH:0.4 },
+    { p:[1.1,0,0.7], color:'#e91e63', stemH:0.52 },
+    { p:[-0.3,0,1.1], color:'#fff176', stemH:0.48 },
+    { p:[0.8,0,-0.3], color:'#ce93d8', stemH:0.58 },
+  ]
+  return (
+    <group position={position}>
+      {/* Planter box */}
+      <mesh castShadow receiveShadow>
+        <boxGeometry args={[2.8, 0.35, 1.8]} />
+        <meshStandardMaterial color="#4a2e15" roughness={0.85} />
+      </mesh>
+      {/* Soil */}
+      <mesh position={[0, 0.2, 0]} castShadow>
+        <boxGeometry args={[2.6, 0.15, 1.6]} />
+        <meshStandardMaterial color="#2d1a08" roughness={1.0} />
+      </mesh>
+      {/* Flowers */}
+      {flowers.map(({p,color,stemH},i) => (
+        <group key={i} position={[p[0]-1.2, 0.28, p[2]-0.7]}>
+          {/* Stem */}
+          <mesh position={[0, stemH/2, 0]} castShadow>
+            <cylinderGeometry args={[0.025, 0.025, stemH, 6]} />
+            <meshStandardMaterial color="#388e3c" roughness={0.9} />
+          </mesh>
+          {/* Petals */}
+          {[0,1,2,3,4].map(pi => (
+            <mesh key={pi}
+              position={[Math.cos(pi*Math.PI*2/5)*0.1, stemH+0.04, Math.sin(pi*Math.PI*2/5)*0.1]}
+              castShadow
+            >
+              <sphereGeometry args={[0.085, 8, 8]} />
+              <meshStandardMaterial color={color} roughness={0.6} />
+            </mesh>
+          ))}
+          {/* Center */}
+          <mesh position={[0, stemH+0.06, 0]} castShadow>
+            <sphereGeometry args={[0.072, 8, 8]} />
+            <meshStandardMaterial color="#fff176" roughness={0.5} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  )
+}
 
 
 // ─────────────────────────────────────────────────────────────────────
@@ -1111,6 +1696,9 @@ export default function Ship({ aboutActive = false }) {
           SHIP WHEEL
       ════════════════════════════════════════════════════════════ */}
       <ShipWheel position={[0, 3.62, 19.5]} />
+      <LogPosePillar position={[0, 4.05, 18.2]} />
+      <FlowerGarden position={[-5.5, 2.85, 22]} />
+<FlowerGarden position={[5.5,  2.85, 22]} />
       {/* Wheel post */}
       <mesh position={[0, 2.9, 19.8]} castShadow>
         <cylinderGeometry args={[0.1, 0.12, 1.5, 10]} />
@@ -1140,7 +1728,7 @@ export default function Ship({ aboutActive = false }) {
       {/* ════════════════════════════════════════════════════════════
           CROW'S NEST
       ════════════════════════════════════════════════════════════ */}
-      <CrowsNest position={[0, 33.5, -3]} />
+      <DomeCrowsNest position={[0, 33.5, -3]} />
 
       {/* ════════════════════════════════════════════════════════════
           MAIN CROSS SPAR + SAIL
@@ -1233,7 +1821,7 @@ export default function Ship({ aboutActive = false }) {
       </mesh>
 
         {/* NEW: The Library & Survey Room Architecture */}
-      <LibrarySurveyRoom position={[0, 2.65, 24.5]} />
+      <KitchenDiningHall position={[0, 2.65, 24.5]} />
 
 
 
@@ -1330,7 +1918,33 @@ export default function Ship({ aboutActive = false }) {
           <meshStandardMaterial color="#333" roughness={0.5} metalness={0.4} />
         </mesh>
       ))}
+      {/* ════════════════════════════════════════════════════════════
+          BOW PLATFORM — Sunny's extended front deck
+      ════════════════════════════════════════════════════════════ */}
+      <BowPlatform position={[0, 2.78, -26.5]} />
 
+      {/* ════════════════════════════════════════════════════════════
+          COUP DE VENT CANNON — giant front cannon
+      ════════════════════════════════════════════════════════════ */}
+      <CoupDeVentCannon position={[0, 3.4, -25]} />
+
+      {/* ════════════════════════════════════════════════════════════
+          STERN BALCONY — observation deck at the rear
+      ════════════════════════════════════════════════════════════ */}
+      <SternBalcony position={[0, 3.8, 28.5]} />
+
+      {/* ════════════════════════════════════════════════════════════
+          PADDLE WHEELS — Chicken Voyage emergency propulsion
+      ════════════════════════════════════════════════════════════ */}
+      <PaddleWheel position={[-9.8, -1.5, 8]}  side={-1} />
+      <PaddleWheel position={[9.8,  -1.5, 8]}  side={1}  />
+
+      {/* ════════════════════════════════════════════════════════════
+          TREASURE CHESTS — atmospheric detail
+      ════════════════════════════════════════════════════════════ */}
+      <TreasureChest position={[-6.5, 0.85, 15]} rotation={[0, 0.4, 0]} />
+      <TreasureChest position={[6.5,  0.85, 15]} rotation={[0, -0.3, 0]} />
+      <TreasureChest position={[6.2,  0.85, -5]} rotation={[0, 0.8, 0]} />
     </RigidBody>
   )
 }
