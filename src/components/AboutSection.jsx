@@ -95,21 +95,29 @@ export function AnimatedSail({ position = [0, 20.5, -2.5] }) {
       const y = pos.getY(i)
       const nx = x / (W / 2)
       const ny = y / (H / 2)
-      const bulge = (1 - nx * nx) * (1 - ny * ny * 0.25) * (W * 0.16)
+      const bulge = (1 - nx * nx) * (1 - ny * ny * 0.18) * (W * 0.28)
       pos.setZ(i, bulge)
     }
     geo.computeVertexNormals()
     return geo
   }, [])
 
-  const aboutTex = useMemo(() => {
-    const W = 2048, H = 1400
-    const canvas = document.createElement('canvas')
-    canvas.width = W; canvas.height = H
-    const ctx = canvas.getContext('2d')
+  const [aboutTex, setAboutTex] = useState(null)
 
+useEffect(() => {
+  const W = 2048, H = 1400
+  const canvas = document.createElement('canvas')
+  canvas.width = W; canvas.height = H
+  const ctx = canvas.getContext('2d')
+
+  const drawAll = (photoImg) => {
     // Base linen
-    ctx.fillStyle = '#dfd0a8'
+    const baseGrad = ctx.createLinearGradient(0, 0, W, H)
+    baseGrad.addColorStop(0,   '#ece0bc')
+    baseGrad.addColorStop(0.35,'#ece0bc')
+    baseGrad.addColorStop(0.65,'#ece0bc')
+    baseGrad.addColorStop(1,   '#ece0bc')
+    ctx.fillStyle = baseGrad
     ctx.fillRect(0, 0, W, H)
 
     // Vertical rope stitch lines
@@ -126,16 +134,14 @@ export function AnimatedSail({ position = [0, 20.5, -2.5] }) {
       ctx.fillRect(x, y, 1.5, 1.5)
     }
 
-    // Edge vignette
-    const vg = ctx.createRadialGradient(W/2, H/2, H*0.25, W/2, H/2, H*0.85)
-    vg.addColorStop(0, 'rgba(255,245,220,0.10)')
-    vg.addColorStop(1, 'rgba(50,30,8,0.28)')
-    ctx.fillStyle = vg
-    ctx.fillRect(0, 0, W, H)
+    // Edge vignette (removed for even color)
+    // const vg = ctx.createRadialGradient(W/2, H/2, H*0.25, W/2, H/2, H*0.85)
+    // vg.addColorStop(0, 'rgba(255,245,220,0.10)')
+    // vg.addColorStop(1, 'rgba(50,30,8,0.28)')
+    // ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H)
 
     // Border rope line
-    ctx.strokeStyle = 'rgba(80,55,18,0.30)'
-    ctx.lineWidth = 5
+    ctx.strokeStyle = 'rgba(80,55,18,0.30)'; ctx.lineWidth = 5
     ctx.strokeRect(55, 55, W - 110, H - 110)
 
     // Anchor corners
@@ -146,35 +152,64 @@ export function AnimatedSail({ position = [0, 20.5, -2.5] }) {
       ctx.beginPath(); ctx.arc(0, -size*0.35, size*0.22, 0, Math.PI*2); ctx.stroke()
       ctx.beginPath(); ctx.moveTo(0, -size*0.13); ctx.lineTo(0, size*0.52); ctx.stroke()
       ctx.beginPath(); ctx.moveTo(-size*0.28, size*0.05); ctx.lineTo(size*0.28, size*0.05); ctx.stroke()
-      ctx.beginPath(); ctx.moveTo(0, size*0.52); ctx.bezierCurveTo(-size*0.06, size*0.42, -size*0.30, size*0.38, -size*0.28, size*0.52); ctx.stroke()
-      ctx.beginPath(); ctx.moveTo(0, size*0.52); ctx.bezierCurveTo( size*0.06, size*0.42,  size*0.30, size*0.38,  size*0.28, size*0.52); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(0, size*0.52)
+        ctx.bezierCurveTo(-size*0.06, size*0.42, -size*0.30, size*0.38, -size*0.28, size*0.52); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(0, size*0.52)
+        ctx.bezierCurveTo(size*0.06, size*0.42, size*0.30, size*0.38, size*0.28, size*0.52); ctx.stroke()
       ctx.restore()
     }
-    drawAnchor(105, 100, 68)
-    drawAnchor(W - 105, 100, 68)
-    drawAnchor(105, H - 100, 68)
-    drawAnchor(W - 105, H - 100, 68)
+    drawAnchor(105, 100, 68); drawAnchor(W-105, 100, 68)
+    drawAnchor(105, H-100, 68); drawAnchor(W-105, H-100, 68)
 
-    // ── LEFT: Text block (left 55% of canvas) ──
-    const textRight = W * 0.54
+    // ── PHOTO — right half, sepia blended ──
+    if (photoImg) {
+      const px = W * 0.54, py = 80
+      const pw = W * 0.42, ph = H - 160
+      // Save and clip to right zone
+      ctx.save()
+      ctx.globalAlpha = 0.78
+ctx.filter = 'sepia(85%) contrast(1.05) brightness(0.88) saturate(0.6)'
+      // Draw photo filling right side
+      const imgAspect = photoImg.naturalWidth / photoImg.naturalHeight
+      const drawH = ph
+      const drawW = drawH * imgAspect
+      const drawX = px + (pw - drawW) / 2
+      ctx.drawImage(photoImg, drawX, py, drawW, drawH)
+      ctx.filter = 'none'
+      ctx.globalAlpha = 1
 
+      // Blend gradients removed for even color
+      // const fadeGrad = ctx.createLinearGradient(px, 0, px + pw * 0.45, 0)
+      // fadeGrad.addColorStop(0, 'rgba(232,217,176,1)')
+      // fadeGrad.addColorStop(0.6,'rgba(232,217,176,0.4)')
+      // fadeGrad.addColorStop(1,  'rgba(232,217,176,0)')
+      // ctx.fillStyle = fadeGrad
+      // ctx.fillRect(px, py, pw * 0.45, ph)
+
+      // const fadeBot = ctx.createLinearGradient(0, py + ph - ph*0.22, 0, py + ph)
+      // fadeBot.addColorStop(0, 'rgba(232,217,176,0)')
+      // fadeBot.addColorStop(1, 'rgba(232,217,176,1)')
+      // ctx.fillStyle = fadeBot
+      // ctx.fillRect(px, py + ph - ph*0.22, pw, ph*0.22)
+    }
+
+    // ── TEXT — left 52% ──
     // Title
     ctx.fillStyle = '#100800'
-    ctx.font = 'bold 132px Georgia, serif'
-    ctx.fillText("I'M SHAURYA.", 118, 198)
+    ctx.font = 'bold 128px Georgia, serif'
+    ctx.fillText("I'M SHAURYA.", 118, 195)
 
     // Taglines
-    ctx.font = 'italic 52px Georgia, serif'
+    ctx.font = 'italic 50px Georgia, serif'
     ctx.fillStyle = 'rgba(20,10,2,0.80)'
-    ctx.fillText('I build things that look good and work well.', 118, 272)
-    ctx.font = 'italic 44px Georgia, serif'
+    ctx.fillText('I build things that look good and work well.', 118, 268)
+    ctx.font = 'italic 42px Georgia, serif'
     ctx.fillStyle = 'rgba(20,10,2,0.65)'
-    ctx.fillText('Designer by instinct. Developer by choice. AI/ML by curiosity.', 118, 330)
+    ctx.fillText('Designer by instinct. Developer by choice. AI/ML by curiosity.', 118, 325)
 
     // Separator
-    ctx.strokeStyle = 'rgba(60,38,12,0.38)'
-    ctx.lineWidth = 2
-    ctx.beginPath(); ctx.moveTo(118, 358); ctx.lineTo(textRight - 30, 358); ctx.stroke()
+    ctx.strokeStyle = 'rgba(60,38,12,0.38)'; ctx.lineWidth = 2
+    ctx.beginPath(); ctx.moveTo(118, 352); ctx.lineTo(W*0.50, 352); ctx.stroke()
 
     // Bio paragraphs
     const lines = [
@@ -195,93 +230,267 @@ export function AnimatedSail({ position = [0, 20.5, -2.5] }) {
       'everything connected, every section with a reason',
       'for being exactly where it is.',
     ]
-    ctx.font = '46px Georgia, serif'
+    ctx.font = '44px Georgia, serif'
     ctx.fillStyle = 'rgba(18,8,1,0.85)'
-    let py = 418
+    let py2 = 408
     lines.forEach(line => {
-      if (line === '') { py += 24; return }
-      ctx.fillText(line, 118, py)
-      py += 60
+      if (line === '') { py2 += 22; return }
+      ctx.fillText(line, 118, py2); py2 += 57
     })
 
-    // Ornament divider at bottom
-    ctx.strokeStyle = 'rgba(70,45,15,0.50)'
-    ctx.lineWidth = 1.5
-    const ox = 160, oy = H - 130, ow = 200
-    ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox + ow, oy); ctx.stroke()
-    ctx.beginPath(); ctx.arc(ox + ow + 16, oy, 7, 0, Math.PI*2); ctx.stroke()
-    ctx.beginPath(); ctx.moveTo(ox + ow + 33, oy); ctx.lineTo(ox + ow*2 + 33, oy); ctx.stroke()
+    // Ornament divider
+    ctx.strokeStyle = 'rgba(70,45,15,0.50)'; ctx.lineWidth = 1.5
+    const ox = 160, oy = H - 120, ow = 200
+    ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox+ow, oy); ctx.stroke()
+    ctx.beginPath(); ctx.arc(ox+ow+16, oy, 7, 0, Math.PI*2); ctx.stroke()
+    ctx.beginPath(); ctx.moveTo(ox+ow+33, oy); ctx.lineTo(ox+ow*2+33, oy); ctx.stroke()
 
-    // Grommet holes along top
+    // Grommets along top
     for (let gx = 0.06; gx <= 0.94; gx += 0.085) {
-      ctx.beginPath()
-      ctx.arc(W * gx, 28, 10, 0, Math.PI * 2)
-      ctx.fillStyle = 'rgba(50,30,10,0.55)'
-      ctx.fill()
-      ctx.beginPath()
-      ctx.arc(W * gx, 28, 6, 0, Math.PI * 2)
-      ctx.fillStyle = 'rgba(25,14,4,0.75)'
-      ctx.fill()
+      ctx.beginPath(); ctx.arc(W*gx, 28, 10, 0, Math.PI*2)
+      ctx.fillStyle = 'rgba(50,30,10,0.55)'; ctx.fill()
+      ctx.beginPath(); ctx.arc(W*gx, 28, 6, 0, Math.PI*2)
+      ctx.fillStyle = 'rgba(25,14,4,0.75)'; ctx.fill()
     }
 
     const tex = new THREE.CanvasTexture(canvas)
     tex.needsUpdate = true
-    return tex
-  }, [])
+    setAboutTex(tex)
+  }
+
+  // Load photo then draw
+  const img = new window.Image()
+  img.crossOrigin = 'anonymous'
+  img.onload = () => drawAll(img)
+  img.onerror = () => drawAll(null) // draw without photo if it fails
+  img.src = '/shaurya.png'
+}, [])
 
   // Blank linen sail texture (for the other two sails)
   const blankTex = useMemo(() => {
-    const W = 1024, H = 800
-    const canvas = document.createElement('canvas')
-    canvas.width = W; canvas.height = H
-    const ctx = canvas.getContext('2d')
-    ctx.fillStyle = '#dfd0a8'
-    ctx.fillRect(0, 0, W, H)
-    for (let x = 0; x <= W; x += W / 12) {
-      ctx.strokeStyle = 'rgba(90,60,22,0.10)'
-      ctx.lineWidth = 1.5
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke()
+  const W = 1024, H = 800
+  const canvas = document.createElement('canvas')
+  canvas.width = W; canvas.height = H
+  const ctx = canvas.getContext('2d')
+
+  // ── Base warm linen ──
+  const baseGrad = ctx.createLinearGradient(0, 0, W, H)
+  baseGrad.addColorStop(0,   '#f0e6c8')
+  baseGrad.addColorStop(0.5, '#e8d9b0')
+  baseGrad.addColorStop(1,   '#e0cfa0')
+  ctx.fillStyle = baseGrad
+  ctx.fillRect(0, 0, W, H)
+
+  // ── Vertical rope stitch lines ──
+  ctx.strokeStyle = 'rgba(90,60,22,0.10)'
+  ctx.lineWidth = 1.5
+  for (let x = 0; x <= W; x += W / 12) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke()
+  }
+
+  // ── Grain noise ──
+  for (let i = 0; i < 14000; i++) {
+    const x = Math.random() * W, y = Math.random() * H
+    ctx.fillStyle = `rgba(70,48,18,${Math.random() * 0.035})`
+    ctx.fillRect(x, y, 1.2, 1.2)
+  }
+
+  // ── Edge vignette ──
+  const vg = ctx.createRadialGradient(W/2, H/2, H*0.2, W/2, H/2, H*0.82)
+  vg.addColorStop(0, 'rgba(255,248,225,0.12)')
+  vg.addColorStop(1, 'rgba(45,26,6,0.26)')
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H)
+
+  // ── Border ──
+  ctx.strokeStyle = 'rgba(80,52,16,0.28)'; ctx.lineWidth = 4
+  ctx.strokeRect(40, 40, W-80, H-80)
+  ctx.strokeStyle = 'rgba(80,52,16,0.14)'; ctx.lineWidth = 1.5
+  ctx.strokeRect(52, 52, W-104, H-104)
+
+  // ── Anchor corners ──
+  const drawAnchor = (cx, cy, size) => {
+    ctx.save(); ctx.translate(cx, cy)
+    ctx.strokeStyle = 'rgba(55,35,10,0.35)'
+    ctx.lineWidth = size * 0.09; ctx.lineCap = 'round'
+    ctx.beginPath(); ctx.arc(0, -size*0.35, size*0.22, 0, Math.PI*2); ctx.stroke()
+    ctx.beginPath(); ctx.moveTo(0, -size*0.13); ctx.lineTo(0, size*0.52); ctx.stroke()
+    ctx.beginPath(); ctx.moveTo(-size*0.28, size*0.05); ctx.lineTo(size*0.28, size*0.05); ctx.stroke()
+    ctx.beginPath(); ctx.moveTo(0, size*0.52)
+    ctx.bezierCurveTo(-size*0.06, size*0.42, -size*0.30, size*0.38, -size*0.28, size*0.52); ctx.stroke()
+    ctx.beginPath(); ctx.moveTo(0, size*0.52)
+    ctx.bezierCurveTo(size*0.06, size*0.42, size*0.30, size*0.38, size*0.28, size*0.52); ctx.stroke()
+    ctx.restore()
+  }
+  drawAnchor(75, 72, 44); drawAnchor(W-75, 72, 44)
+  drawAnchor(75, H-72, 44); drawAnchor(W-75, H-72, 44)
+
+  // ── Grommets along top ──
+  for (let gx = 0.06; gx <= 0.94; gx += 0.10) {
+    ctx.beginPath(); ctx.arc(W*gx, 20, 8, 0, Math.PI*2)
+    ctx.fillStyle = 'rgba(45,26,8,0.52)'; ctx.fill()
+    ctx.beginPath(); ctx.arc(W*gx, 20, 5, 0, Math.PI*2)
+    ctx.fillStyle = 'rgba(20,10,2,0.72)'; ctx.fill()
+  }
+
+  // ════════════════════════════════
+  // COMPASS ROSE — center of sail
+  // ════════════════════════════════
+  const cx = W / 2, cy = H / 2 + 30
+  const R = 210  // outer radius
+
+  // Outer decorative rings
+  ctx.strokeStyle = 'rgba(55,35,10,0.22)'; ctx.lineWidth = 2
+  ctx.beginPath(); ctx.arc(cx, cy, R + 12, 0, Math.PI*2); ctx.stroke()
+  ctx.strokeStyle = 'rgba(55,35,10,0.12)'; ctx.lineWidth = 1
+  ctx.beginPath(); ctx.arc(cx, cy, R + 22, 0, Math.PI*2); ctx.stroke()
+
+  // Degree tick marks around outer ring
+  for (let deg = 0; deg < 360; deg += 5) {
+    const rad = (deg * Math.PI) / 180
+    const isMain = deg % 45 === 0
+    const isMed  = deg % 15 === 0
+    const r1 = R + 12
+    const r2 = isMain ? R - 8 : isMed ? R + 4 : R + 8
+    ctx.strokeStyle = isMain
+      ? 'rgba(55,35,10,0.55)'
+      : 'rgba(55,35,10,0.22)'
+    ctx.lineWidth = isMain ? 2 : 1
+    ctx.beginPath()
+    ctx.moveTo(cx + Math.cos(rad)*r1, cy + Math.sin(rad)*r1)
+    ctx.lineTo(cx + Math.cos(rad)*r2, cy + Math.sin(rad)*r2)
+    ctx.stroke()
+  }
+
+  // 16-point star base (alternating long/short)
+  const drawStar = (points, outerR, innerR, color, alpha) => {
+    ctx.save()
+    ctx.translate(cx, cy)
+    ctx.fillStyle = color
+    ctx.globalAlpha = alpha
+    ctx.beginPath()
+    for (let i = 0; i < points * 2; i++) {
+      const angle = (i * Math.PI) / points - Math.PI / 2
+      const r = i % 2 === 0 ? outerR : innerR
+      i === 0
+        ? ctx.moveTo(Math.cos(angle)*r, Math.sin(angle)*r)
+        : ctx.lineTo(Math.cos(angle)*r, Math.sin(angle)*r)
     }
-    const vg = ctx.createRadialGradient(W/2, H/2, H*0.2, W/2, H/2, H*0.8)
-    vg.addColorStop(0, 'rgba(255,245,220,0.08)')
-    vg.addColorStop(1, 'rgba(50,30,8,0.22)')
-    ctx.fillStyle = vg
-    ctx.fillRect(0, 0, W, H)
-    // 4 anchors
-    const drawA = (cx, cy, s) => {
-      ctx.save(); ctx.translate(cx, cy)
-      ctx.strokeStyle = 'rgba(55,35,10,0.32)'
-      ctx.lineWidth = s*0.09; ctx.lineCap = 'round'
-      ctx.beginPath(); ctx.arc(0, -s*0.35, s*0.22, 0, Math.PI*2); ctx.stroke()
-      ctx.beginPath(); ctx.moveTo(0, -s*0.13); ctx.lineTo(0, s*0.52); ctx.stroke()
-      ctx.beginPath(); ctx.moveTo(-s*0.28, s*0.05); ctx.lineTo(s*0.28, s*0.05); ctx.stroke()
-      ctx.restore()
-    }
-    drawA(75, 75, 48); drawA(W-75, 75, 48)
-    drawA(75, H-75, 48); drawA(W-75, H-75, 48)
-    ctx.strokeStyle = 'rgba(80,55,18,0.22)'; ctx.lineWidth = 3
-    ctx.strokeRect(40, 40, W-80, H-80)
-    // Grommets
-    for (let gx = 0.06; gx <= 0.94; gx += 0.10) {
-      ctx.beginPath(); ctx.arc(W*gx, 22, 7, 0, Math.PI*2)
-      ctx.fillStyle = 'rgba(40,24,8,0.55)'; ctx.fill()
-      ctx.beginPath(); ctx.arc(W*gx, 22, 4, 0, Math.PI*2)
-      ctx.fillStyle = 'rgba(20,10,2,0.70)'; ctx.fill()
-    }
-    const tex = new THREE.CanvasTexture(canvas)
-    tex.needsUpdate = true
-    return tex
-  }, [])
+    ctx.closePath(); ctx.fill()
+    ctx.globalAlpha = 1; ctx.restore()
+  }
+
+  // Shadow star
+  ctx.save(); ctx.translate(3, 5)
+  drawStar(8, R * 0.82, R * 0.12, 'rgba(30,16,4,0.18)', 1)
+  ctx.restore()
+
+  // Main 8-point compass star — dark ink
+  drawStar(8, R * 0.82, R * 0.12, '#2a1505', 0.72)
+
+  // Inner 8-point star — rotated 22.5°, lighter
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(Math.PI/8); ctx.translate(-cx, -cy)
+  drawStar(8, R * 0.55, R * 0.10, '#3d2008', 0.55)
+  ctx.restore()
+
+  // Inner decorative rings
+  ctx.strokeStyle = 'rgba(55,35,10,0.38)'; ctx.lineWidth = 2.5
+  ctx.beginPath(); ctx.arc(cx, cy, R * 0.30, 0, Math.PI*2); ctx.stroke()
+  ctx.strokeStyle = 'rgba(55,35,10,0.22)'; ctx.lineWidth = 1.5
+  ctx.beginPath(); ctx.arc(cx, cy, R * 0.20, 0, Math.PI*2); ctx.stroke()
+
+  // Center hub
+  const hubGrad = ctx.createRadialGradient(cx-4, cy-4, 2, cx, cy, R*0.14)
+  hubGrad.addColorStop(0, 'rgba(200,170,110,0.9)')
+  hubGrad.addColorStop(1, 'rgba(80,48,14,0.85)')
+  ctx.fillStyle = hubGrad
+  ctx.beginPath(); ctx.arc(cx, cy, R * 0.13, 0, Math.PI*2); ctx.fill()
+  ctx.strokeStyle = 'rgba(40,20,4,0.60)'; ctx.lineWidth = 2
+  ctx.beginPath(); ctx.arc(cx, cy, R * 0.13, 0, Math.PI*2); ctx.stroke()
+
+  // Center dot
+  ctx.fillStyle = 'rgba(20,10,2,0.85)'
+  ctx.beginPath(); ctx.arc(cx, cy, R * 0.04, 0, Math.PI*2); ctx.fill()
+
+  // Cardinal direction labels — N S E W
+  const dirs = [
+    { label: 'N', angle: -Math.PI/2, dist: R * 0.92 },
+    { label: 'S', angle:  Math.PI/2, dist: R * 0.92 },
+    { label: 'E', angle:  0,         dist: R * 0.92 },
+    { label: 'W', angle:  Math.PI,   dist: R * 0.92 },
+  ]
+  ctx.font = 'bold 52px Georgia, serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  dirs.forEach(({ label, angle, dist }) => {
+    const x = cx + Math.cos(angle) * dist
+    const y = cy + Math.sin(angle) * dist
+    // shadow
+    ctx.fillStyle = 'rgba(220,200,160,0.7)'
+    ctx.fillText(label, x+2, y+2)
+    // main
+    ctx.fillStyle = 'rgba(22,10,2,0.88)'
+    ctx.fillText(label, x, y)
+  })
+
+  // Intercardinal labels — NE NW SE SW (smaller)
+  const interDirs = [
+    { label: 'NE', angle: -Math.PI/4 },
+    { label: 'NW', angle: -3*Math.PI/4 },
+    { label: 'SE', angle:  Math.PI/4 },
+    { label: 'SW', angle:  3*Math.PI/4 },
+  ]
+  ctx.font = 'bold 30px Georgia, serif'
+  interDirs.forEach(({ label, angle }) => {
+    const x = cx + Math.cos(angle) * (R * 0.88)
+    const y = cy + Math.sin(angle) * (R * 0.88)
+    ctx.fillStyle = 'rgba(22,10,2,0.65)'
+    ctx.fillText(label, x, y)
+  })
+
+  // ── TOP TITLE: "GRAND LINE" ──
+  ctx.font = 'bold 68px Georgia, serif'
+  ctx.textAlign = 'center'
+  ctx.letterSpacing = '6px'
+  // shadow
+  ctx.fillStyle = 'rgba(180,155,100,0.5)'
+  ctx.fillText('GRAND  LINE', cx+2, 118)
+  // main
+  ctx.fillStyle = 'rgba(18,8,1,0.88)'
+  ctx.fillText('GRAND  LINE', cx, 116)
+
+  // thin rule under title
+  ctx.strokeStyle = 'rgba(60,38,12,0.35)'; ctx.lineWidth = 1.5
+  ctx.beginPath()
+  ctx.moveTo(cx - 200, 138); ctx.lineTo(cx + 200, 138)
+  ctx.stroke()
+
+  // ── BOTTOM tagline ──
+  ctx.font = 'italic 32px Georgia, serif'
+  ctx.fillStyle = 'rgba(22,10,2,0.55)'
+  ctx.fillText('— charting unknown waters —', cx, H - 72)
+
+  // Grommets along top (redraw on top of everything)
+  for (let gx = 0.06; gx <= 0.94; gx += 0.10) {
+    ctx.beginPath(); ctx.arc(W*gx, 20, 8, 0, Math.PI*2)
+    ctx.fillStyle = 'rgba(45,26,8,0.55)'; ctx.fill()
+    ctx.beginPath(); ctx.arc(W*gx, 20, 5, 0, Math.PI*2)
+    ctx.fillStyle = 'rgba(20,10,2,0.75)'; ctx.fill()
+  }
+
+  const tex = new THREE.CanvasTexture(canvas)
+  tex.needsUpdate = true
+  return tex
+}, [])
 
   // Shared curved geometry for side/fore sails
   const sideGeo = useMemo(() => {
-    const W = 14, H = 8, seg = 24
+    const W = 16, H = 9, seg = 24
     const geo = new THREE.PlaneGeometry(W, H, seg, seg)
     const pos = geo.attributes.position
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i), y = pos.getY(i)
       const nx = x/(W/2), ny = y/(H/2)
-      const bulge = (1 - nx*nx) * (1 - ny*ny*0.3) * (W*0.14)
+      const bulge = (1 - nx*nx) * (1 - ny*ny*0.20) * (W*0.22)
       pos.setZ(i, bulge)
     }
     geo.computeVertexNormals()
@@ -303,14 +512,11 @@ export function AnimatedSail({ position = [0, 20.5, -2.5] }) {
           <meshStandardMaterial color="#2a1505" roughness={0.78} />
         </mesh>
         {/* Sail cloth with about content */}
-        <mesh ref={meshRef} geometry={sailGeo} castShadow receiveShadow>
-          <meshStandardMaterial
-            map={aboutTex}
-            roughness={0.90}
-            metalness={0.0}
-            side={THREE.FrontSide}
-          />
-        </mesh>
+        {aboutTex && (
+  <mesh ref={meshRef} geometry={sailGeo} castShadow receiveShadow>
+    <meshStandardMaterial map={aboutTex} roughness={0.90} metalness={0.0} side={THREE.DoubleSide} />
+  </mesh>
+)}
         {/* Grommets */}
         {[-8.5,-6,-3.5,-1,1.5,4,6.5,9].map((x,i) => (
           <mesh key={i} position={[x, 6.85, 0.15]} castShadow>
@@ -320,31 +526,29 @@ export function AnimatedSail({ position = [0, 20.5, -2.5] }) {
         ))}
       </group>
 
-      {/* ── FORE SAIL — plain linen (position from Ship.jsx line 1214) ── */}
-      <group position={[0, 12, -19]}>
-        <mesh geometry={sideGeo} castShadow receiveShadow>
-          <meshStandardMaterial map={blankTex} roughness={0.90} metalness={0.0} side={THREE.FrontSide} />
-        </mesh>
-        {[-5.5,-2.5,0.5,3.5,6].map((x,i) => (
-          <mesh key={i} position={[x, 3.7, 0.12]} castShadow>
-            <torusGeometry args={[0.12, 0.03, 7, 12]} />
-            <meshStandardMaterial color="#3d1a00" roughness={0.5} metalness={0.3} />
-          </mesh>
-        ))}
-      </group>
-
-      {/* ── LOWER MAIN SAIL — plain linen (position from Ship.jsx line 1163) ── */}
-      <group position={[0, 11, -2.5]}>
-        <mesh geometry={sideGeo} castShadow receiveShadow>
-          <meshStandardMaterial map={blankTex} roughness={0.90} metalness={0.0} side={THREE.FrontSide} />
-        </mesh>
-        {[-5.5,-2.5,0.5,3.5,6].map((x,i) => (
-          <mesh key={i} position={[x, 3.7, 0.12]} castShadow>
-            <torusGeometry args={[0.12, 0.03, 7, 12]} />
-            <meshStandardMaterial color="#3d1a00" roughness={0.5} metalness={0.3} />
-          </mesh>
-        ))}
-      </group>
+      {/* ── FORE SAIL — plain linen ── */}
+<group position={[0, 13.5, -19]}>
+  <mesh castShadow receiveShadow>
+    <primitive object={sideGeo} />
+    <meshStandardMaterial map={blankTex} roughness={0.90} metalness={0.0} side={THREE.DoubleSide} />
+  </mesh>
+  {/* Top spar */}
+  <mesh position={[0, 4.2, -0.3]} castShadow>
+    <cylinderGeometry args={[0.10, 0.10, 15, 8]} rotation={[0,0,Math.PI/2]} />
+    <meshStandardMaterial color="#2a1505" roughness={0.78} />
+  </mesh>
+  {/* Bottom spar */}
+  <mesh position={[0, -4.2, -0.3]} castShadow>
+    <cylinderGeometry args={[0.08, 0.08, 13, 8]} rotation={[0,0,Math.PI/2]} />
+    <meshStandardMaterial color="#2a1505" roughness={0.78} />
+  </mesh>
+  {[-5,-2.5,0,2.5,5].map((x,i) => (
+    <mesh key={i} position={[x, 3.9, 0.1]} castShadow>
+      <torusGeometry args={[0.12, 0.03, 7, 12]} />
+      <meshStandardMaterial color="#3d1a00" roughness={0.5} metalness={0.3} />
+    </mesh>
+  ))}
+</group>
     </group>
   )
 }
