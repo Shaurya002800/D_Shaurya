@@ -1156,15 +1156,8 @@ export default function Ship({ aboutActive = false }) {
         <WoodMaterial repeat={[1, 4]} roughness={0.82} />
       </mesh>
       {/* Main printed sail */}
-      <AnimatedSail position={[0, 20.5, -2.5]} inAboutMode={aboutActive} />
-      {/* Jolly Roger emblem removed so the custom sail print stays visible at all times */}
-      {!aboutActive && (
-        <mesh position={[0, 11, -2.5]}>
-          <planeGeometry args={[18, 5, 6, 4]} />
-          <SailMaterial repeat={[2.5, 0.8]} color="#fafaf8" />
-        </mesh>
-      )}
-
+      {/* THE REAL MULTI-TEXTURED SHADER SAIL */}
+<AnimatedSail position={[0, 18, -2.5]} active={aboutActive} />
       {/* ════════════════════════════════════════════════════════════
           LADDER TO CROW'S NEST
       ════════════════════════════════════════════════════════════ */}
@@ -1210,12 +1203,6 @@ export default function Ship({ aboutActive = false }) {
         <cylinderGeometry args={[0.12, 0.12, 14, 8]} />
         <WoodMaterial repeat={[1, 3]} roughness={0.82} />
       </mesh>
-      {!aboutActive && (
-        <mesh position={[0, 12, -19]}>
-          <planeGeometry args={[12, 8, 6, 5]} />
-          <SailMaterial repeat={[1.5, 1]} color="#f8f8f6" />
-        </mesh>
-      )}
       {/* Fore rigging */}
       <RigLine from={[7, 1, -15]}  to={[0, 14.5, -19]} thickness={0.038} />
       <RigLine from={[-7, 1, -15]} to={[0, 14.5, -19]} thickness={0.038} />
