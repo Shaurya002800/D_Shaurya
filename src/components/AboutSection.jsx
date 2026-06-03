@@ -433,6 +433,7 @@ export function AboutTransitionOverlay({ active }) { return null }
 export function SectionTransitionLabel({ active }) { return null }
 export function WindCompass({ visible }) { return null }
 
+// REPLACE the entire default export at the bottom:
 export default function AboutSection({ active, onClose }) {
-  return <SailInteractiveOverlay active={active} onClose={onClose} />
+  return null
 }

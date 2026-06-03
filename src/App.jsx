@@ -28,6 +28,12 @@ function App() {
     }, 100)
     return () => clearInterval(id)
   }, [])
+  // ADD this useEffect at the top of App() function, after your existing useEffects:
+useEffect(() => {
+  const fn = (e) => { if (e.key === 'Escape' && aboutActive) handleAboutClose() }
+  window.addEventListener('keydown', fn)
+  return () => window.removeEventListener('keydown', fn)
+}, [aboutActive])
 
   const handleNavigate = (section) => {
     setActiveSection(section)
