@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import LoadingScreen from './components/LoadingScreen'
 import WorldScene from './scenes/WorldScene'
 import ControlsOverlay from './components/ControlsOverlay'
@@ -11,16 +11,39 @@ import AboutSection, {
 } from './components/AboutSection'
 import { LuffyUI } from './components/LuffyCharacter'
 import SkillsSection from './components/Skillssection'
+import WorkSection, {
+  WorkTransitionOverlay,
+  WorkSectionLabel,
+} from './components/WorkSection'
 
 function App() {
   const [loaded,        setLoaded]        = useState(false)
   const [activeSection, setActiveSection] = useState('explore')
   const [aboutActive,   setAboutActive]   = useState(false)
-  const [skillsActive,  setSkillsActive]  = useState(false) // ✨ FIXED: Added missing state
+  const [skillsActive,  setSkillsActive]  = useState(false)
+  const [workActive, setWorkActive] = useState(false)
+  const [selectedProject, setSelectedProject] = useState(null)
   const [hintLabel,     setHintLabel]     = useState(null)
   const [charState,     setCharState]     = useState('idle')
   const [speed,         setSpeed]         = useState(0)
   const debugRef = useRef(null)
+  const sectionActive = aboutActive || skillsActive || workActive
+
+  const handleAboutClose = useCallback(() => {
+    setAboutActive(false)
+    setActiveSection('explore')
+  }, [])
+
+  const handleSkillsClose = useCallback(() => {
+    setSkillsActive(false)
+    setActiveSection('explore')
+  }, [])
+
+  const handleWorkClose = useCallback(() => {
+    setWorkActive(false)
+    setSelectedProject(null)
+    setActiveSection('explore')
+  }, [])
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -28,27 +51,19 @@ function App() {
     }, 100)
     return () => clearInterval(id)
   }, [])
-  // ADD this useEffect at the top of App() function, after your existing useEffects:
-useEffect(() => {
-  const fn = (e) => { if (e.key === 'Escape' && aboutActive) handleAboutClose() }
-  window.addEventListener('keydown', fn)
-  return () => window.removeEventListener('keydown', fn)
-}, [aboutActive])
+
+  useEffect(() => {
+    const fn = (e) => { if (e.key === 'Escape' && aboutActive) handleAboutClose() }
+    window.addEventListener('keydown', fn)
+    return () => window.removeEventListener('keydown', fn)
+  }, [aboutActive, handleAboutClose])
 
   const handleNavigate = (section) => {
     setActiveSection(section)
     setAboutActive(section === 'about')
-    setSkillsActive(section === 'skills') // ✨ FIXED: Set active state for skills
-  }
-
-  const handleAboutClose = () => {
-    setAboutActive(false)
-    setActiveSection('explore')
-  }
-
-  const handleSkillsClose = () => {
-    setSkillsActive(false)
-    setActiveSection('explore') // ✨ FIXED: Added missing close handler
+    setSkillsActive(section === 'skills')
+    setWorkActive(section === 'work')
+    if (section !== 'work') setSelectedProject(null)
   }
 
   return (
@@ -59,32 +74,40 @@ useEffect(() => {
         onStateChange={setCharState}
         onNavigate={handleNavigate}
         aboutActive={aboutActive}
-        skillsActive={skillsActive} // ✨ FIXED: Passed down to canvas
+        skillsActive={skillsActive}
+        workActive={workActive}
+        onProjectSelect={setSelectedProject}
       />
 
       {loaded && (
         <>
-          <NavWheels
-            activeSection={activeSection}
-            onNavigate={handleNavigate}
-          />
-          <ControlsOverlay />
-          <LuffyUI
-            hintLabel={hintLabel}
-            speed={speed}
-            charState={charState}
-          />
-          <WindCompass visible={!aboutActive} />
+          {!sectionActive && (
+            <>
+              <NavWheels
+                activeSection={activeSection}
+                onNavigate={handleNavigate}
+              />
+              <ControlsOverlay />
+              <LuffyUI
+                hintLabel={hintLabel}
+                speed={speed}
+                charState={charState}
+              />
+              <WindCompass visible />
+            </>
+          )}
           
-          <div style={{ 
-            position: 'fixed', 
-            bottom: '30px', 
-            right: '30px', 
-            zIndex: 9999,
-            pointerEvents: 'auto'
-          }}>
-            <DevilFruitChat /> 
-          </div>
+          {!sectionActive && (
+            <div style={{ 
+              position: 'fixed', 
+              bottom: '30px', 
+              right: '30px', 
+              zIndex: 9999,
+              pointerEvents: 'auto'
+            }}>
+              <DevilFruitChat /> 
+            </div>
+          )}
         </>
       )}
 
@@ -94,6 +117,14 @@ useEffect(() => {
         active={skillsActive} 
         onClose={handleSkillsClose} 
       />
+      <WorkSection
+        active={workActive}
+        onClose={handleWorkClose}
+        selectedProject={selectedProject}
+        onProjectClose={() => setSelectedProject(null)}
+      />
+      <WorkTransitionOverlay active={workActive} />
+      <WorkSectionLabel active={workActive} />
       
       <AboutTransitionOverlay active={aboutActive} />
       <SectionTransitionLabel active={aboutActive} label="ABOUT" />

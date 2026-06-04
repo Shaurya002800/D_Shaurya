@@ -726,6 +726,8 @@ function Luffy3D({
   onNavigate,
   debugRef,
   aboutActive = false,
+  skillsActive = false,
+  workActive = false,
 }) {
   const groupRef     = useRef()
   const mixerRef     = useRef(null)
@@ -809,7 +811,7 @@ function Luffy3D({
     const safeDt = Math.min(dt, 0.05)
     mixerRef.current.update(safeDt)
 
-    if (aboutActive) {
+    if (aboutActive || skillsActive || workActive) {
       animSM.current.updateLocomotion({ moving: false, running: false })
       if (stateRef.current !== animSM.current.current) {
         stateRef.current = animSM.current.current
@@ -919,6 +921,8 @@ export default function LuffyCharacter({
   position = [0, 0.15, 5],
   onNavigate,
   aboutActive = false,
+  skillsActive = false,
+  workActive = false,
 }) {
   const [hintLabel,   setHintLabel]   = useState(null)
   const [charState,   setCharState]   = useState(STATE.IDLE)
@@ -951,6 +955,8 @@ export default function LuffyCharacter({
         onNavigate={onNavigate}
         debugRef={debugRef}
         aboutActive={aboutActive}
+        skillsActive={skillsActive}
+        workActive={workActive}
       />
       <InteractionHint label={hintLabel} />
       <SpeedIndicator  speed={speed} state={charState} />

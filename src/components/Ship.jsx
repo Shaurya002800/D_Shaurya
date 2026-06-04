@@ -854,7 +854,589 @@ function LibrarySurveyRoom({ position }) {
     </group>
   )
 }
+// ─────────────────────────────────────────────────────────────────────
+// FISH — animated fish swimming in the aquarium
+// ─────────────────────────────────────────────────────────────────────
+function Fish({ color = '#ff6b35', startPos = [0,0,0], speed = 0.4, radius = 3, yOffset = 0 }) {
+  const ref = useRef()
+  const phase = useMemo(() => Math.random() * Math.PI * 2, [])
+  const yWave = useMemo(() => Math.random() * 0.8, [])
 
+  useFrame(({ clock }) => {
+    const t = clock.getElapsedTime() * speed + phase
+    if (ref.current) {
+      ref.current.position.x = startPos[0] + Math.cos(t) * radius
+      ref.current.position.y = startPos[1] + Math.sin(t * 0.5) * yWave + yOffset
+      ref.current.position.z = startPos[2] + Math.sin(t) * radius * 0.6
+      ref.current.rotation.y = -t + Math.PI / 2
+    }
+  })
+
+  return (
+    <group ref={ref}>
+      {/* Body */}
+      <mesh castShadow>
+        <sphereGeometry args={[0.22, 12, 8]} />
+        <meshStandardMaterial color={color} roughness={0.3} metalness={0.1} emissive={color} emissiveIntensity={0.15} />
+      </mesh>
+      {/* Tail */}
+      <mesh position={[0.25, 0, 0]} rotation={[0, 0.3, 0]}>
+        <coneGeometry args={[0.12, 0.28, 6]} rotation={[0, 0, Math.PI/2]} />
+        <meshStandardMaterial color={color} roughness={0.4} />
+      </mesh>
+      {/* Top fin */}
+      <mesh position={[-0.05, 0.18, 0]} rotation={[0, 0, 0.2]}>
+        <coneGeometry args={[0.07, 0.2, 5]} />
+        <meshStandardMaterial color={color} roughness={0.4} transparent opacity={0.85} />
+      </mesh>
+      {/* Eye */}
+      <mesh position={[-0.16, 0.06, 0.12]}>
+        <sphereGeometry args={[0.042, 8, 8]} />
+        <meshStandardMaterial color="#000" roughness={0.1} />
+      </mesh>
+      <mesh position={[-0.17, 0.065, 0.13]}>
+        <sphereGeometry args={[0.018, 6, 6]} />
+        <meshStandardMaterial color="#fff" emissive="#fff" emissiveIntensity={0.5} />
+      </mesh>
+    </group>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// BUBBLE — rising bubble in water
+// ─────────────────────────────────────────────────────────────────────
+function Bubble({ startPos, speed = 0.35 }) {
+  const ref = useRef()
+  const phase = useMemo(() => Math.random() * Math.PI * 2, [])
+  const xWobble = useMemo(() => (Math.random() - 0.5) * 0.6, [])
+  const startY = startPos[1]
+
+  useFrame(({ clock }) => {
+    const t = clock.getElapsedTime() * speed + phase
+    if (ref.current) {
+      ref.current.position.y = startY + ((t * 1.2) % 8)
+      ref.current.position.x = startPos[0] + Math.sin(t * 2.5) * xWobble
+      ref.current.position.z = startPos[2]
+    }
+  })
+
+  return (
+    <mesh ref={ref} position={startPos}>
+      <sphereGeometry args={[0.055 + Math.random() * 0.06, 8, 8]} />
+      <meshStandardMaterial
+        color="#88ddff"
+        roughness={0.05}
+        metalness={0.1}
+        transparent
+        opacity={0.35}
+        emissive="#44aaff"
+        emissiveIntensity={0.12}
+      />
+    </mesh>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// PROJECT CARD — 3D panel inside aquarium with project info
+// ─────────────────────────────────────────────────────────────────────
+function createProjectCardTexture(project) {
+  const W = 1024, H = 640
+  const canvas = document.createElement('canvas')
+  canvas.width = W; canvas.height = H
+  const ctx = canvas.getContext('2d')
+
+  // Dark underwater glass background
+  const bg = ctx.createLinearGradient(0, 0, 0, H)
+  bg.addColorStop(0, 'rgba(2,22,48,0.96)')
+  bg.addColorStop(1, 'rgba(0,12,30,0.98)')
+  ctx.fillStyle = bg
+  ctx.fillRect(0, 0, W, H)
+
+  // Glowing border
+  ctx.strokeStyle = project.color
+  ctx.lineWidth = 4
+  ctx.shadowColor = project.color
+  ctx.shadowBlur = 18
+  ctx.strokeRect(8, 8, W-16, H-16)
+  ctx.shadowBlur = 0
+
+  // Inner subtle border
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)'
+  ctx.lineWidth = 1
+  ctx.strokeRect(18, 18, W-36, H-36)
+
+  // Top color bar
+  ctx.fillStyle = project.color
+  ctx.globalAlpha = 0.9
+  ctx.fillRect(8, 8, W-16, 6)
+  ctx.globalAlpha = 1
+
+  // Stack tag chips
+  const tagX = 40
+  let tagCurX = tagX
+  const tagY = 56
+  ctx.font = 'bold 22px monospace'
+  project.stack.slice(0, 4).forEach(tag => {
+    const tw = ctx.measureText(tag).width + 24
+    ctx.fillStyle = 'rgba(255,255,255,0.08)'
+    ctx.beginPath()
+    ctx.roundRect(tagCurX, tagY, tw, 32, 6)
+    ctx.fill()
+    ctx.fillStyle = project.color
+    ctx.fillText(tag, tagCurX + 12, tagY + 22)
+    tagCurX += tw + 10
+  })
+
+  // Title
+  ctx.font = 'bold 72px Georgia, serif'
+  ctx.fillStyle = '#ffffff'
+  ctx.shadowColor = project.color
+  ctx.shadowBlur = 12
+  ctx.fillText(project.name, 40, 180)
+  ctx.shadowBlur = 0
+
+  // Separator line
+  ctx.strokeStyle = project.color
+  ctx.lineWidth = 2
+  ctx.globalAlpha = 0.5
+  ctx.beginPath(); ctx.moveTo(40, 200); ctx.lineTo(W-40, 200); ctx.stroke()
+  ctx.globalAlpha = 1
+
+  // Description — word wrapped
+  ctx.font = '32px Georgia, serif'
+  ctx.fillStyle = 'rgba(200,220,255,0.88)'
+  const words = project.desc.split(' ')
+  let line = '', lines = [], maxW = W - 80
+  words.forEach(word => {
+    const test = line + word + ' '
+    if (ctx.measureText(test).width > maxW && line) {
+      lines.push(line); line = word + ' '
+    } else line = test
+  })
+  lines.push(line)
+  lines.slice(0, 4).forEach((l, i) => ctx.fillText(l, 40, 260 + i * 46))
+
+  // Bottom live link pill
+  ctx.fillStyle = project.color
+  ctx.globalAlpha = 0.18
+  ctx.beginPath(); ctx.roundRect(40, H-100, 280, 52, 26); ctx.fill()
+  ctx.globalAlpha = 1
+  ctx.font = 'bold 28px monospace'
+  ctx.fillStyle = project.color
+  ctx.fillText('⬡  LIVE PROJECT', 65, H-68)
+
+  // Bottom right — year
+  ctx.font = 'bold 26px monospace'
+  ctx.fillStyle = 'rgba(255,255,255,0.25)'
+  ctx.textAlign = 'right'
+  ctx.fillText(project.year, W-40, H-68)
+  ctx.textAlign = 'left'
+
+  // Water caustic shimmer overlay
+  for (let i = 0; i < 6; i++) {
+    const gx = Math.random() * W, gy = Math.random() * H
+    const gr = ctx.createRadialGradient(gx, gy, 0, gx, gy, 80 + Math.random()*60)
+    gr.addColorStop(0, 'rgba(100,200,255,0.06)')
+    gr.addColorStop(1, 'rgba(0,0,0,0)')
+    ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H)
+  }
+
+  const tex = new THREE.CanvasTexture(canvas)
+  tex.needsUpdate = true
+  return tex
+}
+
+function ProjectCard({ project, position, rotation = [0, 0, 0], onSelect }) {
+  const ref = useRef()
+  const tex = useMemo(() => createProjectCardTexture(project), [project])
+  const phase = useMemo(() => Math.random() * Math.PI * 2, [])
+  const handleSelect = (event) => {
+    event.stopPropagation()
+    if (onSelect) onSelect(project)
+  }
+
+  useFrame(({ clock }) => {
+    if (ref.current) {
+      ref.current.position.y = position[1] + Math.sin(clock.getElapsedTime() * 0.4 + phase) * 0.12
+    }
+  })
+
+  return (
+    <group
+      ref={ref}
+      position={position}
+      rotation={rotation}
+      onClick={handleSelect}
+      onPointerOver={(event) => {
+        event.stopPropagation()
+        document.body.style.cursor = 'pointer'
+      }}
+      onPointerOut={() => {
+        document.body.style.cursor = 'default'
+      }}
+    >
+      {/* Glass frame */}
+      <mesh castShadow>
+        <boxGeometry args={[5.2, 3.3, 0.08]} />
+        <meshStandardMaterial
+          color="#0a2040"
+          roughness={0.05}
+          metalness={0.4}
+          transparent
+          opacity={0.7}
+          emissive="#001830"
+          emissiveIntensity={0.3}
+        />
+      </mesh>
+      {/* Card texture face */}
+      <mesh position={[0, 0, 0.045]}>
+        <planeGeometry args={[5.0, 3.15]} />
+        <meshStandardMaterial map={tex} roughness={0.2} metalness={0.0} transparent opacity={0.97} side={THREE.FrontSide} />
+      </mesh>
+      {/* Glowing edge frame */}
+      <mesh position={[0, 0, 0.02]}>
+        <boxGeometry args={[5.22, 3.32, 0.02]} />
+        <meshStandardMaterial
+          color={project.color}
+          emissive={project.color}
+          emissiveIntensity={0.4}
+          transparent
+          opacity={0.0}
+          wireframe
+        />
+      </mesh>
+      {/* Corner bolts */}
+      {[[-2.4,1.4],[ 2.4,1.4],[-2.4,-1.4],[2.4,-1.4]].map(([x,y],i) => (
+        <mesh key={i} position={[x, y, 0.06]}>
+          <cylinderGeometry args={[0.07, 0.07, 0.04, 10]} rotation={[Math.PI/2,0,0]} />
+          <meshStandardMaterial color="#888" roughness={0.3} metalness={0.8} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// CAUSTIC LIGHT PANEL — animated underwater light shimmer on floor
+// ─────────────────────────────────────────────────────────────────────
+function CausticFloor({ position }) {
+  const ref = useRef()
+  useFrame(({ clock }) => {
+    if (ref.current?.material) {
+      ref.current.material.emissiveIntensity = 0.08 + Math.sin(clock.getElapsedTime() * 1.2) * 0.05
+    }
+  })
+  return (
+    <mesh ref={ref} position={position} rotation={[-Math.PI/2, 0, 0]} receiveShadow>
+      <planeGeometry args={[22, 16, 1, 1]} />
+      <meshStandardMaterial
+        color="#021830"
+        emissive="#0a4a8a"
+        emissiveIntensity={0.08}
+        roughness={0.95}
+      />
+    </mesh>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// FULL AQUARIUM BASEMENT — the Work section
+// ─────────────────────────────────────────────────────────────────────
+const PROJECTS = [
+  {
+    name: 'SentinelMesh',
+    desc: 'Autonomous threat intelligence network — ESP32 swarm with on-device AI inference, blockchain audit log, live D3 attack heatmap.',
+    stack: ['ESP32', 'TFLite', 'React', 'Web3'],
+    color: '#ff4444',
+    year: '2026',
+    url: '#'
+  },
+  {
+    name: 'Vivayu',
+    desc: 'Proactive AgTech platform — XGBoost crop disease detection, voice-first RAG assistant, auto-generated pesticide reports.',
+    stack: ['Python', 'LangChain', 'FAISS', 'Groq'],
+    color: '#44ff88',
+    year: '2025',
+    url: 'https://ml-project-6c8bzwvgvr8xibunhdsjtt.streamlit.app'
+  },
+  {
+    name: 'DevBoard',
+    desc: 'Full-stack indie talent marketplace — founders post projects, developers pitch. JWT auth, PostgreSQL, fully deployed.',
+    stack: ['Next.js', 'Node', 'PostgreSQL', 'Railway'],
+    color: '#4488ff',
+    year: '2025',
+    url: 'https://devboard-gamma-gilt.vercel.app'
+  },
+  {
+    name: 'Hack Battle',
+    desc: '36-hour hackathon platform serving 500+ participants. Game-inspired visuals, high-concurrency registration — zero UI failures.',
+    stack: ['React', 'Tailwind', 'Figma'],
+    color: '#ff8844',
+    year: '2025',
+    url: 'https://hackbattle25.ieeecsvit.com'
+  },
+  {
+    name: 'Model Arena',
+    desc: 'Competitive ML hackathon platform — futuristic design system, strong visual hierarchy across the full event lifecycle.',
+    stack: ['React', 'Tailwind', 'Figma'],
+    color: '#cc44ff',
+    year: '2025',
+    url: 'https://model-arena.netlify.app'
+  },
+  {
+    name: 'IEEE CS Website',
+    desc: 'Official IEEE CS VIT chapter platform — modern UI, responsive architecture, brand consistency, accessibility standards.',
+    stack: ['React', 'Tailwind', 'Figma'],
+    color: '#44ddff',
+    year: '2025',
+    url: 'https://ieeecsvit.com'
+  },
+]
+
+function AquariumBasement({ position = [0, -14, 2], onProjectSelect }) {
+  return (
+    <group position={position}>
+
+      {/* ── ROOM SHELL ── */}
+      {/* Floor */}
+      <CausticFloor position={[0, 0, 0]} />
+
+      {/* Ceiling */}
+      <mesh position={[0, 10, 0]} rotation={[-Math.PI/2, 0, 0]}>
+        <planeGeometry args={[22, 16]} />
+        <meshStandardMaterial color="#010e1f" roughness={1} />
+      </mesh>
+
+      {/* Back wall */}
+      <mesh position={[0, 5, -8]} castShadow>
+        <boxGeometry args={[22, 10, 0.3]} />
+        <meshStandardMaterial color="#01111f" roughness={0.9} />
+      </mesh>
+
+      {/* Front wall (with hatch hole — just make it dark) */}
+      <mesh position={[0, 5, 8]} castShadow>
+        <boxGeometry args={[22, 10, 0.3]} />
+        <meshStandardMaterial color="#01111f" roughness={0.9} />
+      </mesh>
+
+      {/* Left wall — GLASS AQUARIUM PANEL */}
+      <mesh position={[-11, 5, 0]}>
+        <boxGeometry args={[0.25, 10, 16]} />
+        <meshStandardMaterial
+          color="#0a3a6a"
+          roughness={0.05}
+          metalness={0.2}
+          transparent
+          opacity={0.38}
+          emissive="#0a2a5a"
+          emissiveIntensity={0.2}
+        />
+      </mesh>
+
+      {/* Right wall — GLASS AQUARIUM PANEL */}
+      <mesh position={[11, 5, 0]}>
+        <boxGeometry args={[0.25, 10, 16]} />
+        <meshStandardMaterial
+          color="#0a3a6a"
+          roughness={0.05}
+          metalness={0.2}
+          transparent
+          opacity={0.38}
+          emissive="#0a2a5a"
+          emissiveIntensity={0.2}
+        />
+      </mesh>
+
+      {/* Glass frame beams — horizontal */}
+      {[2, 5, 8].map((y, i) => (
+        <group key={i}>
+          <mesh position={[-11, y, 0]} castShadow>
+            <boxGeometry args={[0.3, 0.18, 16]} />
+            <meshStandardMaterial color="#1a4a7a" roughness={0.3} metalness={0.7} />
+          </mesh>
+          <mesh position={[11, y, 0]} castShadow>
+            <boxGeometry args={[0.3, 0.18, 16]} />
+            <meshStandardMaterial color="#1a4a7a" roughness={0.3} metalness={0.7} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Glass frame beams — vertical */}
+      {[-6, -2, 2, 6].map((z, i) => (
+        <group key={i}>
+          <mesh position={[-11, 5, z]} castShadow>
+            <boxGeometry args={[0.3, 10, 0.18]} />
+            <meshStandardMaterial color="#1a4a7a" roughness={0.3} metalness={0.7} />
+          </mesh>
+          <mesh position={[11, 5, z]} castShadow>
+            <boxGeometry args={[0.3, 10, 0.18]} />
+            <meshStandardMaterial color="#1a4a7a" roughness={0.3} metalness={0.7} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* ── WATER VOLUME — fills the glass panels ── */}
+      {/* Left water */}
+      <mesh position={[-13.5, 5, 0]}>
+        <boxGeometry args={[5, 10, 16]} />
+        <meshStandardMaterial
+          color="#021a3a"
+          roughness={0.05}
+          transparent
+          opacity={0.88}
+          emissive="#011020"
+          emissiveIntensity={0.15}
+        />
+      </mesh>
+      {/* Right water */}
+      <mesh position={[13.5, 5, 0]}>
+        <boxGeometry args={[5, 10, 16]} />
+        <meshStandardMaterial
+          color="#021a3a"
+          roughness={0.05}
+          transparent
+          opacity={0.88}
+          emissive="#011020"
+          emissiveIntensity={0.15}
+        />
+      </mesh>
+
+      {/* ── FISH swimming in left tank ── */}
+      <Fish color="#ff6b35" startPos={[-13.5, 5, 0]} radius={1.8} speed={0.5} yOffset={0} />
+      <Fish color="#ffcc00" startPos={[-13.5, 4, 1]} radius={1.2} speed={0.35} yOffset={1} />
+      <Fish color="#44aaff" startPos={[-13.5, 6, -1]} radius={1.5} speed={0.6} yOffset={-1} />
+      <Fish color="#ff44aa" startPos={[-13.5, 3.5, 0.5]} radius={1.0} speed={0.42} yOffset={0.5} />
+      <Fish color="#44ffcc" startPos={[-13.5, 7, -0.5]} radius={1.3} speed={0.38} yOffset={-0.5} />
+
+      {/* ── FISH swimming in right tank ── */}
+      <Fish color="#ff8844" startPos={[13.5, 5, 0]} radius={1.8} speed={0.45} yOffset={0} />
+      <Fish color="#88ff44" startPos={[13.5, 4.5, 1]} radius={1.4} speed={0.55} yOffset={0.8} />
+      <Fish color="#ff44ff" startPos={[13.5, 6, -1]} radius={1.2} speed={0.4} yOffset={-0.8} />
+      <Fish color="#44ccff" startPos={[13.5, 3, 0]} radius={1.6} speed={0.52} yOffset={1.2} />
+      <Fish color="#ffff44" startPos={[13.5, 7, 0.5]} radius={1.0} speed={0.36} yOffset={-1.2} />
+
+      {/* ── BUBBLES ── */}
+      {Array.from({ length: 18 }, (_, i) => (
+        <Bubble
+          key={i}
+          startPos={[
+            -10.5 + (i % 3) * 1.2,
+            0.2 + (i % 4) * 0.5,
+            -6 + Math.floor(i / 3) * 2.4
+          ]}
+          speed={0.25 + (i % 5) * 0.08}
+        />
+      ))}
+      {Array.from({ length: 18 }, (_, i) => (
+        <Bubble
+          key={`r${i}`}
+          startPos={[
+            10.5 - (i % 3) * 1.2,
+            0.2 + (i % 4) * 0.5,
+            -6 + Math.floor(i / 3) * 2.4
+          ]}
+          speed={0.22 + (i % 5) * 0.09}
+        />
+      ))}
+
+      {/* ── LOUNGE BAR TABLE — center of room ── */}
+      <mesh position={[0, 1.6, 0]} castShadow>
+        <cylinderGeometry args={[2.2, 2.2, 0.2, 24]} />
+        <meshStandardMaterial color="#0a2040" roughness={0.2} metalness={0.5} emissive="#0a2040" emissiveIntensity={0.1} />
+      </mesh>
+      {/* Table top glass */}
+      <mesh position={[0, 1.72, 0]}>
+        <cylinderGeometry args={[2.2, 2.2, 0.05, 24]} />
+        <meshStandardMaterial color="#44aaff" roughness={0.05} metalness={0.2} transparent opacity={0.4} emissive="#44aaff" emissiveIntensity={0.2} />
+      </mesh>
+      {/* Table pedestal */}
+      <mesh position={[0, 0.8, 0]} castShadow>
+        <cylinderGeometry args={[0.18, 0.28, 1.6, 12]} />
+        <meshStandardMaterial color="#1a3a5a" roughness={0.4} metalness={0.6} />
+      </mesh>
+
+      {/* Bar stools around table */}
+      {Array.from({ length: 5 }, (_, i) => {
+        const angle = (i * Math.PI * 2) / 5
+        const r = 3.0
+        return (
+          <group key={i} position={[Math.cos(angle)*r, 0, Math.sin(angle)*r]}>
+            <mesh position={[0, 1.1, 0]} castShadow>
+              <cylinderGeometry args={[0.32, 0.32, 0.1, 14]} />
+              <meshStandardMaterial color="#0a3050" roughness={0.3} metalness={0.4} />
+            </mesh>
+            <mesh position={[0, 0.55, 0]} castShadow>
+              <cylinderGeometry args={[0.045, 0.055, 1.1, 8]} />
+              <meshStandardMaterial color="#1a4a7a" roughness={0.4} metalness={0.7} />
+            </mesh>
+          </group>
+        )
+      })}
+
+      {/* ── UNDERWATER AMBIENT LIGHTING ── */}
+      <pointLight position={[0, 8, 0]} color="#0a4a8a" intensity={2.5} distance={25} decay={1.5} />
+      <pointLight position={[-10, 5, 0]} color="#0044aa" intensity={1.8} distance={18} decay={2} />
+      <pointLight position={[10, 5, 0]} color="#0044aa" intensity={1.8} distance={18} decay={2} />
+      <pointLight position={[0, 1, -5]} color="#0066cc" intensity={1.2} distance={15} decay={2} />
+      {/* Caustic shimmer lights */}
+      <pointLight position={[-5, 9.5, -3]} color="#22aaff" intensity={0.8} distance={12} decay={2} />
+      <pointLight position={[5, 9.5, 3]} color="#22aaff" intensity={0.8} distance={12} decay={2} />
+
+      {/* ── PROJECT CARDS — 3 on each glass wall ── */}
+      {/* Left wall cards */}
+      <ProjectCard project={PROJECTS[0]} position={[-7.4, 5.7, -4.6]} rotation={[0,  1.05, 0]} onSelect={onProjectSelect} />
+      <ProjectCard project={PROJECTS[1]} position={[-8.0, 5.5,  0]}   rotation={[0,  1.18, 0]} onSelect={onProjectSelect} />
+      <ProjectCard project={PROJECTS[2]} position={[-7.2, 5.4,  4.5]} rotation={[0,  1.35, 0]} onSelect={onProjectSelect} />
+
+      {/* Right wall cards */}
+      <ProjectCard project={PROJECTS[3]} position={[7.4, 5.7, -4.6]} rotation={[0, -1.05, 0]} onSelect={onProjectSelect} />
+      <ProjectCard project={PROJECTS[4]} position={[8.0, 5.5,  0]}   rotation={[0, -1.18, 0]} onSelect={onProjectSelect} />
+      <ProjectCard project={PROJECTS[5]} position={[7.2, 5.4,  4.5]} rotation={[0, -1.35, 0]} onSelect={onProjectSelect} />
+
+      {/* ── CEILING SKYLIGHT — glass ring looking up to deck ── */}
+      <mesh position={[0, 9.9, 0]} rotation={[Math.PI/2, 0, 0]}>
+        <ringGeometry args={[1.4, 2.5, 32]} />
+        <meshStandardMaterial color="#888" roughness={0.3} metalness={0.8} />
+      </mesh>
+      <mesh position={[0, 9.85, 0]} rotation={[Math.PI/2, 0, 0]}>
+        <circleGeometry args={[1.4, 32]} />
+        <meshStandardMaterial color="#44aaff" roughness={0.05} transparent opacity={0.4} emissive="#44aaff" emissiveIntensity={0.3} />
+      </mesh>
+
+      {/* ── LADDER DOWN FROM HATCH ── */}
+      <group position={[0, 5, 7.2]}>
+        {/* Left rail */}
+        <mesh castShadow>
+          <boxGeometry args={[0.06, 10, 0.06]} />
+          <meshStandardMaterial color="#1a4a7a" roughness={0.5} metalness={0.6} />
+        </mesh>
+        <mesh position={[0.55, 0, 0]} castShadow>
+          <boxGeometry args={[0.06, 10, 0.06]} />
+          <meshStandardMaterial color="#1a4a7a" roughness={0.5} metalness={0.6} />
+        </mesh>
+        {Array.from({ length: 12 }, (_, i) => (
+          <mesh key={i} position={[0.27, -5 + i * 0.9, 0]} castShadow>
+            <boxGeometry args={[0.55, 0.055, 0.055]} />
+            <meshStandardMaterial color="#2a5a8a" roughness={0.5} metalness={0.5} />
+          </mesh>
+        ))}
+      </group>
+
+      {/* ── FLOOR CORAL/KELP decoration ── */}
+      {[[-8,0,-5],[-8,0,5],[8,0,-5],[8,0,5],[-8,0,0],[8,0,0]].map(([x,y,z],i) => (
+        <mesh key={i} position={[x, 0.6, z]} castShadow>
+          <cylinderGeometry args={[0.08, 0.14, 1.2+i*0.1, 6]} />
+          <meshStandardMaterial
+            color={i%2===0?'#ff6644':'#44ff88'}
+            roughness={0.7}
+            emissive={i%2===0?'#ff3300':'#00ff44'}
+            emissiveIntensity={0.12}
+          />
+        </mesh>
+      ))}
+    </group>
+  )
+}
 
 
 // ─────────────────────────────────────────────────────────────────────
@@ -1449,7 +2031,7 @@ function FlowerGarden({ position }) {
 // ─────────────────────────────────────────────────────────────────────
 
 
-export default function Ship({ aboutActive = false }) {
+export default function Ship({ aboutActive = false, onProjectSelect }) {
   const shipRef = useRef()
 
   // Gentle ocean rocking — kinematic physics body moves with waves
@@ -1945,6 +2527,12 @@ export default function Ship({ aboutActive = false }) {
       <TreasureChest position={[-6.5, 0.85, 15]} rotation={[0, 0.4, 0]} />
       <TreasureChest position={[6.5,  0.85, 15]} rotation={[0, -0.3, 0]} />
       <TreasureChest position={[6.2,  0.85, -5]} rotation={[0, 0.8, 0]} />
+
+          {/* ══════════════════════════════════════════════════════
+        AQUARIUM BASEMENT — Work Section
+        Positioned below deck (y = -14 puts it under the ship floor)
+    ══════════════════════════════════════════════════════ */}
+    <AquariumBasement position={[0, -14, 2]} onProjectSelect={onProjectSelect} />
     </RigidBody>
   )
 }

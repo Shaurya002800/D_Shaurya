@@ -46,6 +46,49 @@ export function SkillsCameraTransition({ active }) {
   return null
 }
 
+// ─── WORK/BASEMENT CAMERA CONTROLLER ─────────────────────────────────────────
+const CAM_WORK = {
+  position: new THREE.Vector3(0, -10.2, 7.4),
+  target: new THREE.Vector3(0, -8.8, -0.8),
+  fov: 78,
+}
+
+export function WorkCameraTransition({ active }) {
+  const isAnimating = useRef(false)
+  const currentTarget = useRef(new THREE.Vector3(0, 1.5, 0))
+  const hasEntered = useRef(false)
+
+  useFrame((state, delta) => {
+    const speed = 2.2 * delta
+
+    if (active) {
+      isAnimating.current = true
+      hasEntered.current = true
+      state.camera.position.lerp(CAM_WORK.position, speed)
+      currentTarget.current.lerp(CAM_WORK.target, speed)
+      state.camera.lookAt(currentTarget.current)
+      state.camera.fov = THREE.MathUtils.lerp(state.camera.fov, CAM_WORK.fov, speed)
+      state.camera.updateProjectionMatrix()
+      state.scene.fog = null
+    } else if (hasEntered.current) {
+      isAnimating.current = true
+      state.camera.position.lerp(CAM_EXPLORE.position, speed)
+      currentTarget.current.lerp(CAM_EXPLORE.target, speed)
+      state.camera.lookAt(currentTarget.current)
+      state.camera.fov = THREE.MathUtils.lerp(state.camera.fov, 68, speed)
+      state.camera.updateProjectionMatrix()
+      state.scene.fog = new THREE.Fog('#e4f0f6', 60, 260)
+      if (state.camera.position.distanceTo(CAM_EXPLORE.position) < 0.1) {
+        isAnimating.current = false
+        hasEntered.current = false
+      }
+    }
+  })
+
+  return null
+}
+
+
 
 // ─── STYLIZED "GRAND LINE" OCEAN ──────────────────────────────────────────────
 function Ocean() {
@@ -138,6 +181,9 @@ function Ocean() {
     `,
   }), [])
 
+
+  
+
   useFrame(({ clock }) => {
     if (matRef.current)
       matRef.current.uniforms.uTime.value = clock.getElapsedTime()
@@ -173,8 +219,10 @@ export default function WorldScene({
   onZoneChange,
   onStateChange,
   onNavigate,
+  onProjectSelect,
   aboutActive = false,
-  skillsActive = false, // ✨ FIXED: Destructured missing prop here
+  skillsActive = false,
+  workActive = false,
 }) {
   const [cloudsCleared, setCloudsCleared] = useState(false)
 
@@ -195,21 +243,31 @@ export default function WorldScene({
         gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.84 }}
         style={{ position: 'absolute', inset: 0, zIndex: 1 }}
       >
-        <fog attach="fog" args={['#e4f0f6', 60, 260]} />
+        {!workActive && <fog attach="fog" args={['#e4f0f6', 60, 260]} />}
         <Lighting />
         <Sky distance={4500} sunPosition={[82, 18, 46]} inclination={0.53} azimuth={0.21} rayleigh={0.78} turbidity={4.6} />
         <Sparkles count={220} scale={60} size={1.25} speed={0.18} opacity={0.11} color="#ffffff" position={[0, 8, 0]} />
 
         <AboutCameraController active={aboutActive} />
-        <SkillsCameraTransition active={skillsActive} /> {/* ✨ FIXED: Safe inside canvas tree now */}
+        <SkillsCameraTransition active={skillsActive} />
+        <WorkCameraTransition active={workActive} />
         <Ocean />
 
         <Suspense fallback={null}>
           <Physics gravity={[0, -9.81, 0]} debug={false}>
-            <Ship aboutActive={aboutActive} />
+            <Ship aboutActive={aboutActive} onProjectSelect={onProjectSelect} />
             <RigidBody type="kinematicPosition" colliders={false} lockRotations>
               <CuboidCollider args={[0.35, 0.9, 0.35]} position={[0, 0.9, 0]} />
-              <LuffyCharacter3D position={[0, 0.15, 5]} onStateChange={onStateChange} onZoneChange={onZoneChange} onNavigate={onNavigate} debugRef={debugRef} aboutActive={aboutActive} />
+              <LuffyCharacter3D
+                position={[0, 0.15, 5]}
+                onStateChange={onStateChange}
+                onZoneChange={onZoneChange}
+                onNavigate={onNavigate}
+                debugRef={debugRef}
+                aboutActive={aboutActive}
+                skillsActive={skillsActive}
+                workActive={workActive}
+              />
             </RigidBody>
           </Physics>
         </Suspense>
