@@ -1193,247 +1193,234 @@ const PROJECTS = [
   },
 ]
 
-function AquariumBasement({ position = [0, -14, 2], onProjectSelect }) {
+function AquariumBasement({ position = [0, -14, 2] }) {
   return (
     <group position={position}>
 
-      {/* ── ROOM SHELL ── */}
-      {/* Floor */}
+      {/* ── FLOOR with caustic pulse ── */}
       <CausticFloor position={[0, 0, 0]} />
 
-      {/* Ceiling */}
-      <mesh position={[0, 10, 0]} rotation={[-Math.PI/2, 0, 0]}>
-        <planeGeometry args={[22, 16]} />
-        <meshStandardMaterial color="#010e1f" roughness={1} />
+      {/* ── CEILING — wood underside of deck ── */}
+      <mesh position={[0, 10, 0]} rotation={[-Math.PI/2, 0, 0]} receiveShadow>
+        <planeGeometry args={[24, 18]} />
+        <meshStandardMaterial color="#1a0a02" roughness={0.95} />
       </mesh>
+      {/* Ceiling wood beams */}
+      {[-8,-4,0,4,8].map((x,i) => (
+        <mesh key={i} position={[x, 9.7, 0]} castShadow>
+          <boxGeometry args={[0.4, 0.5, 18]} />
+          <meshStandardMaterial color="#2a1505" roughness={0.9} />
+        </mesh>
+      ))}
 
-      {/* Back wall */}
+      {/* ── BACK WALL (decorative) ── */}
       <mesh position={[0, 5, -8]} castShadow>
-        <boxGeometry args={[22, 10, 0.3]} />
-        <meshStandardMaterial color="#01111f" roughness={0.9} />
+        <boxGeometry args={[24, 10, 0.3]} />
+        <meshStandardMaterial color="#010d18" roughness={0.95} />
+      </mesh>
+      {/* Back wall porthole windows */}
+      {[-6, 0, 6].map((x,i) => (
+        <group key={i} position={[x, 6, -7.85]}>
+          <mesh>
+            <circleGeometry args={[1.2, 24]} />
+            <meshStandardMaterial color="#0a4a8a" roughness={0.05} transparent opacity={0.5} emissive="#0a3a6a" emissiveIntensity={0.4} />
+          </mesh>
+          <mesh>
+            <torusGeometry args={[1.2, 0.12, 10, 24]} />
+            <meshStandardMaterial color="#4a3010" roughness={0.4} metalness={0.7} />
+          </mesh>
+          {/* Cross bars */}
+          <mesh><boxGeometry args={[2.5, 0.1, 0.06]} /><meshStandardMaterial color="#3a2008" roughness={0.5} metalness={0.6} /></mesh>
+          <mesh><boxGeometry args={[0.1, 2.5, 0.06]} /><meshStandardMaterial color="#3a2008" roughness={0.5} metalness={0.6} /></mesh>
+        </group>
+      ))}
+
+      {/* ── FRONT ARCH (open, camera enters here) ── */}
+      <mesh position={[0, 9.6, 8]} castShadow>
+        <boxGeometry args={[24, 0.8, 0.5]} />
+        <meshStandardMaterial color="#010d18" roughness={0.95} />
+      </mesh>
+      <mesh position={[-11.5, 5, 8]} castShadow>
+        <boxGeometry args={[1.0, 10, 0.5]} />
+        <meshStandardMaterial color="#010d18" roughness={0.95} />
+      </mesh>
+      <mesh position={[11.5, 5, 8]} castShadow>
+        <boxGeometry args={[1.0, 10, 0.5]} />
+        <meshStandardMaterial color="#010d18" roughness={0.95} />
       </mesh>
 
-      {/* Front wall (with hatch hole — just make it dark) */}
-      <mesh position={[0, 5, 8]} castShadow>
-        <boxGeometry args={[22, 10, 0.3]} />
-        <meshStandardMaterial color="#01111f" roughness={0.9} />
-      </mesh>
-
-      {/* Left wall — GLASS AQUARIUM PANEL */}
+      {/* ── LEFT GLASS AQUARIUM WALL ── */}
       <mesh position={[-11, 5, 0]}>
-        <boxGeometry args={[0.25, 10, 16]} />
-        <meshStandardMaterial
-          color="#0a3a6a"
-          roughness={0.05}
-          metalness={0.2}
-          transparent
-          opacity={0.38}
-          emissive="#0a2a5a"
-          emissiveIntensity={0.2}
-        />
+        <boxGeometry args={[0.18, 10, 16]} />
+        <meshStandardMaterial color="#0a4a8a" roughness={0.02} metalness={0.15} transparent opacity={0.32} emissive="#0a2a5a" emissiveIntensity={0.25} />
       </mesh>
+      {/* Left glass metal frame grid */}
+      {[1, 3.5, 6, 8.5].map((y,i) => (
+        <mesh key={i} position={[-11, y, 0]} castShadow>
+          <boxGeometry args={[0.25, 0.14, 16.2]} />
+          <meshStandardMaterial color="#1a4060" roughness={0.3} metalness={0.8} />
+        </mesh>
+      ))}
+      {[-6,-2,2,6].map((z,i) => (
+        <mesh key={i} position={[-11, 5, z]} castShadow>
+          <boxGeometry args={[0.25, 10.2, 0.14]} />
+          <meshStandardMaterial color="#1a4060" roughness={0.3} metalness={0.8} />
+        </mesh>
+      ))}
 
-      {/* Right wall — GLASS AQUARIUM PANEL */}
+      {/* ── RIGHT GLASS AQUARIUM WALL ── */}
       <mesh position={[11, 5, 0]}>
-        <boxGeometry args={[0.25, 10, 16]} />
-        <meshStandardMaterial
-          color="#0a3a6a"
-          roughness={0.05}
-          metalness={0.2}
-          transparent
-          opacity={0.38}
-          emissive="#0a2a5a"
-          emissiveIntensity={0.2}
-        />
+        <boxGeometry args={[0.18, 10, 16]} />
+        <meshStandardMaterial color="#0a4a8a" roughness={0.02} metalness={0.15} transparent opacity={0.32} emissive="#0a2a5a" emissiveIntensity={0.25} />
       </mesh>
-
-      {/* Glass frame beams — horizontal */}
-      {[2, 5, 8].map((y, i) => (
-        <group key={i}>
-          <mesh position={[-11, y, 0]} castShadow>
-            <boxGeometry args={[0.3, 0.18, 16]} />
-            <meshStandardMaterial color="#1a4a7a" roughness={0.3} metalness={0.7} />
-          </mesh>
-          <mesh position={[11, y, 0]} castShadow>
-            <boxGeometry args={[0.3, 0.18, 16]} />
-            <meshStandardMaterial color="#1a4a7a" roughness={0.3} metalness={0.7} />
-          </mesh>
-        </group>
+      {[1, 3.5, 6, 8.5].map((y,i) => (
+        <mesh key={i} position={[11, y, 0]} castShadow>
+          <boxGeometry args={[0.25, 0.14, 16.2]} />
+          <meshStandardMaterial color="#1a4060" roughness={0.3} metalness={0.8} />
+        </mesh>
+      ))}
+      {[-6,-2,2,6].map((z,i) => (
+        <mesh key={i} position={[11, 5, z]} castShadow>
+          <boxGeometry args={[0.25, 10.2, 0.14]} />
+          <meshStandardMaterial color="#1a4060" roughness={0.3} metalness={0.8} />
+        </mesh>
       ))}
 
-      {/* Glass frame beams — vertical */}
-      {[-6, -2, 2, 6].map((z, i) => (
-        <group key={i}>
-          <mesh position={[-11, 5, z]} castShadow>
-            <boxGeometry args={[0.3, 10, 0.18]} />
-            <meshStandardMaterial color="#1a4a7a" roughness={0.3} metalness={0.7} />
-          </mesh>
-          <mesh position={[11, 5, z]} castShadow>
-            <boxGeometry args={[0.3, 10, 0.18]} />
-            <meshStandardMaterial color="#1a4a7a" roughness={0.3} metalness={0.7} />
-          </mesh>
-        </group>
+      {/* ── WATER VOLUME — glowing deep blue outside glass ── */}
+      <mesh position={[-14.5, 5, 0]}>
+        <boxGeometry args={[7, 10, 16]} />
+        <meshStandardMaterial color="#011428" roughness={0.05} transparent opacity={0.92} emissive="#010c1e" emissiveIntensity={0.2} />
+      </mesh>
+      <mesh position={[14.5, 5, 0]}>
+        <boxGeometry args={[7, 10, 16]} />
+        <meshStandardMaterial color="#011428" roughness={0.05} transparent opacity={0.92} emissive="#010c1e" emissiveIntensity={0.2} />
+      </mesh>
+
+      {/* ── FISH — left tank ── */}
+      <Fish color="#ff6b35" startPos={[-14, 5, 0]}  radius={2.0} speed={0.48} yOffset={0}   />
+      <Fish color="#ffcc00" startPos={[-14, 4, 1]}  radius={1.4} speed={0.32} yOffset={1}   />
+      <Fish color="#44aaff" startPos={[-14, 6, -1]} radius={1.6} speed={0.58} yOffset={-1}  />
+      <Fish color="#ff44aa" startPos={[-14, 3.5, 0.5]} radius={1.1} speed={0.40} yOffset={0.5} />
+      <Fish color="#44ffcc" startPos={[-14, 7, -0.5]} radius={1.4} speed={0.36} yOffset={-0.5} />
+      <Fish color="#ffaa44" startPos={[-14, 5.5, 1.5]} radius={1.8} speed={0.52} yOffset={0.8} />
+
+      {/* ── FISH — right tank ── */}
+      <Fish color="#ff8844" startPos={[14, 5, 0]}   radius={2.0} speed={0.44} yOffset={0}   />
+      <Fish color="#88ff44" startPos={[14, 4.5, 1]} radius={1.5} speed={0.54} yOffset={0.8} />
+      <Fish color="#ff44ff" startPos={[14, 6, -1]}  radius={1.3} speed={0.38} yOffset={-0.8} />
+      <Fish color="#44ccff" startPos={[14, 3, 0]}   radius={1.7} speed={0.50} yOffset={1.2} />
+      <Fish color="#ffff44" startPos={[14, 7, 0.5]} radius={1.1} speed={0.34} yOffset={-1.2} />
+      <Fish color="#cc44ff" startPos={[14, 5, -1.5]} radius={1.6} speed={0.46} yOffset={0.4} />
+
+      {/* ── BUBBLES — both tanks ── */}
+      {Array.from({ length: 22 }, (_, i) => (
+        <Bubble key={`L${i}`} startPos={[-13.5 + (i%3)*0.8, 0.3 + (i%4)*0.3, -6.5 + Math.floor(i/3)*2]} speed={0.22 + (i%5)*0.07} />
+      ))}
+      {Array.from({ length: 22 }, (_, i) => (
+        <Bubble key={`R${i}`} startPos={[13.5  - (i%3)*0.8, 0.3 + (i%4)*0.3, -6.5 + Math.floor(i/3)*2]} speed={0.20 + (i%5)*0.08} />
       ))}
 
-      {/* ── WATER VOLUME — fills the glass panels ── */}
-      {/* Left water */}
-      <mesh position={[-13.5, 5, 0]}>
-        <boxGeometry args={[5, 10, 16]} />
-        <meshStandardMaterial
-          color="#021a3a"
-          roughness={0.05}
-          transparent
-          opacity={0.88}
-          emissive="#011020"
-          emissiveIntensity={0.15}
-        />
-      </mesh>
-      {/* Right water */}
-      <mesh position={[13.5, 5, 0]}>
-        <boxGeometry args={[5, 10, 16]} />
-        <meshStandardMaterial
-          color="#021a3a"
-          roughness={0.05}
-          transparent
-          opacity={0.88}
-          emissive="#011020"
-          emissiveIntensity={0.15}
-        />
-      </mesh>
+      {/* ── PROJECT CARDS — 3 per side, angled toward center ── */}
+      <ProjectCard project={PROJECTS[0]} position={[-10.5, 5.5, -5.5]} rotation={[0,  Math.PI/2 - 0.15, 0]} />
+      <ProjectCard project={PROJECTS[1]} position={[-10.5, 5.5,  0]}   rotation={[0,  Math.PI/2,        0]} />
+      <ProjectCard project={PROJECTS[2]} position={[-10.5, 5.5,  5.5]} rotation={[0,  Math.PI/2 + 0.15, 0]} />
+      <ProjectCard project={PROJECTS[3]} position={[ 10.5, 5.5, -5.5]} rotation={[0, -Math.PI/2 + 0.15, 0]} />
+      <ProjectCard project={PROJECTS[4]} position={[ 10.5, 5.5,  0]}   rotation={[0, -Math.PI/2,        0]} />
+      <ProjectCard project={PROJECTS[5]} position={[ 10.5, 5.5,  5.5]} rotation={[0, -Math.PI/2 - 0.15, 0]} />
 
-      {/* ── FISH swimming in left tank ── */}
-      <Fish color="#ff6b35" startPos={[-13.5, 5, 0]} radius={1.8} speed={0.5} yOffset={0} />
-      <Fish color="#ffcc00" startPos={[-13.5, 4, 1]} radius={1.2} speed={0.35} yOffset={1} />
-      <Fish color="#44aaff" startPos={[-13.5, 6, -1]} radius={1.5} speed={0.6} yOffset={-1} />
-      <Fish color="#ff44aa" startPos={[-13.5, 3.5, 0.5]} radius={1.0} speed={0.42} yOffset={0.5} />
-      <Fish color="#44ffcc" startPos={[-13.5, 7, -0.5]} radius={1.3} speed={0.38} yOffset={-0.5} />
-
-      {/* ── FISH swimming in right tank ── */}
-      <Fish color="#ff8844" startPos={[13.5, 5, 0]} radius={1.8} speed={0.45} yOffset={0} />
-      <Fish color="#88ff44" startPos={[13.5, 4.5, 1]} radius={1.4} speed={0.55} yOffset={0.8} />
-      <Fish color="#ff44ff" startPos={[13.5, 6, -1]} radius={1.2} speed={0.4} yOffset={-0.8} />
-      <Fish color="#44ccff" startPos={[13.5, 3, 0]} radius={1.6} speed={0.52} yOffset={1.2} />
-      <Fish color="#ffff44" startPos={[13.5, 7, 0.5]} radius={1.0} speed={0.36} yOffset={-1.2} />
-
-      {/* ── BUBBLES ── */}
-      {Array.from({ length: 18 }, (_, i) => (
-        <Bubble
-          key={i}
-          startPos={[
-            -10.5 + (i % 3) * 1.2,
-            0.2 + (i % 4) * 0.5,
-            -6 + Math.floor(i / 3) * 2.4
-          ]}
-          speed={0.25 + (i % 5) * 0.08}
-        />
-      ))}
-      {Array.from({ length: 18 }, (_, i) => (
-        <Bubble
-          key={`r${i}`}
-          startPos={[
-            10.5 - (i % 3) * 1.2,
-            0.2 + (i % 4) * 0.5,
-            -6 + Math.floor(i / 3) * 2.4
-          ]}
-          speed={0.22 + (i % 5) * 0.09}
-        />
-      ))}
-
-      {/* ── LOUNGE BAR TABLE — center of room ── */}
-      <mesh position={[0, 1.6, 0]} castShadow>
-        <cylinderGeometry args={[2.2, 2.2, 0.2, 24]} />
-        <meshStandardMaterial color="#0a2040" roughness={0.2} metalness={0.5} emissive="#0a2040" emissiveIntensity={0.1} />
+      {/* ── LOUNGE BAR TABLE ── */}
+      <mesh position={[0, 1.8, 0]} castShadow>
+        <cylinderGeometry args={[2.4, 2.4, 0.22, 28]} />
+        <meshStandardMaterial color="#0a1e35" roughness={0.18} metalness={0.55} emissive="#0a1e35" emissiveIntensity={0.12} />
       </mesh>
-      {/* Table top glass */}
-      <mesh position={[0, 1.72, 0]}>
-        <cylinderGeometry args={[2.2, 2.2, 0.05, 24]} />
-        <meshStandardMaterial color="#44aaff" roughness={0.05} metalness={0.2} transparent opacity={0.4} emissive="#44aaff" emissiveIntensity={0.2} />
+      <mesh position={[0, 1.92, 0]}>
+        <cylinderGeometry args={[2.4, 2.4, 0.06, 28]} />
+        <meshStandardMaterial color="#44aaff" roughness={0.04} metalness={0.2} transparent opacity={0.45} emissive="#44aaff" emissiveIntensity={0.25} />
       </mesh>
-      {/* Table pedestal */}
-      <mesh position={[0, 0.8, 0]} castShadow>
-        <cylinderGeometry args={[0.18, 0.28, 1.6, 12]} />
-        <meshStandardMaterial color="#1a3a5a" roughness={0.4} metalness={0.6} />
+      <mesh position={[0, 0.9, 0]} castShadow>
+        <cylinderGeometry args={[0.16, 0.26, 1.8, 12]} />
+        <meshStandardMaterial color="#1a3a5a" roughness={0.35} metalness={0.7} />
       </mesh>
-
-      {/* Bar stools around table */}
-      {Array.from({ length: 5 }, (_, i) => {
-        const angle = (i * Math.PI * 2) / 5
-        const r = 3.0
+      {/* Bar stools */}
+      {Array.from({ length: 6 }, (_, i) => {
+        const angle = (i * Math.PI * 2) / 6
         return (
-          <group key={i} position={[Math.cos(angle)*r, 0, Math.sin(angle)*r]}>
+          <group key={i} position={[Math.cos(angle)*3.2, 0, Math.sin(angle)*3.2]}>
             <mesh position={[0, 1.1, 0]} castShadow>
-              <cylinderGeometry args={[0.32, 0.32, 0.1, 14]} />
-              <meshStandardMaterial color="#0a3050" roughness={0.3} metalness={0.4} />
+              <cylinderGeometry args={[0.3, 0.3, 0.1, 14]} />
+              <meshStandardMaterial color="#0a2a45" roughness={0.25} metalness={0.5} />
             </mesh>
             <mesh position={[0, 0.55, 0]} castShadow>
-              <cylinderGeometry args={[0.045, 0.055, 1.1, 8]} />
-              <meshStandardMaterial color="#1a4a7a" roughness={0.4} metalness={0.7} />
+              <cylinderGeometry args={[0.04, 0.05, 1.1, 8]} />
+              <meshStandardMaterial color="#1a4060" roughness={0.35} metalness={0.75} />
             </mesh>
           </group>
         )
       })}
 
-      {/* ── UNDERWATER AMBIENT LIGHTING ── */}
-      <pointLight position={[0, 8, 0]} color="#0a4a8a" intensity={2.5} distance={25} decay={1.5} />
-      <pointLight position={[-10, 5, 0]} color="#0044aa" intensity={1.8} distance={18} decay={2} />
-      <pointLight position={[10, 5, 0]} color="#0044aa" intensity={1.8} distance={18} decay={2} />
-      <pointLight position={[0, 1, -5]} color="#0066cc" intensity={1.2} distance={15} decay={2} />
-      {/* Caustic shimmer lights */}
-      <pointLight position={[-5, 9.5, -3]} color="#22aaff" intensity={0.8} distance={12} decay={2} />
-      <pointLight position={[5, 9.5, 3]} color="#22aaff" intensity={0.8} distance={12} decay={2} />
+      {/* ── FLOOR CORAL + KELP ── */}
+      {[[-8,0,-5],[-8,0,5],[8,0,-5],[8,0,5],[-8,0,0],[8,0,0],
+        [-4,0,-6],[4,0,-6],[-4,0,6],[4,0,6]].map(([x,y,z],i) => (
+        <group key={i} position={[x, 0, z]}>
+          <mesh castShadow>
+            <cylinderGeometry args={[0.07+i%3*0.03, 0.13+i%3*0.04, 1.0+i%4*0.2, 6]} />
+            <meshStandardMaterial
+              color={i%3===0?'#ff5533':i%3===1?'#ff8800':'#cc3377'}
+              roughness={0.7}
+              emissive={i%3===0?'#ff2200':i%3===1?'#ff5500':'#aa1155'}
+              emissiveIntensity={0.18}
+            />
+          </mesh>
+          {/* Kelp fronds */}
+          {[0,1,2].map(j => (
+            <mesh key={j} position={[Math.cos(j*2.1)*0.22, 0.8+j*0.15, Math.sin(j*2.1)*0.22]} castShadow>
+              <sphereGeometry args={[0.14+j*0.03, 7, 7]} />
+              <meshStandardMaterial color="#1a8a2a" roughness={0.8} emissive="#0a5a10" emissiveIntensity={0.1} />
+            </mesh>
+          ))}
+        </group>
+      ))}
 
-      {/* ── PROJECT CARDS — 3 on each glass wall ── */}
-      {/* Left wall cards */}
-      <ProjectCard project={PROJECTS[0]} position={[-7.4, 5.7, -4.6]} rotation={[0,  1.05, 0]} onSelect={onProjectSelect} />
-      <ProjectCard project={PROJECTS[1]} position={[-8.0, 5.5,  0]}   rotation={[0,  1.18, 0]} onSelect={onProjectSelect} />
-      <ProjectCard project={PROJECTS[2]} position={[-7.2, 5.4,  4.5]} rotation={[0,  1.35, 0]} onSelect={onProjectSelect} />
-
-      {/* Right wall cards */}
-      <ProjectCard project={PROJECTS[3]} position={[7.4, 5.7, -4.6]} rotation={[0, -1.05, 0]} onSelect={onProjectSelect} />
-      <ProjectCard project={PROJECTS[4]} position={[8.0, 5.5,  0]}   rotation={[0, -1.18, 0]} onSelect={onProjectSelect} />
-      <ProjectCard project={PROJECTS[5]} position={[7.2, 5.4,  4.5]} rotation={[0, -1.35, 0]} onSelect={onProjectSelect} />
-
-      {/* ── CEILING SKYLIGHT — glass ring looking up to deck ── */}
-      <mesh position={[0, 9.9, 0]} rotation={[Math.PI/2, 0, 0]}>
-        <ringGeometry args={[1.4, 2.5, 32]} />
-        <meshStandardMaterial color="#888" roughness={0.3} metalness={0.8} />
+      {/* ── CEILING SKYLIGHT — glowing hatch opening ── */}
+      <mesh position={[0, 9.92, 5]} rotation={[Math.PI/2, 0, 0]}>
+        <ringGeometry args={[1.5, 2.8, 32]} />
+        <meshStandardMaterial color="#556" roughness={0.3} metalness={0.85} />
       </mesh>
-      <mesh position={[0, 9.85, 0]} rotation={[Math.PI/2, 0, 0]}>
-        <circleGeometry args={[1.4, 32]} />
-        <meshStandardMaterial color="#44aaff" roughness={0.05} transparent opacity={0.4} emissive="#44aaff" emissiveIntensity={0.3} />
+      <mesh position={[0, 9.88, 5]} rotation={[Math.PI/2, 0, 0]}>
+        <circleGeometry args={[1.5, 32]} />
+        <meshStandardMaterial color="#44aaff" roughness={0.04} transparent opacity={0.5} emissive="#44aaff" emissiveIntensity={0.4} />
       </mesh>
-
-      {/* ── LADDER DOWN FROM HATCH ── */}
-      <group position={[0, 5, 7.2]}>
-        {/* Left rail */}
-        <mesh castShadow>
-          <boxGeometry args={[0.06, 10, 0.06]} />
-          <meshStandardMaterial color="#1a4a7a" roughness={0.5} metalness={0.6} />
-        </mesh>
-        <mesh position={[0.55, 0, 0]} castShadow>
-          <boxGeometry args={[0.06, 10, 0.06]} />
-          <meshStandardMaterial color="#1a4a7a" roughness={0.5} metalness={0.6} />
-        </mesh>
-        {Array.from({ length: 12 }, (_, i) => (
-          <mesh key={i} position={[0.27, -5 + i * 0.9, 0]} castShadow>
-            <boxGeometry args={[0.55, 0.055, 0.055]} />
-            <meshStandardMaterial color="#2a5a8a" roughness={0.5} metalness={0.5} />
+      {/* Hatch ladder */}
+      <group position={[0.25, 5, 6.8]}>
+        <mesh castShadow><boxGeometry args={[0.06, 10, 0.06]} /><meshStandardMaterial color="#1a4060" roughness={0.5} metalness={0.65} /></mesh>
+        <mesh position={[0.5, 0, 0]} castShadow><boxGeometry args={[0.06, 10, 0.06]} /><meshStandardMaterial color="#1a4060" roughness={0.5} metalness={0.65} /></mesh>
+        {Array.from({ length: 13 }, (_, i) => (
+          <mesh key={i} position={[0.25, -5 + i * 0.82, 0]} castShadow>
+            <boxGeometry args={[0.5, 0.05, 0.05]} />
+            <meshStandardMaterial color="#2a5a80" roughness={0.5} metalness={0.6} />
           </mesh>
         ))}
       </group>
 
-      {/* ── FLOOR CORAL/KELP decoration ── */}
-      {[[-8,0,-5],[-8,0,5],[8,0,-5],[8,0,5],[-8,0,0],[8,0,0]].map(([x,y,z],i) => (
-        <mesh key={i} position={[x, 0.6, z]} castShadow>
-          <cylinderGeometry args={[0.08, 0.14, 1.2+i*0.1, 6]} />
-          <meshStandardMaterial
-            color={i%2===0?'#ff6644':'#44ff88'}
-            roughness={0.7}
-            emissive={i%2===0?'#ff3300':'#00ff44'}
-            emissiveIntensity={0.12}
-          />
-        </mesh>
-      ))}
+      {/* ── UNDERWATER LIGHTS ── */}
+      <pointLight position={[0, 8.5, 0]}    color="#1a6aaa" intensity={14} distance={55} decay={0.7} />
+      <pointLight position={[-9, 5, -5]}    color="#0055cc" intensity={9}  distance={28} decay={0.9} />
+      <pointLight position={[9,  5, -5]}    color="#0055cc" intensity={9}  distance={28} decay={0.9} />
+      <pointLight position={[-9, 5,  5]}    color="#0066dd" intensity={9}  distance={28} decay={0.9} />
+      <pointLight position={[9,  5,  5]}    color="#0066dd" intensity={9}  distance={28} decay={0.9} />
+      <pointLight position={[0,  2,  0]}    color="#2277cc" intensity={7}  distance={30} decay={0.8} />
+      <pointLight position={[0,  6,  6]}    color="#3399ff" intensity={6}  distance={22} decay={1.0} />
+      <pointLight position={[0,  6, -6]}    color="#3399ff" intensity={6}  distance={22} decay={1.0} />
+      {/* Per-card accent lights */}
+      <pointLight position={[-9, 5.5, -5.5]} color="#ff4444" intensity={4} distance={9} decay={1.5} />
+      <pointLight position={[-9, 5.5,  0]}   color="#44ff88" intensity={4} distance={9} decay={1.5} />
+      <pointLight position={[-9, 5.5,  5.5]} color="#4488ff" intensity={4} distance={9} decay={1.5} />
+      <pointLight position={[9,  5.5, -5.5]} color="#ff8844" intensity={4} distance={9} decay={1.5} />
+      <pointLight position={[9,  5.5,  0]}   color="#cc44ff" intensity={4} distance={9} decay={1.5} />
+      <pointLight position={[9,  5.5,  5.5]} color="#44ddff" intensity={4} distance={9} decay={1.5} />
+      {/* Tank wall glow */}
+      <pointLight position={[-12, 5, 0]} color="#0066ff" intensity={5} distance={14} decay={1.2} />
+      <pointLight position={[12,  5, 0]} color="#0066ff" intensity={5} distance={14} decay={1.2} />
     </group>
   )
 }

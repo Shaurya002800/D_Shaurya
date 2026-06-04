@@ -153,7 +153,7 @@ export default function WorkSection({
           letterSpacing: '2px',
           color: 'rgba(100,200,255,0.85)',
         }}>
-          CLICK PROJECT CARDS · PRESS ESC TO SURFACE
+          DRAG TO EXPLORE · CLICK CARDS · ESC TO SURFACE
         </div>
       </div>
 

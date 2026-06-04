@@ -47,31 +47,38 @@ export function SkillsCameraTransition({ active }) {
 }
 
 // ─── WORK/BASEMENT CAMERA CONTROLLER ─────────────────────────────────────────
+// FIND and REPLACE entire WorkCameraTransition:
 const CAM_WORK = {
-  position: new THREE.Vector3(0, -10.2, 7.4),
-  target: new THREE.Vector3(0, -8.8, -0.8),
-  fov: 78,
+  position: new THREE.Vector3(0, -10.5, 8),
+  target:   new THREE.Vector3(0, -11.5, -5),
+  fov: 82,
 }
 
 export function WorkCameraTransition({ active }) {
-  const isAnimating = useRef(false)
+  const isAnimating  = useRef(false)
+  const hasEntered   = useRef(false)
   const currentTarget = useRef(new THREE.Vector3(0, 1.5, 0))
-  const hasEntered = useRef(false)
+  const settled      = useRef(false)
 
   useFrame((state, delta) => {
-    const speed = 2.2 * delta
+    const speed = 2.8 * delta
 
     if (active) {
       isAnimating.current = true
-      hasEntered.current = true
+      hasEntered.current  = true
+      settled.current     = false
       state.camera.position.lerp(CAM_WORK.position, speed)
       currentTarget.current.lerp(CAM_WORK.target, speed)
       state.camera.lookAt(currentTarget.current)
       state.camera.fov = THREE.MathUtils.lerp(state.camera.fov, CAM_WORK.fov, speed)
       state.camera.updateProjectionMatrix()
       state.scene.fog = null
+      // Mark settled once we're close enough
+      if (state.camera.position.distanceTo(CAM_WORK.position) < 0.3) {
+        settled.current = true
+      }
     } else if (hasEntered.current) {
-      isAnimating.current = true
+      settled.current = false
       state.camera.position.lerp(CAM_EXPLORE.position, speed)
       currentTarget.current.lerp(CAM_EXPLORE.target, speed)
       state.camera.lookAt(currentTarget.current)
@@ -80,9 +87,78 @@ export function WorkCameraTransition({ active }) {
       state.scene.fog = new THREE.Fog('#e4f0f6', 60, 260)
       if (state.camera.position.distanceTo(CAM_EXPLORE.position) < 0.1) {
         isAnimating.current = false
-        hasEntered.current = false
+        hasEntered.current  = false
       }
     }
+  })
+  return null
+}
+
+// ─── WORK BASEMENT FREE-LOOK (mouse drag) ────────────────────────────────────
+function WorkOrbitControl({ active }) {
+  const isDragging = useRef(false)
+  const lastMouse  = useRef({ x: 0, y: 0 })
+  const yaw        = useRef(0)
+  const pitch      = useRef(-0.12)
+
+  // Reset on toggle
+  useEffect(() => {
+    if (!active) { yaw.current = 0; pitch.current = -0.12 }
+  }, [active])
+
+  useEffect(() => {
+    if (!active) return
+    const onDown = (e) => {
+      isDragging.current = true
+      lastMouse.current  = { x: e.clientX, y: e.clientY }
+    }
+    const onUp   = () => { isDragging.current = false }
+    const onMove = (e) => {
+      if (!isDragging.current) return
+      const dx = (e.clientX - lastMouse.current.x) * 0.0035
+      const dy = (e.clientY - lastMouse.current.y) * 0.0025
+      yaw.current    -= dx
+      pitch.current   = Math.max(-0.55, Math.min(0.35, pitch.current - dy))
+      lastMouse.current = { x: e.clientX, y: e.clientY }
+    }
+    // Touch support
+    const onTouchStart = (e) => {
+      isDragging.current = true
+      lastMouse.current  = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+    }
+    const onTouchMove = (e) => {
+      if (!isDragging.current) return
+      const dx = (e.touches[0].clientX - lastMouse.current.x) * 0.004
+      const dy = (e.touches[0].clientY - lastMouse.current.y) * 0.003
+      yaw.current    -= dx
+      pitch.current   = Math.max(-0.55, Math.min(0.35, pitch.current - dy))
+      lastMouse.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+    }
+    window.addEventListener('mousedown',  onDown)
+    window.addEventListener('mouseup',    onUp)
+    window.addEventListener('mousemove',  onMove)
+    window.addEventListener('touchstart', onTouchStart)
+    window.addEventListener('touchend',   onUp)
+    window.addEventListener('touchmove',  onTouchMove)
+    return () => {
+      window.removeEventListener('mousedown',  onDown)
+      window.removeEventListener('mouseup',    onUp)
+      window.removeEventListener('mousemove',  onMove)
+      window.removeEventListener('touchstart', onTouchStart)
+      window.removeEventListener('touchend',   onUp)
+      window.removeEventListener('touchmove',  onTouchMove)
+    }
+  }, [active])
+
+  useFrame((state) => {
+    if (!active) return
+    const BASE = CAM_WORK.position
+    const r    = 13
+    const tx   = BASE.x + Math.sin(yaw.current) * r
+    const ty   = BASE.y + Math.sin(pitch.current) * r - 1
+    const tz   = BASE.z + (-Math.cos(yaw.current)) * r
+    state.camera.position.copy(BASE)
+    state.camera.lookAt(tx, ty, tz)
   })
 
   return null
@@ -251,6 +327,7 @@ export default function WorldScene({
         <AboutCameraController active={aboutActive} />
         <SkillsCameraTransition active={skillsActive} />
         <WorkCameraTransition active={workActive} />
+<WorkOrbitControl active={workActive} />
         <Ocean />
 
         <Suspense fallback={null}>
