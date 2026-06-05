@@ -10,12 +10,16 @@ import { useKeyboard }         from '../hooks/useKeyboard'
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** How far Luffy can walk in each direction from ship centre */
-const BOUNDS = {
-  minX: -7.0,
-  maxX:  7.0,
-  minZ: -22.0,
-  maxZ:  28.0, // ✨ INCREASED from 22.0 to 28.0
+const BOUNDS_DECK = {
+  minX: -7.0, maxX: 7.0,
+  minZ: -22.0, maxZ: 28.0,
 }
+const BOUNDS_BASEMENT = {
+  minX: -9.0, maxX: 9.0,
+  minZ: -7.5, maxZ: 7.5,
+}
+// keep BOUNDS pointing to deck for backward compat
+const BOUNDS = BOUNDS_DECK
 
 /** Movement feel */
 const MOVE = {
@@ -597,6 +601,27 @@ class PositionController {
       p.y = 0.15 
     }
   }
+
+  // Basement mode — override everything
+  updateBasement(group, vel, dt) {
+    const p = group.position
+    let nextX = clamp(p.x + vel.x * dt, BOUNDS_BASEMENT.minX, BOUNDS_BASEMENT.maxX)
+    let nextZ = clamp(p.z + vel.z * dt, BOUNDS_BASEMENT.minZ, BOUNDS_BASEMENT.maxZ)
+    // Block aquarium tank zones (walls)
+    const TANK_BLOCKS = [
+      { minX: -13.5, maxX: -9.5, minZ: -8.5, maxZ: 8.5 }, // left wall tanks
+      { minX:  9.5,  maxX: 13.5, minZ: -8.5, maxZ: 8.5 }, // right wall tanks
+    ]
+    for (const obs of TANK_BLOCKS) {
+      if (nextX > obs.minX && nextX < obs.maxX && nextZ > obs.minZ && nextZ < obs.maxZ) {
+        if (p.x <= obs.minX || p.x >= obs.maxX) nextX = p.x
+        if (p.z <= obs.minZ || p.z >= obs.maxZ) nextZ = p.z
+      }
+    }
+    p.x = nextX
+    p.z = nextZ
+    p.y = -13.85 // basement floor Y
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -805,13 +830,26 @@ function Luffy3D({
     }
   }, [glbScene])
 
+  useEffect(() => {
+  if (!groupRef.current) return
+  if (workActive) {
+    // Teleport Luffy to basement start position
+    groupRef.current.position.set(0, -13.85, 5)
+    velCtrl.current.vel.set(0, 0, 0)
+  } else if (!workActive && groupRef.current.position.y < -5) {
+    // Teleport back to deck hatch position
+    groupRef.current.position.set(0, 0.15, 5)
+    velCtrl.current.vel.set(0, 0, 0)
+  }
+}, [workActive])
+
   useFrame((_, dt) => {
     if (!loadedRef.current || !groupRef.current || !mixerRef.current) return
 
     const safeDt = Math.min(dt, 0.05)
     mixerRef.current.update(safeDt)
 
-    if (aboutActive || skillsActive || workActive) {
+     if (aboutActive || skillsActive) {
       animSM.current.updateLocomotion({ moving: false, running: false })
       if (stateRef.current !== animSM.current.current) {
         stateRef.current = animSM.current.current
@@ -832,11 +870,11 @@ function Luffy3D({
       safeDt,
     )
 
-    posCtrl.current.update(
-      groupRef.current,
-      velCtrl.current.vel,
-      safeDt,
-    )
+    if (workActive) {
+      posCtrl.current.updateBasement(groupRef.current, velCtrl.current.vel, safeDt)
+    } else {
+      posCtrl.current.update(groupRef.current, velCtrl.current.vel, safeDt)
+    }
 
     if (moving) {
       const targetAngle = rotCtrl.current.update(

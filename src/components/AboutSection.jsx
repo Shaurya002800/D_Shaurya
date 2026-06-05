@@ -7,6 +7,8 @@ import { useRef, useEffect, useState, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import gsap from 'gsap'
+let _sailTexCache = null
+let _blankTexCache = null
 
 const ABOUT = {
   title:    "I'M SHAURYA.",

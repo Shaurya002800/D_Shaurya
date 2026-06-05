@@ -49,9 +49,9 @@ export function SkillsCameraTransition({ active }) {
 // ─── WORK/BASEMENT CAMERA CONTROLLER ─────────────────────────────────────────
 // FIND and REPLACE entire WorkCameraTransition:
 const CAM_WORK = {
-  position: new THREE.Vector3(0, -10.5, 8),
-  target:   new THREE.Vector3(0, -11.5, -5),
-  fov: 82,
+  position: new THREE.Vector3(0, -9.5, 9),
+  target:   new THREE.Vector3(0, -11, -2),
+  fov: 75,
 }
 
 export function WorkCameraTransition({ active }) {
@@ -266,8 +266,9 @@ function Ocean() {
   })
   
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -16, 0]} receiveShadow={false}>
-      <planeGeometry args={[1400, 1400, 160, 160]} />
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -3.5, 0]} receiveShadow={false}>
+
+      <planeGeometry args={[1400, 1400, 80, 80]} />
       <shaderMaterial ref={matRef} args={[shader]} />
     </mesh>
   )
@@ -278,13 +279,18 @@ function Lighting() {
     <>
       <ambientLight intensity={0.42} color="#fff0dc" />
       <directionalLight
-        position={[70, 95, 40]}
-        intensity={1.8}
-        color="#fff3db"
-        castShadow
-        shadow-mapSize={[2048, 2048]}
-        shadow-camera-far={500}
-      />
+  position={[70, 95, 40]}
+  intensity={1.8}
+  color="#fff3db"
+  castShadow
+  shadow-mapSize={[1024, 1024]}
+  shadow-camera-far={200}
+  shadow-camera-near={1}
+  shadow-camera-left={-60}
+  shadow-camera-right={60}
+  shadow-camera-top={60}
+  shadow-camera-bottom={-60}
+/>
       <hemisphereLight skyColor="#b9ddf0" groundColor="#1e5266" intensity={0.72} />
     </>
   )
@@ -313,8 +319,10 @@ export default function WorldScene({
       background: 'linear-gradient(180deg, #cfe6f5 0%, #9fc6df 46%, #6f9dbd 100%)',
     }}>
       <Canvas
-        shadows
-        camera={{ position: [0, 8.5, 16], fov: 68, near: 0.1, far: 2000 }}
+          shadows="soft"
+  camera={{ position: [0, 8.5, 16], fov: 68, near: 0.1, far: 2000 }}
+  performance={{ min: 0.5 }}
+  dpr={[1, 1.5]}
         onCreated={({ camera }) => camera.lookAt(0, 1.5, 0)}
         gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.84 }}
         style={{ position: 'absolute', inset: 0, zIndex: 1 }}
@@ -326,8 +334,7 @@ export default function WorldScene({
 
         <AboutCameraController active={aboutActive} />
         <SkillsCameraTransition active={skillsActive} />
-        <WorkCameraTransition active={workActive} />
-<WorkOrbitControl active={workActive} />
+
         <Ocean />
 
         <Suspense fallback={null}>
@@ -349,10 +356,10 @@ export default function WorldScene({
           </Physics>
         </Suspense>
 
-        <EffectComposer disableNormalPass>
-          <Bloom luminanceThreshold={1.1} mipmapBlur intensity={0.3} />
-          <Vignette eskil={false} offset={0.12} darkness={0.75} />
-        </EffectComposer>
+        <EffectComposer disableNormalPass multisampling={0}>
+  <Bloom luminanceThreshold={1.1} mipmapBlur intensity={0.3} levels={4} />
+  <Vignette eskil={false} offset={0.12} darkness={0.75} />
+</EffectComposer>
       </Canvas>
 
       <AnimatePresence>
