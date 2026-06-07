@@ -1166,95 +1166,102 @@ const PROJECTS = [
 // ─────────────────────────────────────────────────────────────────────
 // AQUARIUM TANK — one of 6 project tanks built into the wall
 // ─────────────────────────────────────────────────────────────────────
-function ProjectTank({ project, position, onSelect }) {
+function ProjectTank({ project, position, facingRight = true, onSelect }) {
   const cardRef = useRef()
   const phase   = useMemo(() => Math.random() * Math.PI * 2, [])
   const tex     = useMemo(() => createProjectCardTexture(project), [project])
-  const isLeft  = position[0] < 0
 
   useFrame(({ clock }) => {
     if (!cardRef.current) return
-    cardRef.current.position.y = 3.2 + Math.sin(clock.getElapsedTime() * 0.5 + phase) * 0.12
+    cardRef.current.position.y = 3.0 + Math.sin(clock.getElapsedTime() * 0.5 + phase) * 0.12
   })
 
-  // Face toward center of room
-  const faceAngle = isLeft ? -Math.PI / 2 : Math.PI / 2
+  // dir: +1 = tank faces right (left wall), -1 = tank faces left (right wall)
+  const dir = facingRight ? 1 : -1
 
   return (
-    <group position={position} rotation={[0, faceAngle, 0]}>
-      {/* Tank back wall */}
-      <mesh position={[0, 3, -2.2]}>
-        <boxGeometry args={[5.5, 6, 0.15]} />
+    <group position={position}>
+      {/* Back panel — flush against the wall */}
+      <mesh position={[-dir * 2.0, 3, 0]}>
+        <boxGeometry args={[0.2, 6, 5]} />
         <meshStandardMaterial color="#010d18" roughness={0.95} />
       </mesh>
-      {/* Tank side walls */}
-      <mesh position={[-2.75, 3, 0]}>
-        <boxGeometry args={[0.08, 6, 4.4]} />
-        <meshStandardMaterial color="#44aaff" roughness={0.05} transparent opacity={0.25} emissive="#0044aa" emissiveIntensity={0.12} />
+      {/* Top */}
+      <mesh position={[0, 6.06, 0]}>
+        <boxGeometry args={[4.1, 0.12, 5.1]} />
+        <meshStandardMaterial color="#1a3a5a" roughness={0.4} metalness={0.7} />
       </mesh>
-      <mesh position={[2.75, 3, 0]}>
-        <boxGeometry args={[0.08, 6, 4.4]} />
-        <meshStandardMaterial color="#44aaff" roughness={0.05} transparent opacity={0.25} emissive="#0044aa" emissiveIntensity={0.12} />
+      {/* Bottom rim */}
+      <mesh position={[0, 0.06, 0]}>
+        <boxGeometry args={[4.1, 0.12, 5.1]} />
+        <meshStandardMaterial color="#1a3a5a" roughness={0.4} metalness={0.7} />
       </mesh>
-      {/* Front glass — CLICKABLE */}
+      {/* Side glass — Z axis */}
+      <mesh position={[0, 3, -2.5]}>
+        <boxGeometry args={[4, 6, 0.07]} />
+        <meshStandardMaterial color="#44aaff" roughness={0.04} transparent opacity={0.22} emissive="#0044bb" emissiveIntensity={0.1} />
+      </mesh>
+      <mesh position={[0, 3, 2.5]}>
+        <boxGeometry args={[4, 6, 0.07]} />
+        <meshStandardMaterial color="#44aaff" roughness={0.04} transparent opacity={0.22} emissive="#0044bb" emissiveIntensity={0.1} />
+      </mesh>
+      {/* Front glass — faces INTO room — CLICKABLE */}
       <mesh
-        position={[0, 3, 2.2]}
+        position={[dir * 2.0, 3, 0]}
         onClick={(e) => { e.stopPropagation(); onSelect && onSelect(project) }}
         onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer' }}
         onPointerOut={() => { document.body.style.cursor = 'default' }}
       >
-        <boxGeometry args={[5.5, 6, 0.08]} />
-        <meshStandardMaterial color="#44aaff" roughness={0.02} transparent opacity={0.18} emissive="#0055cc" emissiveIntensity={0.08} />
+        <boxGeometry args={[0.07, 6, 5]} />
+        <meshStandardMaterial color="#44aaff" roughness={0.02} transparent opacity={0.18} emissive="#0055cc" emissiveIntensity={0.1} />
       </mesh>
-      {/* Tank floor */}
-      <mesh rotation={[-Math.PI/2, 0, 0]} position={[0, 0, 0]}>
-        <planeGeometry args={[5.5, 4.4]} />
-        <meshStandardMaterial color="#010c18" roughness={0.95} />
-      </mesh>
-      {/* Tank top rim */}
-      <mesh position={[0, 6.05, 0]}>
-        <boxGeometry args={[5.6, 0.12, 4.5]} />
-        <meshStandardMaterial color="#1a3a5a" roughness={0.4} metalness={0.7} />
-      </mesh>
-      {/* Metal frame corners */}
-      {[[-2.75,3,2.2],[-2.75,3,-2.2],[2.75,3,2.2],[2.75,3,-2.2]].map(([x,y,z],i) => (
+      {/* Corner frame posts */}
+      {[[dir*2, 3, -2.5],[dir*2, 3, 2.5],[-dir*2, 3, -2.5],[-dir*2, 3, 2.5]].map(([x,y,z],i) => (
         <mesh key={i} position={[x,y,z]}>
-          <boxGeometry args={[0.12, 6.1, 0.12]} />
+          <boxGeometry args={[0.1, 6.1, 0.1]} />
           <meshStandardMaterial color="#1a3a5a" roughness={0.3} metalness={0.8} />
         </mesh>
       ))}
 
       {/* Water volume */}
       <mesh position={[0, 3, 0]}>
-        <boxGeometry args={[5.4, 5.9, 4.3]} />
-        <meshStandardMaterial color="#021428" roughness={0.05} transparent opacity={0.5} emissive="#010c1e" emissiveIntensity={0.08} />
+        <boxGeometry args={[3.9, 5.9, 4.9]} />
+        <meshStandardMaterial color="#021428" roughness={0.05} transparent opacity={0.48} emissive="#010c1e" emissiveIntensity={0.08} />
       </mesh>
 
-      {/* 2 fish per tank — performance */}
-      <Fish color={project.color} startPos={[0, 3, 0]} radius={1.4} speed={0.42} yOffset={0} />
-      <Fish color="#ffffff"       startPos={[0, 2.5, 0]} radius={0.9} speed={0.58} yOffset={0.4} />
+      {/* 2 fish */}
+      <Fish color={project.color} startPos={[0, 3, 0]} radius={1.2} speed={0.4}  yOffset={0}   />
+      <Fish color="#ffffff"       startPos={[0, 2.5, 0]} radius={0.8} speed={0.55} yOffset={0.4} />
 
-      {/* 3 bubbles per tank */}
-      <Bubble startPos={[-1, 0.2, -0.8]} speed={0.26} />
-      <Bubble startPos={[0.8, 0.2, 0.5]} speed={0.32} />
-      <Bubble startPos={[0.2, 0.2, -0.3]} speed={0.28} />
+      {/* 3 bubbles */}
+      <Bubble startPos={[-0.8, 0.3, -0.6]} speed={0.25} />
+      <Bubble startPos={[0.6,  0.3,  0.7]} speed={0.30} />
+      <Bubble startPos={[0.1,  0.3, -0.2]} speed={0.27} />
 
-      {/* Floating project card */}
-      <group ref={cardRef} position={[0, 3.2, 0]}>
+      {/* Floating project card — faces into room */}
+      <group ref={cardRef} position={[0, 3, 0]} rotation={[0, facingRight ? 0 : Math.PI, 0]}>
         <mesh>
-          <planeGeometry args={[4.4, 2.8]} />
-          <meshStandardMaterial map={tex} roughness={0.15} transparent opacity={0.96} side={THREE.FrontSide} />
+          <planeGeometry args={[3.6, 2.4]} />
+          <meshStandardMaterial map={tex} roughness={0.1} transparent opacity={0.97} side={THREE.FrontSide} />
         </mesh>
+        <pointLight color={project.color} intensity={2} distance={4} decay={1.8} />
       </group>
 
-      {/* Tank glow light */}
-      <pointLight position={[0, 5, 0]} color={project.color} intensity={1.5} distance={5} decay={2} />
-
-      {/* Project name label below tank */}
-      <mesh position={[0, -0.25, 1.8]}>
-        <planeGeometry args={[4, 0.5]} />
-        <meshStandardMaterial color="#001428" roughness={0.9} transparent opacity={0.8} />
+      {/* Tank floor sand */}
+      <mesh rotation={[-Math.PI/2, 0, 0]} position={[0, 0.1, 0]}>
+        <planeGeometry args={[3.9, 4.9]} />
+        <meshStandardMaterial color="#0a1520" roughness={0.95} />
       </mesh>
+      {/* Small coral */}
+      {[[-0.8,0.3,-1],[0.6,0.3,0.8],[-0.3,0.3,1.2]].map(([x,y,z],i) => (
+        <mesh key={i} position={[x,y,z]}>
+          <cylinderGeometry args={[0.05,0.08,0.4+i*0.1,6]} />
+          <meshStandardMaterial color={i%2===0?'#ff5533':'#ff8800'} roughness={0.7} emissive={i%2===0?'#ff2200':'#ff5500'} emissiveIntensity={0.15} />
+        </mesh>
+      ))}
+
+      {/* Top tank light */}
+      <pointLight position={[0, 5.5, 0]} color={project.color} intensity={2} distance={6} decay={1.5} />
     </group>
   )
 }
@@ -1266,96 +1273,106 @@ function AquariumBasement({ position = [0, -14, 2], onProjectSelect }) {
   return (
     <group position={position}>
 
-      {/* ── FLOOR — wood planks ── */}
-      <mesh rotation={[-Math.PI/2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-        <planeGeometry args={[28, 20]} />
+      {/* ── FLOOR ── */}
+      <mesh rotation={[-Math.PI/2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
+        <planeGeometry args={[22, 18]} />
         <meshStandardMaterial color="#3d2008" roughness={0.9} />
       </mesh>
       {/* Green grass center walkway */}
-      <mesh rotation={[-Math.PI/2, 0, 0]} position={[0, 0.01, 0]}>
-        <planeGeometry args={[9, 15]} />
+      <mesh rotation={[-Math.PI/2, 0, 0]} position={[0, 0.02, 0]}>
+        <planeGeometry args={[8, 14]} />
         <meshStandardMaterial color="#2d5a1b" roughness={0.95} />
       </mesh>
 
       {/* ── CEILING ── */}
       <mesh rotation={[Math.PI/2, 0, 0]} position={[0, 10, 0]}>
-        <planeGeometry args={[28, 20]} />
+        <planeGeometry args={[22, 18]} />
         <meshStandardMaterial color="#1a0a02" roughness={0.95} />
       </mesh>
       {/* Ceiling beams */}
-      {[-8, 0, 8].map((x, i) => (
-        <mesh key={i} position={[x, 9.6, 0]} castShadow>
-          <boxGeometry args={[0.5, 0.5, 20]} />
+      {[-7, 0, 7].map((x, i) => (
+        <mesh key={i} position={[x, 9.6, 0]}>
+          <boxGeometry args={[0.5, 0.5, 18]} />
           <meshStandardMaterial color="#2a1005" roughness={0.9} />
         </mesh>
       ))}
 
-      {/* ── WALLS ── */}
-      <mesh position={[0, 5, -9.5]}>
-        <boxGeometry args={[28, 10, 0.4]} />
+      {/* ── 4 SOLID WALLS — fully closed room ── */}
+      {/* Back wall */}
+      <mesh position={[0, 5, -9]}>
+        <boxGeometry args={[22, 10, 0.4]} />
         <meshStandardMaterial color="#2a1505" roughness={0.88} />
       </mesh>
-      <mesh position={[0, 9.5, 9.5]}>
-        <boxGeometry args={[28, 1.0, 0.4]} />
+      {/* Front wall */}
+      <mesh position={[0, 5, 9]}>
+        <boxGeometry args={[22, 10, 0.4]} />
         <meshStandardMaterial color="#2a1505" roughness={0.88} />
       </mesh>
-      {/* Left/right wall sections beside tanks */}
-      <mesh position={[-13.8, 5, 0]}>
-        <boxGeometry args={[0.4, 10, 20]} />
+      {/* Left wall — tanks are built INTO this */}
+      <mesh position={[-11, 5, 0]}>
+        <boxGeometry args={[0.4, 10, 18]} />
         <meshStandardMaterial color="#2a1505" roughness={0.88} />
       </mesh>
-      <mesh position={[13.8, 5, 0]}>
-        <boxGeometry args={[0.4, 10, 20]} />
+      {/* Right wall */}
+      <mesh position={[11, 5, 0]}>
+        <boxGeometry args={[0.4, 10, 18]} />
         <meshStandardMaterial color="#2a1505" roughness={0.88} />
       </mesh>
 
       {/* ── FURNITURE ── */}
       {/* Center table */}
       <mesh position={[0, 1.5, 0]} castShadow>
-        <boxGeometry args={[3.5, 0.18, 2]} />
+        <boxGeometry args={[3, 0.18, 1.8]} />
         <meshStandardMaterial color="#5C3A21" roughness={0.8} />
       </mesh>
-      {[[-1.2,-1,-0.6],[1.2,-1,-0.6],[-1.2,-1,0.6],[1.2,-1,0.6]].map(([x,y,z],i) => (
-        <mesh key={i} position={[x, y+1.5, z]} castShadow>
-          <cylinderGeometry args={[0.07,0.07,2,7]} />
+      {[[-1,-1.4,-0.6],[1,-1.4,-0.6],[-1,-1.4,0.6],[1,-1.4,0.6]].map(([x,y,z],i) => (
+        <mesh key={i} position={[x, y+1.5, z]}>
+          <cylinderGeometry args={[0.07,0.07,1.8,7]} />
           <meshStandardMaterial color="#3d2410" roughness={0.85} />
         </mesh>
       ))}
-
       {/* Barrels */}
-      <Barrel position={[-11.5, 0.5, 8]} />
-      <Barrel position={[11.5, 0.5, 8]} />
+      <Barrel position={[-9.5, 0.45, 7.5]} />
+      <Barrel position={[9.5,  0.45, 7.5]} />
+      <Barrel position={[-9.5, 0.45,-7.5]} scale={0.85} />
+      <Barrel position={[9.5,  0.45,-7.5]} scale={0.85} />
 
-      {/* Lanterns — just 3 */}
-      <Lantern position={[0, 8.5, 0]} />
-      <Lantern position={[-5, 8.5, -4]} />
-      <Lantern position={[5, 8.5, -4]} />
+      {/* Lanterns */}
+      <Lantern position={[0, 8.8, 0]} />
+      <Lantern position={[-5, 8.8, -5]} />
+      <Lantern position={[5, 8.8, -5]} />
+      <Lantern position={[-5, 8.8, 5]} />
+      <Lantern position={[5, 8.8, 5]} />
 
-      {/* Skylight hatch */}
-      <mesh position={[0, 9.88, 5.5]} rotation={[Math.PI/2, 0, 0]}>
+      {/* Skylight */}
+      <mesh position={[0, 9.88, 5]} rotation={[Math.PI/2, 0, 0]}>
         <ringGeometry args={[1.4, 2.5, 20]} />
         <meshStandardMaterial color="#555" roughness={0.3} metalness={0.8} />
       </mesh>
-      <mesh position={[0, 9.85, 5.5]} rotation={[Math.PI/2, 0, 0]}>
+      <mesh position={[0, 9.85, 5]} rotation={[Math.PI/2, 0, 0]}>
         <circleGeometry args={[1.4, 20]} />
-        <meshStandardMaterial color="#44aaff" roughness={0.05} transparent opacity={0.5} emissive="#44aaff" emissiveIntensity={0.4} />
+        <meshStandardMaterial color="#44aaff" roughness={0.05} transparent opacity={0.5} emissive="#44aaff" emissiveIntensity={0.5} />
       </mesh>
 
-      {/* ── 6 PROJECT TANKS — 3 left, 3 right ── */}
-      <ProjectTank project={PROJECTS[0]} position={[-11.2, 0, -5.5]} onSelect={onProjectSelect} />
-      <ProjectTank project={PROJECTS[1]} position={[-11.2, 0,  0]}   onSelect={onProjectSelect} />
-      <ProjectTank project={PROJECTS[2]} position={[-11.2, 0,  5.5]} onSelect={onProjectSelect} />
-      <ProjectTank project={PROJECTS[3]} position={[ 11.2, 0, -5.5]} onSelect={onProjectSelect} />
-      <ProjectTank project={PROJECTS[4]} position={[ 11.2, 0,  0]}   onSelect={onProjectSelect} />
-      <ProjectTank project={PROJECTS[5]} position={[ 11.2, 0,  5.5]} onSelect={onProjectSelect} />
+      {/* ── 6 PROJECT TANKS on left/right walls ── */}
+      {/* LEFT wall tanks — flush against X=-11 wall, facing RIGHT into room */}
+      <ProjectTank project={PROJECTS[0]} position={[-10.8, 0, -5.5]} facingRight={true} onSelect={onProjectSelect} />
+      <ProjectTank project={PROJECTS[1]} position={[-10.8, 0,  0]}   facingRight={true} onSelect={onProjectSelect} />
+      <ProjectTank project={PROJECTS[2]} position={[-10.8, 0,  5.5]} facingRight={true} onSelect={onProjectSelect} />
+      {/* RIGHT wall tanks — flush against X=+11 wall, facing LEFT into room */}
+      <ProjectTank project={PROJECTS[3]} position={[10.8,  0, -5.5]} facingRight={false} onSelect={onProjectSelect} />
+      <ProjectTank project={PROJECTS[4]} position={[10.8,  0,  0]}   facingRight={false} onSelect={onProjectSelect} />
+      <ProjectTank project={PROJECTS[5]} position={[10.8,  0,  5.5]} facingRight={false} onSelect={onProjectSelect} />
 
-      {/* ── LIGHTS — warm room + cool tank accents (6 total) ── */}
-      <pointLight position={[0, 8, 0]}   color="#ffcc88" intensity={8}  distance={30} decay={0.8} />
-      <pointLight position={[-7, 7, -4]} color="#ffaa66" intensity={4}  distance={20} decay={1.0} />
-      <pointLight position={[7,  7, -4]} color="#ffaa66" intensity={4}  distance={20} decay={1.0} />
-      <pointLight position={[-11, 4, 0]} color="#0066ff" intensity={6}  distance={18} decay={1.0} />
-      <pointLight position={[11,  4, 0]} color="#0066ff" intensity={6}  distance={18} decay={1.0} />
-      <pointLight position={[0,   3, 0]} color="#ffddaa" intensity={3}  distance={15} decay={1.2} />
+      {/* ── LIGHTS ── */}
+      <pointLight position={[0, 8.5, 0]}   color="#ffcc88" intensity={10} distance={25} decay={0.8} />
+      <pointLight position={[-6, 8, -4]}   color="#ffaa66" intensity={5}  distance={18} decay={1.0} />
+      <pointLight position={[6,  8, -4]}   color="#ffaa66" intensity={5}  distance={18} decay={1.0} />
+      <pointLight position={[-6, 8,  4]}   color="#ffaa66" intensity={5}  distance={18} decay={1.0} />
+      <pointLight position={[6,  8,  4]}   color="#ffaa66" intensity={5}  distance={18} decay={1.0} />
+      {/* Tank wall blue glow */}
+      <pointLight position={[-9, 4, 0]}    color="#0055ff" intensity={8}  distance={14} decay={1.0} />
+      <pointLight position={[9,  4, 0]}    color="#0055ff" intensity={8}  distance={14} decay={1.0} />
     </group>
   )
 }

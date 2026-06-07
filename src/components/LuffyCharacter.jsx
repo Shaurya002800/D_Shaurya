@@ -15,9 +15,10 @@ const BOUNDS_DECK = {
   minZ: -22.0, maxZ: 28.0,
 }
 const BOUNDS_BASEMENT = {
-  minX: -9.0, maxX: 9.0,
-  minZ: -7.5, maxZ: 7.5,
+  minX: -8.5, maxX: 8.5,
+  minZ: -8.0, maxZ: 8.0,
 }
+
 // keep BOUNDS pointing to deck for backward compat
 const BOUNDS = BOUNDS_DECK
 
@@ -305,7 +306,10 @@ class CameraController {
 
   update(camera, luffyPos, luffyRot, isRunning, dt) {
     const dist   = isRunning ? CAM.runDist   : CAM.normalDist
-    const height = isRunning ? CAM.runHeight  : CAM.normalHeight
+    // In basement (Y < -5), use tighter camera so room fits in view
+    const height = luffyPos.y < -5
+      ? 4.5
+      : isRunning ? CAM.runHeight : CAM.normalHeight
     const fov    = isRunning ? CAM.fovRun     : CAM.fovNormal
 
     this._tmpVec.set(

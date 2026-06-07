@@ -322,18 +322,20 @@ export default function WorldScene({
           shadows="soft"
   camera={{ position: [0, 8.5, 16], fov: 68, near: 0.1, far: 2000 }}
   performance={{ min: 0.5 }}
-  dpr={[1, 1.5]}
+  dpr={[1, 2]}
         onCreated={({ camera }) => camera.lookAt(0, 1.5, 0)}
         gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.84 }}
         style={{ position: 'absolute', inset: 0, zIndex: 1 }}
       >
-        {!workActive && <fog attach="fog" args={['#e4f0f6', 60, 260]} />}
+        <fog attach="fog" args={['#e4f0f6', workActive ? 2 : 60, workActive ? 120 : 260]} />
         <Lighting />
         <Sky distance={4500} sunPosition={[82, 18, 46]} inclination={0.53} azimuth={0.21} rayleigh={0.78} turbidity={4.6} />
         <Sparkles count={220} scale={60} size={1.25} speed={0.18} opacity={0.11} color="#ffffff" position={[0, 8, 0]} />
 
         <AboutCameraController active={aboutActive} />
         <SkillsCameraTransition active={skillsActive} />
+        <WorkCameraTransition active={workActive} />
+        <WorkOrbitControl active={workActive} />
 
         <Ocean />
 

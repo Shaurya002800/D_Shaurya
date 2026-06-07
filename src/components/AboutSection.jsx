@@ -106,13 +106,13 @@ export function AnimatedSail({ position = [0, 20.5, -2.5] }) {
 
   const [aboutTex, setAboutTex] = useState(null)
 
-useEffect(() => {
-  const W = 2048, H = 1400
-  const canvas = document.createElement('canvas')
-  canvas.width = W; canvas.height = H
-  const ctx = canvas.getContext('2d')
+  useEffect(() => {
+    const W = 2048, H = 1400
+    const canvas = document.createElement('canvas')
+    canvas.width = W; canvas.height = H
+    const ctx = canvas.getContext('2d')
 
-  const drawAll = (photoImg) => {
+    const drawAll = (photoImg) => {
     // Base linen
     const baseGrad = ctx.createLinearGradient(0, 0, W, H)
     baseGrad.addColorStop(0,   '#ece0bc')
@@ -170,7 +170,7 @@ useEffect(() => {
       // Save and clip to right zone
       ctx.save()
       ctx.globalAlpha = 0.78
-ctx.filter = 'sepia(85%) contrast(1.05) brightness(0.88) saturate(0.6)'
+      ctx.filter = 'sepia(85%) contrast(1.05) brightness(0.88) saturate(0.6)'
       // Draw photo filling right side
       const imgAspect = photoImg.naturalWidth / photoImg.naturalHeight
       const drawH = ph
@@ -258,21 +258,21 @@ ctx.filter = 'sepia(85%) contrast(1.05) brightness(0.88) saturate(0.6)'
     const tex = new THREE.CanvasTexture(canvas)
     tex.needsUpdate = true
     setAboutTex(tex)
-  }
+    }
 
-  // Load photo then draw
-  const img = new window.Image()
-  img.crossOrigin = 'anonymous'
-  img.onload = () => drawAll(img)
-  img.onerror = () => drawAll(null) // draw without photo if it fails
-  img.src = '/shaurya.png'
-}, [])
+    // Load photo then draw
+    const img = new window.Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => drawAll(img)
+    img.onerror = () => drawAll(null) // draw without photo if it fails
+    img.src = '/shaurya.png'
+  }, [])
 
   // Blank linen sail texture (for the other two sails)
   const blankTex = useMemo(() => {
-  const W = 1024, H = 800
-  const canvas = document.createElement('canvas')
-  canvas.width = W; canvas.height = H
+    const W = 1024, H = 800
+    const canvas = document.createElement('canvas')
+    canvas.width = W; canvas.height = H
   const ctx = canvas.getContext('2d')
 
   // ── Base warm linen ──

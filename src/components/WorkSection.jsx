@@ -103,6 +103,18 @@ export default function WorkSection({
 
   return (
     <>
+      {/* Main background overlay */}
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9000,
+        background: 'radial-gradient(circle at 50% 40%, rgba(8,64,96,0.12), rgba(0,8,18,0.42))',
+        backdropFilter: 'blur(4px)',
+        opacity: visible ? 1 : 0,
+        transition: 'opacity 0.5s ease',
+        pointerEvents: 'none',
+      }} />
+
       {/* Close button */}
       <button
         onClick={onClose}
