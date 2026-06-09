@@ -48,9 +48,9 @@ export function SkillsCameraTransition({ active }) {
 
 // ─── WORK/BASEMENT CAMERA CONTROLLER ─────────────────────────────────────────
 const CAM_WORK = {
-  position: new THREE.Vector3(0, -9.5, 9),
-  target:   new THREE.Vector3(0, -11, -2),
-  fov:      75,
+  position: new THREE.Vector3(0, -7, 18),   // pulled back and higher — room now goes to Z=14
+  target:   new THREE.Vector3(0, -10, 0),   // looks into the centre of the room
+  fov:      82,                              // wider FOV to take in the full room width
 }
 
 export function WorkCameraTransition({ active }) {
@@ -384,10 +384,18 @@ export default function WorldScene({
           </Physics>
         </Suspense>
 
-        <EffectComposer disableNormalPass multisampling={0}>
-          <Bloom luminanceThreshold={1.1} mipmapBlur intensity={0.3} levels={4} />
-          <Vignette eskil={false} offset={0.12} darkness={0.75} />
-        </EffectComposer>
+       <EffectComposer disableNormalPass multisampling={0}>
+  {/* Bloom is dialled back hard when inside the dark basement —
+      threshold raised so only true specular highlights bloom,
+      intensity dropped so nothing smears */}
+  <Bloom
+    luminanceThreshold={workActive ? 1.8 : 1.1}
+    mipmapBlur={!workActive}
+    intensity={workActive ? 0.06 : 0.3}
+    levels={workActive ? 2 : 4}
+  />
+  <Vignette eskil={false} offset={0.12} darkness={workActive ? 0.35 : 0.75} />
+</EffectComposer>
       </Canvas>
 
       <AnimatePresence>

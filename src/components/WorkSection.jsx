@@ -108,7 +108,7 @@ export function WorkSectionLabel({ active }) {
         background:     'rgba(0,20,44,0.85)',
         border:         '1px solid rgba(0,160,255,0.3)',
         borderRadius:   '40px',
-        backdropFilter: 'blur(10px)',
+        /* backdrop-filter removed to disable blur for clarity */
         fontFamily:     '"Courier New", monospace',
         fontSize:       '12px',
         letterSpacing:  '4px',
@@ -176,8 +176,8 @@ function ProjectModal({ project, onClose }) {
         alignItems:     'center',
         justifyContent: 'center',
         padding:        '24px 16px',
-        background:     'radial-gradient(ellipse at 50% 35%, rgba(0,60,100,0.22), rgba(0,8,20,0.72))',
-        backdropFilter: 'blur(7px)',
+  background:     'radial-gradient(ellipse at 50% 35%, rgba(0,60,100,0.22), rgba(0,8,20,0.72))',
+  /* backdrop-filter removed to disable blur for clarity */
         animation:      'workFadeIn 0.22s ease',
       }}
     >
@@ -414,7 +414,7 @@ export default function WorkSection({
           inset:          0,
           zIndex:         8800,
           background:     'radial-gradient(ellipse at 50% 30%, rgba(0,60,100,0.14), rgba(0,6,16,0.46))',
-          backdropFilter: 'blur(3px)',
+            /* backdrop-filter removed to disable blur for clarity */
           opacity:        visible ? 1 : 0,
           transition:     'opacity 0.5s ease',
           pointerEvents:  'none',
@@ -441,7 +441,7 @@ export default function WorkSection({
           display:        'flex',
           alignItems:     'center',
           justifyContent: 'center',
-          backdropFilter: 'blur(10px)',
+          /* backdrop-filter removed to disable blur for clarity */
           opacity:        visible ? 1 : 0,
           transform:      visible ? 'scale(1)' : 'scale(0.8)',
           transition:     'opacity 0.4s ease, transform 0.4s ease, background 0.18s, border-color 0.18s',
@@ -479,7 +479,7 @@ export default function WorkSection({
           background:     'rgba(0,14,30,0.9)',
           border:         '1px solid rgba(0,150,255,0.25)',
           borderRadius:   '40px',
-          backdropFilter: 'blur(12px)',
+          /* backdrop-filter removed to disable blur for clarity */
           fontFamily:     '"Courier New", monospace',
           fontSize:       '11px',
           letterSpacing:  '2.5px',

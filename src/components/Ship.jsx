@@ -907,117 +907,235 @@ function Bubble({ startPos, speed = 0.35 }) {
 // ─────────────────────────────────────────────────────────────────────
 // PROJECT CARD — 3D panel inside aquarium with project info
 // ─────────────────────────────────────────────────────────────────────
-function createProjectCardTexture(project) {
-  const W = 1024, H = 640
-  const canvas = document.createElement('canvas')
-  canvas.width = W; canvas.height = H
-  const ctx = canvas.getContext('2d')
+// ─────────────────────────────────────────────────────────────────────
+// DIGITAL SCREEN — animated canvas texture that updates every frame
+// Renders scanlines, typing cursor, live "data" readouts per project
+// ─────────────────────────────────────────────────────────────────────
+function useDigitalScreenTexture(project) {
+  const canvasRef  = useRef(null)
+  const texRef     = useRef(null)
+  const frameRef   = useRef(0)
+  const cursorRef  = useRef(true)
+  const cursorTick = useRef(0)
+  const scrollRef  = useRef(0)
 
-  // Dark underwater glass background
-  const bg = ctx.createLinearGradient(0, 0, 0, H)
-  bg.addColorStop(0, 'rgba(2,22,48,0.96)')
-  bg.addColorStop(1, 'rgba(0,12,30,0.98)')
-  ctx.fillStyle = bg
-  ctx.fillRect(0, 0, W, H)
-
-  // Glowing border
-  ctx.strokeStyle = project.color
-  ctx.lineWidth = 4
-  ctx.shadowColor = project.color
-  ctx.shadowBlur = 18
-  ctx.strokeRect(8, 8, W-16, H-16)
-  ctx.shadowBlur = 0
-
-  // Inner subtle border
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)'
-  ctx.lineWidth = 1
-  ctx.strokeRect(18, 18, W-36, H-36)
-
-  // Top color bar
-  ctx.fillStyle = project.color
-  ctx.globalAlpha = 0.9
-  ctx.fillRect(8, 8, W-16, 6)
-  ctx.globalAlpha = 1
-
-  // Stack tag chips
-  const tagX = 40
-  let tagCurX = tagX
-  const tagY = 56
-  ctx.font = 'bold 22px monospace'
-  project.stack.slice(0, 4).forEach(tag => {
-    const tw = ctx.measureText(tag).width + 24
-    ctx.fillStyle = 'rgba(255,255,255,0.08)'
-    ctx.beginPath()
-    ctx.roundRect(tagCurX, tagY, tw, 32, 6)
-    ctx.fill()
-    ctx.fillStyle = project.color
-    ctx.fillText(tag, tagCurX + 12, tagY + 22)
-    tagCurX += tw + 10
-  })
-
-  // Title
-  ctx.font = 'bold 72px Georgia, serif'
-  ctx.fillStyle = '#ffffff'
-  ctx.shadowColor = project.color
-  ctx.shadowBlur = 12
-  ctx.fillText(project.name, 40, 180)
-  ctx.shadowBlur = 0
-
-  // Separator line
-  ctx.strokeStyle = project.color
-  ctx.lineWidth = 2
-  ctx.globalAlpha = 0.5
-  ctx.beginPath(); ctx.moveTo(40, 200); ctx.lineTo(W-40, 200); ctx.stroke()
-  ctx.globalAlpha = 1
-
-  // Description — word wrapped
-  ctx.font = '32px Georgia, serif'
-  ctx.fillStyle = 'rgba(200,220,255,0.88)'
-  const words = project.desc.split(' ')
-  let line = '', lines = [], maxW = W - 80
-  words.forEach(word => {
-    const test = line + word + ' '
-    if (ctx.measureText(test).width > maxW && line) {
-      lines.push(line); line = word + ' '
-    } else line = test
-  })
-  lines.push(line)
-  lines.slice(0, 4).forEach((l, i) => ctx.fillText(l, 40, 260 + i * 46))
-
-  // Bottom live link pill
-  ctx.fillStyle = project.color
-  ctx.globalAlpha = 0.18
-  ctx.beginPath(); ctx.roundRect(40, H-100, 280, 52, 26); ctx.fill()
-  ctx.globalAlpha = 1
-  ctx.font = 'bold 28px monospace'
-  ctx.fillStyle = project.color
-  ctx.fillText('⬡  LIVE PROJECT', 65, H-68)
-
-  // Bottom right — year
-  ctx.font = 'bold 26px monospace'
-  ctx.fillStyle = 'rgba(255,255,255,0.25)'
-  ctx.textAlign = 'right'
-  ctx.fillText(project.year, W-40, H-68)
-  ctx.textAlign = 'left'
-
-  // Water caustic shimmer overlay
-  const causticPoints = [[200,120],[600,80],[400,300],[150,400],[750,200],[500,500]]
-  for (let i = 0; i < causticPoints.length; i++) {
-    const [gx, gy] = causticPoints[i]
-    const gr = ctx.createRadialGradient(gx, gy, 0, gx, gy, 100)
-    gr.addColorStop(0, 'rgba(100,200,255,0.06)')
-    gr.addColorStop(1, 'rgba(0,0,0,0)')
-    ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H)
+  if (!canvasRef.current) {
+    const c = document.createElement('canvas')
+    c.width = 1024; c.height = 640
+    canvasRef.current = c
+    texRef.current = new THREE.CanvasTexture(c)
+    texRef.current.needsUpdate = true
   }
 
-  const tex = new THREE.CanvasTexture(canvas)
-  tex.needsUpdate = true
-  return tex
+  useFrame(({ clock }) => {
+    const canvas = canvasRef.current
+    const tex    = texRef.current
+    if (!canvas || !tex) return
+
+    const t   = clock.getElapsedTime()
+    const ctx = canvas.getContext('2d')
+    const W   = canvas.width, H = canvas.height
+
+    frameRef.current++
+
+    // ── Background ──
+    ctx.fillStyle = '#020c18'
+    ctx.fillRect(0, 0, W, H)
+
+    // ── Subtle grid ──
+    ctx.strokeStyle = 'rgba(0,180,255,0.045)'
+    ctx.lineWidth = 1
+    for (let x = 0; x < W; x += 40) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke()
+    }
+    for (let y = 0; y < H; y += 40) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke()
+    }
+
+    // ── Glowing border ──
+    const pulse = 0.55 + 0.45 * Math.sin(t * 2.2)
+    ctx.save()
+    ctx.shadowColor = project.color
+    ctx.shadowBlur  = 18 * pulse
+    ctx.strokeStyle = project.color
+    ctx.lineWidth   = 3
+    ctx.strokeRect(10, 10, W - 20, H - 20)
+    ctx.restore()
+
+    // Inner border
+    ctx.strokeStyle = 'rgba(255,255,255,0.07)'
+    ctx.lineWidth   = 1
+    ctx.strokeRect(20, 20, W - 40, H - 40)
+
+    // ── Top accent bar ──
+    ctx.fillStyle = project.color
+    ctx.globalAlpha = 0.85
+    ctx.fillRect(10, 10, W - 20, 5)
+    ctx.globalAlpha = 1
+
+    // ── Header: project name ──
+    ctx.save()
+    ctx.font = 'bold 68px "Courier New", monospace'
+    ctx.fillStyle = '#ffffff'
+    ctx.shadowColor = project.color
+    ctx.shadowBlur  = 14
+    ctx.fillText(project.name, 40, 110)
+    ctx.restore()
+
+    // ── Year badge ──
+    ctx.font = 'bold 22px "Courier New", monospace'
+    ctx.fillStyle = project.color
+    ctx.fillText(`[ ${project.year} ]`, 40, 148)
+
+    // ── Separator ──
+    ctx.save()
+    ctx.strokeStyle = project.color
+    ctx.lineWidth   = 1.5
+    ctx.globalAlpha = 0.45
+    ctx.beginPath(); ctx.moveTo(40, 165); ctx.lineTo(W - 40, 165); ctx.stroke()
+    ctx.restore()
+
+    // ── Description — animated scroll if long ──
+    ctx.font = '28px "Courier New", monospace'
+    ctx.fillStyle = 'rgba(180,220,255,0.92)'
+    const words    = project.desc.split(' ')
+    let line = '', lines = []
+    words.forEach(w => {
+      const test = line + w + ' '
+      if (ctx.measureText(test).width > W - 80 && line) {
+        lines.push(line.trimEnd()); line = w + ' '
+      } else line = test
+    })
+    lines.push(line.trimEnd())
+    // Slow scroll: every 90 frames advance one line
+    if (lines.length > 3 && frameRef.current % 90 === 0) {
+      scrollRef.current = (scrollRef.current + 1) % lines.length
+    }
+    const visLines = [...lines, ...lines].slice(scrollRef.current, scrollRef.current + 3)
+    visLines.forEach((l, i) => ctx.fillText(l, 40, 212 + i * 42))
+
+    // ── Typing cursor after last visible line ──
+    cursorTick.current++
+    if (cursorTick.current % 28 === 0) cursorRef.current = !cursorRef.current
+    if (cursorRef.current) {
+      ctx.fillStyle = project.color
+      ctx.fillText('█', 40, 212 + Math.min(visLines.length, 3) * 42)
+    }
+
+    // ── Stack chips ──
+    let cx = 40
+    const chipY = 370
+    ctx.font = 'bold 21px "Courier New", monospace'
+    project.stack.slice(0, 5).forEach(tag => {
+      const tw = ctx.measureText(tag).width + 28
+      ctx.fillStyle = 'rgba(255,255,255,0.07)'
+      ctx.beginPath()
+      ctx.roundRect(cx, chipY, tw, 34, 6); ctx.fill()
+      ctx.strokeStyle = project.color + '66'
+      ctx.lineWidth = 1
+      ctx.strokeRect(cx, chipY, tw, 34)
+      ctx.fillStyle = project.color
+      ctx.fillText(tag, cx + 14, chipY + 23)
+      cx += tw + 10
+    })
+
+    // ── Live "data" readout panel ──
+    const dataY = 430
+    ctx.fillStyle = 'rgba(0,180,255,0.06)'
+    ctx.fillRect(40, dataY, W - 80, 140)
+    ctx.strokeStyle = 'rgba(0,180,255,0.18)'
+    ctx.lineWidth = 1
+    ctx.strokeRect(40, dataY, W - 80, 140)
+
+    // Animated bar graph — 4 bars that pulse
+    const bars = [
+      { label: 'PERF',  val: 0.82 + 0.08 * Math.sin(t * 1.1) },
+      { label: 'SCALE', val: 0.70 + 0.10 * Math.sin(t * 0.9 + 1) },
+      { label: 'UX',    val: 0.91 + 0.05 * Math.sin(t * 1.3 + 2) },
+      { label: 'CODE',  val: 0.76 + 0.09 * Math.sin(t * 0.7 + 3) },
+    ]
+    bars.forEach((bar, i) => {
+      const bx    = 60 + i * 235
+      const bw    = 195
+      const fillW = bw * bar.val
+      // Background track
+      ctx.fillStyle = 'rgba(255,255,255,0.06)'
+      ctx.fillRect(bx, dataY + 20, bw, 14)
+      // Animated fill
+      ctx.fillStyle = project.color
+      ctx.globalAlpha = 0.75
+      ctx.fillRect(bx, dataY + 20, fillW, 14)
+      ctx.globalAlpha = 1
+      // Label
+      ctx.font = 'bold 18px "Courier New", monospace'
+      ctx.fillStyle = 'rgba(200,230,255,0.7)'
+      ctx.fillText(bar.label, bx, dataY + 54)
+      // Percentage
+      ctx.fillStyle = project.color
+      ctx.fillText(`${Math.round(bar.val * 100)}%`, bx, dataY + 76)
+    })
+
+    // ── Bottom live pill ──
+    const pillPulse = 0.4 + 0.6 * Math.abs(Math.sin(t * 1.6))
+    ctx.fillStyle = project.color
+    ctx.globalAlpha = pillPulse * 0.22
+    ctx.beginPath(); ctx.roundRect(40, H - 92, 300, 50, 25); ctx.fill()
+    ctx.globalAlpha = 1
+    ctx.font = 'bold 26px "Courier New", monospace'
+    ctx.fillStyle = project.color
+    ctx.fillText('⬡  LIVE PROJECT', 68, H - 58)
+
+    // ── Scanlines overlay ──
+    ctx.fillStyle = 'rgba(0,0,0,0.13)'
+    for (let y = 0; y < H; y += 4) {
+      ctx.fillRect(0, y, W, 2)
+    }
+
+    // ── Corner markers ──
+    const corners = [[10,10],[W-10,10],[10,H-10],[W-10,H-10]]
+    const cLen = 18
+    corners.forEach(([cx2, cy2], ci) => {
+      const sx = ci % 2 === 0 ? 1 : -1
+      const sy = ci < 2      ? 1 : -1
+      ctx.strokeStyle = project.color
+      ctx.lineWidth   = 2
+      ctx.globalAlpha = 0.8
+      ctx.beginPath()
+      ctx.moveTo(cx2, cy2); ctx.lineTo(cx2 + sx * cLen, cy2)
+      ctx.moveTo(cx2, cy2); ctx.lineTo(cx2, cy2 + sy * cLen)
+      ctx.stroke()
+      ctx.globalAlpha = 1
+    })
+
+    tex.needsUpdate = true
+  })
+
+  return texRef.current
+}
+
+// Wrapper mesh — drop this inside ProjectTank instead of the old card group
+function DigitalScreen({ project, facingRight }) {
+  const tex = useDigitalScreenTexture(project)
+  return (
+    <mesh rotation={[0, facingRight ? 0 : Math.PI, 0]}>
+      {/* Screen surface */}
+      <planeGeometry args={[5.4, 3.6]} />
+      <meshStandardMaterial
+        map={tex}
+        roughness={0.05}
+        metalness={0.1}
+        transparent
+        opacity={0.99}
+        side={THREE.FrontSide}
+        emissive="#ffffff"
+        emissiveIntensity={0.55}
+      />
+    </mesh>
+  )
 }
 
 function ProjectCard({ project, position, rotation = [0, 0, 0], onSelect }) {
   const ref = useRef()
-  const tex = useMemo(() => createProjectCardTexture(project), [project])
   const phase = useMemo(() => Math.random() * Math.PI * 2, [])
   const handleSelect = (event) => {
     event.stopPropagation()
@@ -1168,97 +1286,100 @@ const PROJECTS = [
 function ProjectTank({ project, position, facingRight = true, onSelect }) {
   const cardRef = useRef()
   const phase   = useMemo(() => Math.random() * Math.PI * 2, [])
-  const tex     = useMemo(() => createProjectCardTexture(project), [project])
 
   useFrame(({ clock }) => {
     if (!cardRef.current) return
-    cardRef.current.position.y = 3.0 + Math.sin(clock.getElapsedTime() * 0.5 + phase) * 0.12
+    cardRef.current.position.y = 4.0 + Math.sin(clock.getElapsedTime() * 0.5 + phase) * 0.15
   })
 
-  // dir: +1 = tank faces right (left wall), -1 = tank faces left (right wall)
   const dir = facingRight ? 1 : -1
 
   return (
     <group position={position}>
-      {/* Back panel — flush against the wall */}
-      <mesh position={[-dir * 2.0, 3, 0]}>
-        <boxGeometry args={[0.2, 6, 5]} />
+      {/* Back panel — flush against wall */}
+      <mesh position={[-dir * 3.0, 4.5, 0]}>
+        <boxGeometry args={[0.25, 9, 7]} />
         <meshStandardMaterial color="#010d18" roughness={0.95} />
       </mesh>
-      {/* Top */}
-      <mesh position={[0, 6.06, 0]}>
-        <boxGeometry args={[4.1, 0.12, 5.1]} />
+      {/* Top rim */}
+      <mesh position={[0, 9.1, 0]}>
+        <boxGeometry args={[6.2, 0.15, 7.2]} />
         <meshStandardMaterial color="#1a3a5a" roughness={0.4} metalness={0.7} />
       </mesh>
       {/* Bottom rim */}
-      <mesh position={[0, 0.06, 0]}>
-        <boxGeometry args={[4.1, 0.12, 5.1]} />
+      <mesh position={[0, 0.08, 0]}>
+        <boxGeometry args={[6.2, 0.15, 7.2]} />
         <meshStandardMaterial color="#1a3a5a" roughness={0.4} metalness={0.7} />
       </mesh>
       {/* Side glass — Z axis */}
-      <mesh position={[0, 3, -2.5]}>
-        <boxGeometry args={[4, 6, 0.07]} />
-        <meshStandardMaterial color="#44aaff" roughness={0.04} transparent opacity={0.22} emissive="#0044bb" emissiveIntensity={0.1} />
+      <mesh position={[0, 4.5, -3.5]}>
+        <boxGeometry args={[6, 9, 0.07]} />
+        {/* FIXED: higher opacity + stronger emissive so glass is visible not invisible */}
+        <meshStandardMaterial color="#88ccff" roughness={0.02} transparent opacity={0.28}
+          emissive="#0044bb" emissiveIntensity={0.25} />
       </mesh>
-      <mesh position={[0, 3, 2.5]}>
-        <boxGeometry args={[4, 6, 0.07]} />
-        <meshStandardMaterial color="#44aaff" roughness={0.04} transparent opacity={0.22} emissive="#0044bb" emissiveIntensity={0.1} />
+      <mesh position={[0, 4.5, 3.5]}>
+        <boxGeometry args={[6, 9, 0.07]} />
+        <meshStandardMaterial color="#88ccff" roughness={0.02} transparent opacity={0.28}
+          emissive="#0044bb" emissiveIntensity={0.25} />
       </mesh>
-      {/* Front glass — faces INTO room — CLICKABLE */}
+      {/* Front glass — CLICKABLE */}
       <mesh
-        position={[dir * 2.0, 3, 0]}
+        position={[dir * 3.0, 4.5, 0]}
         onClick={(e) => { e.stopPropagation(); onSelect && onSelect(project) }}
         onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer' }}
         onPointerOut={() => { document.body.style.cursor = 'default' }}
       >
-        <boxGeometry args={[0.07, 6, 5]} />
-        <meshStandardMaterial color="#44aaff" roughness={0.02} transparent opacity={0.18} emissive="#0055cc" emissiveIntensity={0.1} />
+        <boxGeometry args={[0.07, 9, 7]} />
+        {/* FIXED: barely opaque so you can see the card clearly through it */}
+        <meshStandardMaterial color="#88ccff" roughness={0.02} transparent opacity={0.12}
+          emissive="#0055cc" emissiveIntensity={0.08} />
       </mesh>
       {/* Corner frame posts */}
-      {[[dir*2, 3, -2.5],[dir*2, 3, 2.5],[-dir*2, 3, -2.5],[-dir*2, 3, 2.5]].map(([x,y,z],i) => (
+      {[[dir*3,4.5,-3.5],[dir*3,4.5,3.5],[-dir*3,4.5,-3.5],[-dir*3,4.5,3.5]].map(([x,y,z],i) => (
         <mesh key={i} position={[x,y,z]}>
-          <boxGeometry args={[0.1, 6.1, 0.1]} />
+          <boxGeometry args={[0.12, 9.2, 0.12]} />
           <meshStandardMaterial color="#1a3a5a" roughness={0.3} metalness={0.8} />
         </mesh>
       ))}
 
-      {/* Water volume */}
-      <mesh position={[0, 3, 0]}>
-        <boxGeometry args={[3.9, 5.9, 4.9]} />
-        <meshStandardMaterial color="#021428" roughness={0.05} transparent opacity={0.48} emissive="#010c1e" emissiveIntensity={0.08} />
+      {/* Water volume — FIXED: much lower opacity so card is readable through it */}
+      <mesh position={[0, 4.5, 0]}>
+        <boxGeometry args={[5.9, 8.9, 6.9]} />
+        <meshStandardMaterial color="#021428" roughness={0.05} transparent opacity={0.22}
+          emissive="#010c1e" emissiveIntensity={0.04} />
       </mesh>
 
-      {/* 2 fish */}
-      <Fish color={project.color} startPos={[0, 3, 0]} radius={1.2} speed={0.4}  yOffset={0}   />
-      <Fish color="#ffffff"       startPos={[0, 2.5, 0]} radius={0.8} speed={0.55} yOffset={0.4} />
+      {/* Fish */}
+      <Fish color={project.color} startPos={[0, 4.5, 0]} radius={1.6} speed={0.4}  yOffset={0}   />
+      <Fish color="#ffffff"       startPos={[0, 3.5, 0]} radius={1.0} speed={0.55} yOffset={0.4} />
 
-      {/* 3 bubbles */}
-      <Bubble startPos={[-0.8, 0.3, -0.6]} speed={0.25} />
-      <Bubble startPos={[0.6,  0.3,  0.7]} speed={0.30} />
-      <Bubble startPos={[0.1,  0.3, -0.2]} speed={0.27} />
+      {/* Bubbles */}
+      <Bubble startPos={[-1.0, 0.3, -0.8]} speed={0.25} />
+      <Bubble startPos={[0.8,  0.3,  0.9]} speed={0.30} />
+      <Bubble startPos={[0.1,  0.3, -0.3]} speed={0.27} />
 
-      {/* Floating project card — faces into room */}
-      <group ref={cardRef} position={[0, 3, 0]} rotation={[0, facingRight ? 0 : Math.PI, 0]}>
-        <mesh>
-          <planeGeometry args={[3.6, 2.4]} />
-          <meshStandardMaterial map={tex} roughness={0.1} transparent opacity={0.97} side={THREE.FrontSide} />
-        </mesh>
-      </group>
+      {/* Animated digital screen */}
+<group ref={cardRef} position={[0, 4.5, 0]}>
+  <DigitalScreen project={project} facingRight={facingRight} />
+</group>
 
-      {/* Tank floor sand */}
-      <mesh rotation={[-Math.PI/2, 0, 0]} position={[0, 0.1, 0]}>
-        <planeGeometry args={[3.9, 4.9]} />
-        <meshStandardMaterial color="#0a1520" roughness={0.95} />
+      {/* Tank floor */}
+      <mesh rotation={[-Math.PI/2, 0, 0]} position={[0, 0.12, 0]}>
+        <planeGeometry args={[5.9, 6.9]} />
+        <meshStandardMaterial color="#050e1a" roughness={0.95} />
       </mesh>
-      {/* Small coral */}
-      {[[-0.8,0.3,-1],[0.6,0.3,0.8],[-0.3,0.3,1.2]].map(([x,y,z],i) => (
+      {/* Coral */}
+      {[[-1.2,0.3,-1.5],[0.9,0.3,1.2],[-0.4,0.3,1.8],[1.4,0.3,-0.8]].map(([x,y,z],i) => (
         <mesh key={i} position={[x,y,z]}>
-          <cylinderGeometry args={[0.05,0.08,0.4+i*0.1,6]} />
-          <meshStandardMaterial color={i%2===0?'#ff5533':'#ff8800'} roughness={0.7} emissive={i%2===0?'#ff2200':'#ff5500'} emissiveIntensity={0.15} />
+          <cylinderGeometry args={[0.06,0.1,0.5+i*0.12,6]} />
+          <meshStandardMaterial color={i%2===0?'#ff5533':'#ff8800'} roughness={0.7}
+            emissive={i%2===0?'#ff2200':'#ff5500'} emissiveIntensity={0.3} />
         </mesh>
       ))}
 
-      {/* Top tank light */}
+      {/* Per-tank top light strip — one cheap point light per tank, not removed */}
+      <pointLight position={[0, 8.6, 0]} color={project.color} intensity={3} distance={8} decay={1.5} />
     </group>
   )
 }
@@ -1270,100 +1391,107 @@ function AquariumBasement({ position = [0, -14, 2], onProjectSelect }) {
   return (
     <group position={position}>
 
-      {/* ── FLOOR ── */}
+      {/* ── FLOOR — dark stone, no grass ── */}
       <mesh rotation={[-Math.PI/2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
-        <planeGeometry args={[22, 18]} />
-        <meshStandardMaterial color="#3d2008" roughness={0.9} />
+        <planeGeometry args={[34, 28]} />
+        <meshStandardMaterial color="#0d0d14" roughness={0.95} />
       </mesh>
-      {/* Green grass center walkway */}
+      {/* Floor caustic tint strip down the centre */}
       <mesh rotation={[-Math.PI/2, 0, 0]} position={[0, 0.02, 0]}>
-        <planeGeometry args={[8, 14]} />
-        <meshStandardMaterial color="#2d5a1b" roughness={0.95} />
+        <planeGeometry args={[10, 24]} />
+        <meshStandardMaterial color="#021428" roughness={0.9} emissive="#02284a" emissiveIntensity={0.12} />
       </mesh>
 
-      {/* ── CEILING ── */}
-      <mesh rotation={[Math.PI/2, 0, 0]} position={[0, 10, 0]}>
-        <planeGeometry args={[22, 18]} />
-        <meshStandardMaterial color="#1a0a02" roughness={0.95} />
+      {/* ── CEILING — raised to 14 units ── */}
+      <mesh rotation={[Math.PI/2, 0, 0]} position={[0, 14, 0]}>
+        <planeGeometry args={[34, 28]} />
+        <meshStandardMaterial color="#080810" roughness={0.95} />
       </mesh>
       {/* Ceiling beams */}
-      {[-7, 0, 7].map((x, i) => (
-        <mesh key={i} position={[x, 9.6, 0]}>
-          <boxGeometry args={[0.5, 0.5, 18]} />
-          <meshStandardMaterial color="#2a1005" roughness={0.9} />
+      {[-10, 0, 10].map((x, i) => (
+        <mesh key={i} position={[x, 13.6, 0]}>
+          <boxGeometry args={[0.6, 0.6, 28]} />
+          <meshStandardMaterial color="#0e0810" roughness={0.9} />
         </mesh>
       ))}
 
-      {/* ── 4 SOLID WALLS — fully closed room ── */}
+      {/* ── WALLS — room is now 34 wide × 28 deep ── */}
       {/* Back wall */}
-      <mesh position={[0, 5, -9]}>
-        <boxGeometry args={[22, 10, 0.4]} />
-        <meshStandardMaterial color="#2a1505" roughness={0.88} />
+      <mesh position={[0, 7, -14]}>
+        <boxGeometry args={[34, 14, 0.4]} />
+        <meshStandardMaterial color="#12080a" roughness={0.88} />
       </mesh>
-      {/* Front wall */}
-      <mesh position={[0, 5, 9]}>
-        <boxGeometry args={[22, 10, 0.4]} />
-        <meshStandardMaterial color="#2a1505" roughness={0.88} />
+      {/* Front wall — pushed back so camera has room */}
+      <mesh position={[0, 7, 14]}>
+        <boxGeometry args={[34, 14, 0.4]} />
+        <meshStandardMaterial color="#12080a" roughness={0.88} />
       </mesh>
-      {/* Left wall — tanks are built INTO this */}
-      <mesh position={[-11, 5, 0]}>
-        <boxGeometry args={[0.4, 10, 18]} />
-        <meshStandardMaterial color="#2a1505" roughness={0.88} />
+      {/* Left wall */}
+      <mesh position={[-17, 7, 0]}>
+        <boxGeometry args={[0.4, 14, 28]} />
+        <meshStandardMaterial color="#12080a" roughness={0.88} />
       </mesh>
       {/* Right wall */}
-      <mesh position={[11, 5, 0]}>
-        <boxGeometry args={[0.4, 10, 18]} />
-        <meshStandardMaterial color="#2a1505" roughness={0.88} />
+      <mesh position={[17, 7, 0]}>
+        <boxGeometry args={[0.4, 14, 28]} />
+        <meshStandardMaterial color="#12080a" roughness={0.88} />
       </mesh>
 
       {/* ── FURNITURE ── */}
-      {/* Center table */}
+      {/* Centre display table */}
       <mesh position={[0, 1.5, 0]} castShadow>
-        <boxGeometry args={[3, 0.18, 1.8]} />
-        <meshStandardMaterial color="#5C3A21" roughness={0.8} />
+        <boxGeometry args={[4, 0.2, 2.2]} />
+        <meshStandardMaterial color="#3a2010" roughness={0.8} />
       </mesh>
-      {[[-1,-1.4,-0.6],[1,-1.4,-0.6],[-1,-1.4,0.6],[1,-1.4,0.6]].map(([x,y,z],i) => (
+      {[[-1.6,-1.4,-0.8],[1.6,-1.4,-0.8],[-1.6,-1.4,0.8],[1.6,-1.4,0.8]].map(([x,y,z],i) => (
         <mesh key={i} position={[x, y+1.5, z]}>
-          <cylinderGeometry args={[0.07,0.07,1.8,7]} />
-          <meshStandardMaterial color="#3d2410" roughness={0.85} />
+          <cylinderGeometry args={[0.08,0.08,1.8,7]} />
+          <meshStandardMaterial color="#2a1408" roughness={0.85} />
         </mesh>
       ))}
-      {/* Barrels */}
-      <Barrel position={[-9.5, 0.45, 7.5]} />
-      <Barrel position={[9.5,  0.45, 7.5]} />
-      <Barrel position={[-9.5, 0.45,-7.5]} scale={0.85} />
-      <Barrel position={[9.5,  0.45,-7.5]} scale={0.85} />
+      {/* Barrels in corners */}
+      <Barrel position={[-15, 0.45, 12]} />
+      <Barrel position={[15,  0.45, 12]} />
+      <Barrel position={[-15, 0.45,-12]} scale={0.85} />
+      <Barrel position={[15,  0.45,-12]} scale={0.85} />
 
-      {/* Lanterns */}
-      <Lantern position={[0, 8.8, 0]} />
-      <Lantern position={[-5, 8.8, -5]} />
-      <Lantern position={[5, 8.8, -5]} />
-      <Lantern position={[-5, 8.8, 5]} />
-      <Lantern position={[5, 8.8, 5]} />
+      {/* ── LANTERNS ── emissive only, no pointLights ── */}
+      <Lantern position={[0,   13, 0]}  />
+      <Lantern position={[-8,  13, -8]} />
+      <Lantern position={[8,   13, -8]} />
+      <Lantern position={[-8,  13,  8]} />
+      <Lantern position={[8,   13,  8]} />
 
-      {/* Skylight */}
-      <mesh position={[0, 9.88, 5]} rotation={[Math.PI/2, 0, 0]}>
-        <ringGeometry args={[1.4, 2.5, 20]} />
+      {/* ── SKYLIGHT ── */}
+      <mesh position={[0, 13.88, 6]} rotation={[Math.PI/2, 0, 0]}>
+        <ringGeometry args={[1.6, 2.8, 20]} />
         <meshStandardMaterial color="#555" roughness={0.3} metalness={0.8} />
       </mesh>
-      <mesh position={[0, 9.85, 5]} rotation={[Math.PI/2, 0, 0]}>
-        <circleGeometry args={[1.4, 20]} />
-        <meshStandardMaterial color="#44aaff" roughness={0.05} transparent opacity={0.5} emissive="#44aaff" emissiveIntensity={0.5} />
+      <mesh position={[0, 13.85, 6]} rotation={[Math.PI/2, 0, 0]}>
+        <circleGeometry args={[1.6, 20]} />
+        <meshStandardMaterial color="#44aaff" roughness={0.05} transparent opacity={0.55}
+          emissive="#44aaff" emissiveIntensity={0.7} />
       </mesh>
 
-      {/* ── 6 PROJECT TANKS on left/right walls ── */}
-      {/* LEFT wall tanks — flush against X=-11 wall, facing RIGHT into room */}
-      <ProjectTank project={PROJECTS[0]} position={[-10.8, 0, -5.5]} facingRight={true} onSelect={onProjectSelect} />
-      <ProjectTank project={PROJECTS[1]} position={[-10.8, 0,  0]}   facingRight={true} onSelect={onProjectSelect} />
-      <ProjectTank project={PROJECTS[2]} position={[-10.8, 0,  5.5]} facingRight={true} onSelect={onProjectSelect} />
-      {/* RIGHT wall tanks — flush against X=+11 wall, facing LEFT into room */}
-      <ProjectTank project={PROJECTS[3]} position={[10.8,  0, -5.5]} facingRight={false} onSelect={onProjectSelect} />
-      <ProjectTank project={PROJECTS[4]} position={[10.8,  0,  0]}   facingRight={false} onSelect={onProjectSelect} />
-      <ProjectTank project={PROJECTS[5]} position={[10.8,  0,  5.5]} facingRight={false} onSelect={onProjectSelect} />
+      {/* ── 6 PROJECT TANKS ── spread across bigger room ── */}
+      {/* LEFT wall — X = -17, tanks face RIGHT */}
+      <ProjectTank project={PROJECTS[0]} position={[-16.6, 0, -8]}  facingRight={true}  onSelect={onProjectSelect} />
+      <ProjectTank project={PROJECTS[1]} position={[-16.6, 0,  0]}  facingRight={true}  onSelect={onProjectSelect} />
+      <ProjectTank project={PROJECTS[2]} position={[-16.6, 0,  8]}  facingRight={true}  onSelect={onProjectSelect} />
+      {/* RIGHT wall — X = +17, tanks face LEFT */}
+      <ProjectTank project={PROJECTS[3]} position={[16.6,  0, -8]}  facingRight={false} onSelect={onProjectSelect} />
+      <ProjectTank project={PROJECTS[4]} position={[16.6,  0,  0]}  facingRight={false} onSelect={onProjectSelect} />
+      <ProjectTank project={PROJECTS[5]} position={[16.6,  0,  8]}  facingRight={false} onSelect={onProjectSelect} />
 
-      {/* ── LIGHTS ── */}
-      <pointLight position={[0, 8.5, 0]}  color="#ffcc88" intensity={18} distance={30} decay={0.7} />
-      <pointLight position={[0, 4, 0]}    color="#2244aa" intensity={6}  distance={20} decay={1.0} />
+      {/* ── ROOM LIGHTING ── warm overhead + cool blue fill ── */}
+      {/* Main overhead — warm amber */}
+      <pointLight position={[0,  12, 0]}  color="#ffcc88" intensity={28} distance={40} decay={0.8} />
+      {/* Side fills so tank faces are lit */}
+      <pointLight position={[-8, 7,  0]}  color="#4488ff" intensity={10} distance={22} decay={1.2} />
+      <pointLight position={[8,  7,  0]}  color="#4488ff" intensity={10} distance={22} decay={1.2} />
+      {/* Front/back fills to kill wall-shadow blocking */}
+      <pointLight position={[0,  6, -8]}  color="#224466" intensity={6}  distance={18} decay={1.2} />
+      <pointLight position={[0,  6,  8]}  color="#224466" intensity={6}  distance={18} decay={1.2} />
     </group>
   )
 }
