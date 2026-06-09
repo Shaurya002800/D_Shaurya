@@ -268,7 +268,7 @@ function Ocean() {
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -3.5, 0]} receiveShadow={false}>
 
-      <planeGeometry args={[1400, 1400, 80, 80]} />
+      <planeGeometry args={[2500, 2500, 64, 64]} />
       <shaderMaterial ref={matRef} args={[shader]} />
     </mesh>
   )

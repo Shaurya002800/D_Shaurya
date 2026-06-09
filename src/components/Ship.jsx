@@ -31,7 +31,9 @@ function usePBR(folder, repeat = [1, 1]) {
 
 // ─────────────────────────────────────────────────────────────────────
 // WOOD PLANK MATERIAL — deck floor
-// ─────────────────────────────────────────────────────────────────────
+const NORMAL_SCALE_DECK = new THREE.Vector2(1.2, 1.2)
+const NORMAL_SCALE_WOOD = new THREE.Vector2(1.5, 1.5)
+
 function DeckMaterial({ repeat = [3, 8] }) {
   const maps = usePBR('WoodFloor040_1K-JPG', repeat)
   return (
@@ -40,14 +42,11 @@ function DeckMaterial({ repeat = [3, 8] }) {
       roughness={0.82}
       metalness={0.0}
       aoMapIntensity={1.2}
-      normalScale={new THREE.Vector2(1.2, 1.2)}
+      normalScale={NORMAL_SCALE_DECK}   // ← stable reference
     />
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────
-// WOOD STRUCTURAL MATERIAL — hull, mast, railings
-// ─────────────────────────────────────────────────────────────────────
 function WoodMaterial({ repeat = [2, 2], roughness = 0.88 }) {
   const maps = usePBR('WoodFloor041_1K-JPG', repeat)
   return (
@@ -56,7 +55,7 @@ function WoodMaterial({ repeat = [2, 2], roughness = 0.88 }) {
       roughness={roughness}
       metalness={0.0}
       aoMapIntensity={1.3}
-      normalScale={new THREE.Vector2(1.5, 1.5)}
+      normalScale={NORMAL_SCALE_WOOD}   // ← stable reference
     />
   )
 }
@@ -124,7 +123,7 @@ function ShipWheel({ position }) {
     <group position={position} rotation={[0.28, 0, 0]}>
       {/* Outer ring */}
       <mesh castShadow>
-        <torusGeometry args={[0.88, 0.075, 14, 36]} />
+        <torusGeometry args={[0.88, 0.075, 10, 24]} />
         <meshStandardMaterial color="#2a1505" roughness={0.5} metalness={0.1} />
       </mesh>
       {/* Inner hub ring */}
@@ -163,17 +162,17 @@ function LionFigurehead({ position }) {
     <group position={position}>
       {/* Main head */}
       <mesh castShadow>
-        <sphereGeometry args={[2.8, 32, 32]} />
+        <sphereGeometry args={[2.8, 20, 20]} />
         <meshStandardMaterial color="#FFB300" roughness={0.45} metalness={0.0} />
       </mesh>
       {/* Mane ring */}
       <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
-        <torusGeometry args={[3.5, 0.72, 18, 36]} />
+        <torusGeometry args={[3.5, 0.72, 12, 24]} />
         <meshStandardMaterial color="#E65100" roughness={0.5} metalness={0.0} />
       </mesh>
       {/* Inner mane detail ring */}
       <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
-        <torusGeometry args={[3.0, 0.35, 14, 32]} />
+        <torusGeometry args={[3.0, 0.35, 10, 24]} />
         <meshStandardMaterial color="#FF8F00" roughness={0.55} metalness={0.0} />
       </mesh>
       {/* Snout */}
@@ -536,31 +535,27 @@ function CoiledRope({ position }) {
 // ─────────────────────────────────────────────────────────────────────
 // LANTERN — hanging from ropes
 // ─────────────────────────────────────────────────────────────────────
+// AFTER — remove the pointLight entirely, emissive on the glass is enough
 function Lantern({ position }) {
   return (
     <group position={position}>
-      {/* Glass body */}
       <mesh castShadow>
-        <cylinderGeometry args={[0.14, 0.14, 0.4, 10]} />
-        <meshStandardMaterial color="#ffdd88" roughness={0.1} metalness={0.0} transparent opacity={0.6} emissive="#ffcc44" emissiveIntensity={0.8} />
+        <cylinderGeometry args={[0.14, 0.14, 0.4, 8]} />
+        <meshStandardMaterial color="#ffdd88" roughness={0.1} transparent opacity={0.6} emissive="#ffcc44" emissiveIntensity={1.5} />
       </mesh>
-      {/* Top cap */}
       <mesh position={[0, 0.28, 0]}>
-        <coneGeometry args={[0.16, 0.2, 10]} />
+        <coneGeometry args={[0.16, 0.2, 8]} />
         <meshStandardMaterial color="#888" roughness={0.4} metalness={0.5} />
       </mesh>
-      {/* Bottom cap */}
       <mesh position={[0, -0.28, 0]}>
-        <cylinderGeometry args={[0.16, 0.12, 0.08, 10]} />
+        <cylinderGeometry args={[0.16, 0.12, 0.08, 8]} />
         <meshStandardMaterial color="#888" roughness={0.4} metalness={0.5} />
       </mesh>
-      {/* Hanging wire */}
       <mesh position={[0, 0.45, 0]}>
         <cylinderGeometry args={[0.01, 0.01, 0.5, 4]} />
         <meshStandardMaterial color="#555" roughness={0.5} metalness={0.6} />
       </mesh>
-      {/* Point light for glow */}
-      <pointLight color="#ffcc44" intensity={0.6} distance={6} decay={2} />
+      {/* NO pointLight — emissive glow looks just as good, costs nothing */}
     </group>
   )
 }
@@ -836,7 +831,7 @@ function LibrarySurveyRoom({ position }) {
 
       {/* Globe Stand */}
       <mesh position={[5, 1, 2]} castShadow>
-        <sphereGeometry args={[0.8, 32, 32]} />
+        <sphereGeometry args={[0.8, 16, 16]} />
         <meshStandardMaterial color="#d4c4a8" />
       </mesh>
       
@@ -890,8 +885,11 @@ function Bubble({ startPos, speed = 0.35 }) {
   const ref = useRef()
   const phase = useMemo(() => Math.random() * Math.PI * 2, [])
   const xWobble = useMemo(() => (Math.random() - 0.5) * 0.5, [])
+  const frameCount = useRef(0)
 
   useFrame(({ clock }) => {
+    frameCount.current++
+    if (frameCount.current % 3 !== 0) return  // ← only run every 3rd frame
     if (!ref.current) return
     const t = clock.getElapsedTime() * speed + phase
     ref.current.position.y = startPos[1] + ((t * 1.0) % 7)
@@ -1003,9 +1001,10 @@ function createProjectCardTexture(project) {
   ctx.textAlign = 'left'
 
   // Water caustic shimmer overlay
-  for (let i = 0; i < 6; i++) {
-    const gx = Math.random() * W, gy = Math.random() * H
-    const gr = ctx.createRadialGradient(gx, gy, 0, gx, gy, 80 + Math.random()*60)
+  const causticPoints = [[200,120],[600,80],[400,300],[150,400],[750,200],[500,500]]
+  for (let i = 0; i < causticPoints.length; i++) {
+    const [gx, gy] = causticPoints[i]
+    const gr = ctx.createRadialGradient(gx, gy, 0, gx, gy, 100)
     gr.addColorStop(0, 'rgba(100,200,255,0.06)')
     gr.addColorStop(1, 'rgba(0,0,0,0)')
     ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H)
@@ -1061,7 +1060,7 @@ function ProjectCard({ project, position, rotation = [0, 0, 0], onSelect }) {
       {/* Card texture face */}
       <mesh position={[0, 0, 0.045]}>
         <planeGeometry args={[5.0, 3.15]} />
-        <meshStandardMaterial map={tex} roughness={0.2} metalness={0.0} transparent opacity={0.97} side={THREE.FrontSide} />
+        <meshStandardMaterial map={tex} roughness={0.1} transparent opacity={0.97} side={THREE.FrontSide} emissive="#ffffff" emissiveIntensity={0.15} />
       </mesh>
       {/* Glowing edge frame */}
       <mesh position={[0, 0, 0.02]}>
@@ -1244,7 +1243,6 @@ function ProjectTank({ project, position, facingRight = true, onSelect }) {
           <planeGeometry args={[3.6, 2.4]} />
           <meshStandardMaterial map={tex} roughness={0.1} transparent opacity={0.97} side={THREE.FrontSide} />
         </mesh>
-        <pointLight color={project.color} intensity={2} distance={4} decay={1.8} />
       </group>
 
       {/* Tank floor sand */}
@@ -1261,7 +1259,6 @@ function ProjectTank({ project, position, facingRight = true, onSelect }) {
       ))}
 
       {/* Top tank light */}
-      <pointLight position={[0, 5.5, 0]} color={project.color} intensity={2} distance={6} decay={1.5} />
     </group>
   )
 }
@@ -1365,14 +1362,8 @@ function AquariumBasement({ position = [0, -14, 2], onProjectSelect }) {
       <ProjectTank project={PROJECTS[5]} position={[10.8,  0,  5.5]} facingRight={false} onSelect={onProjectSelect} />
 
       {/* ── LIGHTS ── */}
-      <pointLight position={[0, 8.5, 0]}   color="#ffcc88" intensity={10} distance={25} decay={0.8} />
-      <pointLight position={[-6, 8, -4]}   color="#ffaa66" intensity={5}  distance={18} decay={1.0} />
-      <pointLight position={[6,  8, -4]}   color="#ffaa66" intensity={5}  distance={18} decay={1.0} />
-      <pointLight position={[-6, 8,  4]}   color="#ffaa66" intensity={5}  distance={18} decay={1.0} />
-      <pointLight position={[6,  8,  4]}   color="#ffaa66" intensity={5}  distance={18} decay={1.0} />
-      {/* Tank wall blue glow */}
-      <pointLight position={[-9, 4, 0]}    color="#0055ff" intensity={8}  distance={14} decay={1.0} />
-      <pointLight position={[9,  4, 0]}    color="#0055ff" intensity={8}  distance={14} decay={1.0} />
+      <pointLight position={[0, 8.5, 0]}  color="#ffcc88" intensity={18} distance={30} decay={0.7} />
+      <pointLight position={[0, 4, 0]}    color="#2244aa" intensity={6}  distance={20} decay={1.0} />
     </group>
   )
 }
@@ -1711,7 +1702,7 @@ function DomeCrowsNest({ position }) {
       </mesh>
       {/* Dome body */}
       <mesh position={[0, 1.8, 0]} castShadow>
-        <sphereGeometry args={[2.5, 24, 16, 0, Math.PI*2, 0, Math.PI/2]} />
+        <sphereGeometry args={[2.5, 16, 12, 0, Math.PI*2, 0, Math.PI/2]} />
         <meshStandardMaterial color="#c8b89a" roughness={0.75} side={THREE.DoubleSide} />
       </mesh>
       {/* Dome base ring */}
