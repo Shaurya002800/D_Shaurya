@@ -48,9 +48,13 @@ export function SkillsCameraTransition({ active }) {
 
 // ─── WORK/BASEMENT CAMERA CONTROLLER ─────────────────────────────────────────
 const CAM_WORK = {
-  position: new THREE.Vector3(0, -7, 18),   // pulled back and higher — room now goes to Z=14
-  target:   new THREE.Vector3(0, -10, 0),   // looks into the centre of the room
-  fov:      82,                              // wider FOV to take in the full room width
+  // Room Y offset is -14 (AquariumBasement position prop)
+  // Room front wall is at local Z=+8 → world Z = 8 + 2 (group offset) = 10
+  // Camera sits 4 units inside the front wall at world Z=6, world Y=-8
+  // (local Y = -8 - (-14) = 6, which is mid-height in the 12-tall room)
+  position: new THREE.Vector3(0, -8, 6),
+  target:   new THREE.Vector3(0, -11, -4),   // looks slightly down and inward
+  fov:      85,
 }
 
 export function WorkCameraTransition({ active }) {
@@ -108,28 +112,22 @@ function WorkOrbitControl({ active }) {
   const isDragging = useRef(false)
   const lastMouse  = useRef({ x: 0, y: 0 })
   const yaw        = useRef(0)
-  const pitch      = useRef(-0.12)
-  // FIX: shadow active in a ref so useFrame can early-exit with zero cost
-  // instead of running the full lookAt math every frame when work is closed
+  const pitch      = useRef(-0.08)
   const activeRef  = useRef(active)
-
-  // Keep ref in sync with prop
-  useEffect(() => {
-    activeRef.current = active
-  }, [active])
-
-  // Reset angles when section closes
+ 
+  useEffect(() => { activeRef.current = active }, [active])
+ 
   useEffect(() => {
     if (!active) {
       isDragging.current = false
       yaw.current        = 0
-      pitch.current      = -0.12
+      pitch.current      = -0.08
     }
   }, [active])
-
+ 
   useEffect(() => {
     if (!active) return
-
+ 
     const onDown = (e) => {
       isDragging.current = true
       lastMouse.current  = { x: e.clientX, y: e.clientY }
@@ -137,9 +135,11 @@ function WorkOrbitControl({ active }) {
     const onUp = () => { isDragging.current = false }
     const onMove = (e) => {
       if (!isDragging.current) return
-      yaw.current   -= (e.clientX - lastMouse.current.x) * 0.0035
-      pitch.current  = Math.max(-0.55, Math.min(0.35,
-        pitch.current - (e.clientY - lastMouse.current.y) * 0.0025
+      yaw.current -= (e.clientX - lastMouse.current.x) * 0.003
+      // CLAMP yaw: ±55° (≈ ±0.96 rad) — prevents wall clipping
+      yaw.current = Math.max(-0.96, Math.min(0.96, yaw.current))
+      pitch.current = Math.max(-0.45, Math.min(0.30,
+        pitch.current - (e.clientY - lastMouse.current.y) * 0.0022
       ))
       lastMouse.current = { x: e.clientX, y: e.clientY }
     }
@@ -149,21 +149,21 @@ function WorkOrbitControl({ active }) {
     }
     const onTouchMove = (e) => {
       if (!isDragging.current) return
-      yaw.current   -= (e.touches[0].clientX - lastMouse.current.x) * 0.004
-      pitch.current  = Math.max(-0.55, Math.min(0.35,
-        pitch.current - (e.touches[0].clientY - lastMouse.current.y) * 0.003
+      yaw.current -= (e.touches[0].clientX - lastMouse.current.x) * 0.0035
+      yaw.current = Math.max(-0.96, Math.min(0.96, yaw.current))
+      pitch.current = Math.max(-0.45, Math.min(0.30,
+        pitch.current - (e.touches[0].clientY - lastMouse.current.y) * 0.0028
       ))
       lastMouse.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
     }
-
-    // FIX: { passive: true } on all listeners — removes browser scroll-block warning
+ 
     window.addEventListener('mousedown',  onDown,       { passive: true })
     window.addEventListener('mouseup',    onUp,         { passive: true })
     window.addEventListener('mousemove',  onMove,       { passive: true })
     window.addEventListener('touchstart', onTouchStart, { passive: true })
     window.addEventListener('touchend',   onUp,         { passive: true })
     window.addEventListener('touchmove',  onTouchMove,  { passive: true })
-
+ 
     return () => {
       window.removeEventListener('mousedown',  onDown)
       window.removeEventListener('mouseup',    onUp)
@@ -174,13 +174,14 @@ function WorkOrbitControl({ active }) {
       isDragging.current = false
     }
   }, [active])
-
+ 
   useFrame((state) => {
-    // FIX: ref-based early exit — no math runs when work section is closed
     if (!activeRef.current) return
-
+ 
     const BASE = CAM_WORK.position
-    const r    = 13
+    // Orbit radius 11 — large enough to see the whole room,
+    // small enough that target stays well within the ±11 X walls
+    const r = 11
     state.camera.position.copy(BASE)
     state.camera.lookAt(
       BASE.x + Math.sin(yaw.current) * r,
@@ -188,7 +189,7 @@ function WorkOrbitControl({ active }) {
       BASE.z - Math.cos(yaw.current) * r,
     )
   })
-
+ 
   return null
 }
 
