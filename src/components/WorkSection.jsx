@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { Text } from '@react-three/drei'
 
 // ─────────────────────────────────────────────────────────────────────
 // CONSTANTS

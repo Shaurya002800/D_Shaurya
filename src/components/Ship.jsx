@@ -938,8 +938,8 @@ function useDigitalScreenTexture(project) {
     const sx = s.getContext('2d')
     const W = s.width, H = s.height
  
-    // Background
-    sx.fillStyle = '#020c18'
+    // Background — brighter so the canvas is visible in the dark basement
+    sx.fillStyle = '#061828'
     sx.fillRect(0, 0, W, H)
  
     // Grid — drawn once into static canvas
@@ -1129,35 +1129,46 @@ function useDigitalScreenTexture(project) {
 // ─────────────────────────────────────────────────────────────────────
 function DigitalScreen({ project, facingRight, workActive }) {
   const tex = useDigitalScreenTexture(project, workActive)
-  const rotY = facingRight ? Math.PI / 2 : -Math.PI / 2
+
+  // ── ROTATION FIX ────────────────────────────────────────────────────
+  // Camera looks along the Z axis from the aisle. Screen must face Z.
+  // planeGeometry default normal = +Z, so:
+  //   Left-wall  tank (facingRight=true):  rotY=Math.PI → normal faces -Z toward aisle ✓
+  //   Right-wall tank (facingRight=false): rotY=0       → normal faces +Z toward aisle ✓
+  const rotY = facingRight ? Math.PI : 0
+
+  // Push screen toward the aisle (front glass side) so it's visible.
+  // Left-wall tanks:  front glass at local X=+3.05 → push screen to X=+1.8
+  // Right-wall tanks: front glass at local X=-3.05 → push screen to X=-1.8
+  const screenX = facingRight ? 2.95 : -2.95
 
   return (
     <>
-      {/* Screen plane */}
-      <mesh rotation={[0, rotY, 0]}>
-        <planeGeometry args={[3.8, 2.6]} /> 
+      {/* Screen plane — faces the aisle, full colour */}
+      <mesh position={[screenX, 0, 0]} rotation={[0, facingRight ? Math.PI : 0, 0]}>
+        <planeGeometry args={[3.8, 2.6]} />
         <meshBasicMaterial
           map={tex}
-          color="#060e1a" /* ✨ FIX 3: Solid dark backdrop so the glow doesn't bleed through */
+          color="#ffffff"
           transparent
-          opacity={0.99}
+          opacity={0.98}
           side={THREE.DoubleSide}
         />
       </mesh>
 
-      {/* Bezel — ✨ FIXED: Inverted the X offsets to sit BEHIND the screen */}
-      <mesh position={[facingRight ? -0.04 : 0.04, 0, 0]}>
+      {/* Bezel — sits just behind the screen plane */}
+      <mesh position={[facingRight ? screenX - 0.05 : screenX + 0.05, 0, 0]}>
         <boxGeometry args={[0.06, 2.8, 4.0]} />
         <meshStandardMaterial color="#060e1a" roughness={0.5} metalness={0.7} />
       </mesh>
 
-      {/* Glow — ✨ FIXED: Inverted the X offsets to cast glow backward */}
-      <mesh rotation={[0, rotY, 0]} position={[facingRight ? -0.06 : 0.06, 0, 0]}>
+      {/* Glow halo — in front of screen toward the aisle */}
+      <mesh position={[facingRight ? screenX + 0.06 : screenX - 0.06, 0, 0]} rotation={[0, rotY, 0]}>
         <planeGeometry args={[4.2, 3.0]} />
         <meshBasicMaterial
           color={project.color}
           transparent
-          opacity={0.10}
+          opacity={0.14}
           side={THREE.DoubleSide}
           depthWrite={false}
         />
@@ -1382,10 +1393,10 @@ function ProjectTank({ project, position, facingRight = true, onSelect }) {
           emissive="#000a14" emissiveIntensity={0.02} />
       </mesh>
  
-      {/* Digital screen mounted on back wall */}
-      <group position={[0, 4.8, 0]}>
-  <DigitalScreen project={project} facingRight={facingRight} />
-</group>
+      {/* Digital screen mounted facing the aisle — positioned at tank centre height */}
+      <group position={[0, 4.5, 0.8]}>
+        <DigitalScreen project={project} facingRight={facingRight} />
+      </group>
  
       {/* Fish — tight radius to stay inside 5-deep tank */}
       <Fish color={project.color} startPos={[0, 5.5, 0]} radius={1.0} speed={0.38} yOffset={0} />
