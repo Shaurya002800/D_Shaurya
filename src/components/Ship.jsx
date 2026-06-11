@@ -967,7 +967,12 @@ function useDigitalScreenTexture(project) {
   }
  
   useFrame(({ clock }) => {
-    if (!initRef.current) { bakeStatic(); initRef.current = true }
+    // ✨ FIX 1: Run the initial draw BEFORE checking workActive
+    if (!initRef.current) { 
+      bakeStatic(); 
+      if (texRef.current) texRef.current.needsUpdate = true // ✨ CRITICAL: Tells the GPU to pull the new canvas data
+      initRef.current = true; 
+    }
  
     const canvas = canvasRef.current
     const tex    = texRef.current
@@ -1119,32 +1124,36 @@ function useDigitalScreenTexture(project) {
 }
 
 // Wrapper mesh — drop this inside ProjectTank instead of the old card group
-function DigitalScreen({ project, facingRight }) {
-  const tex = useDigitalScreenTexture(project)
-  const rotY = facingRight ? -Math.PI / 2 : Math.PI / 2
+// ─────────────────────────────────────────────────────────────────────
+// DIGITAL SCREEN — Shrunk and Optimized for Tank Space
+// ─────────────────────────────────────────────────────────────────────
+function DigitalScreen({ project, facingRight, workActive }) {
+  const tex = useDigitalScreenTexture(project, workActive)
+  const rotY = facingRight ? Math.PI / 2 : -Math.PI / 2
 
   return (
     <>
-      {/* Screen plane — faces viewer */}
+      {/* Screen plane */}
       <mesh rotation={[0, rotY, 0]}>
-        <planeGeometry args={[5.0, 3.4]} />
+        <planeGeometry args={[3.8, 2.6]} /> 
         <meshBasicMaterial
           map={tex}
+          color="#060e1a" /* ✨ FIX 3: Solid dark backdrop so the glow doesn't bleed through */
           transparent
           opacity={0.99}
           side={THREE.DoubleSide}
         />
       </mesh>
 
-      {/* Bezel — thin box along X axis (NOT Z) so it sits behind screen */}
-      <mesh position={[facingRight ? 0.06 : -0.06, 0, 0]}>
-        <boxGeometry args={[0.08, 3.7, 5.3]} />
+      {/* Bezel — ✨ FIXED: Inverted the X offsets to sit BEHIND the screen */}
+      <mesh position={[facingRight ? -0.04 : 0.04, 0, 0]}>
+        <boxGeometry args={[0.06, 2.8, 4.0]} />
         <meshStandardMaterial color="#060e1a" roughness={0.5} metalness={0.7} />
       </mesh>
 
-      {/* Glow — same rotation as screen, pushed slightly back along X */}
-      <mesh rotation={[0, rotY, 0]} position={[facingRight ? 0.08 : -0.08, 0, 0]}>
-        <planeGeometry args={[5.5, 3.9]} />
+      {/* Glow — ✨ FIXED: Inverted the X offsets to cast glow backward */}
+      <mesh rotation={[0, rotY, 0]} position={[facingRight ? -0.06 : 0.06, 0, 0]}>
+        <planeGeometry args={[4.2, 3.0]} />
         <meshBasicMaterial
           color={project.color}
           transparent
@@ -1374,7 +1383,7 @@ function ProjectTank({ project, position, facingRight = true, onSelect }) {
       </mesh>
  
       {/* Digital screen mounted on back wall */}
-      <group position={[-dir * 2.85, 4.8, 0]}>
+      <group position={[0, 4.8, 0]}>
   <DigitalScreen project={project} facingRight={facingRight} />
 </group>
  
@@ -2142,6 +2151,11 @@ export default function Ship({ aboutActive = false, onProjectSelect }) {
       ════════════════════════════════════════════════════════════ */}
       {/* Main deck floor */}
       <CuboidCollider args={[8.5, 0.25, 20]} position={[0, 0.1, -1]} />
+      <CuboidCollider args={[11, 0.25, 7]} position={[0, -13.75, 2]} />
+
+      {/* Basement side walls — stop Luffy walking into tank glass */}
+      <CuboidCollider args={[0.14, 6, 7]} position={[-11, -8, 2]} />
+      <CuboidCollider args={[0.14, 6, 7]} position={[ 11, -8, 2]} />
       {/* ════════════════════════════════════════════════════════════
           NEW COLLIDERS (TREES, SLIDE, HATCH, WHEEL)
       ════════════════════════════════════════════════════════════ */}

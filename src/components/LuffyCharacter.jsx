@@ -14,9 +14,16 @@ const BOUNDS_DECK = {
   minX: -7.0, maxX: 7.0,
   minZ: -22.0, maxZ: 28.0,
 }
+
+// ── FIX 1: BOUNDS_BASEMENT in WORLD coordinates ───────────────────────────
+// Luffy teleports to world [0, -13.85, 5] when workActive.
+// AquariumBasement group sits at world [0, -14, 2].
+// Room local extents: X -11..+11, Z -7..+7
+// → world X: -11..+11,  world Z: (2-7)..(2+7) = -5..+9
+// Kept 1.5 units inside each wall so Luffy never clips the geometry.
 const BOUNDS_BASEMENT = {
-  minX: -8.5, maxX: 8.5,
-  minZ: -8.0, maxZ: 8.0,
+  minX: -9.5, maxX: 9.5,
+  minZ: -3.5, maxZ: 8.5,
 }
 
 // keep BOUNDS pointing to deck for backward compat
@@ -24,24 +31,24 @@ const BOUNDS = BOUNDS_DECK
 
 /** Movement feel */
 const MOVE = {
-  walkSpeed:   4.8,   // units/sec at full walk
-  runSpeed:    9.2,   // units/sec at full run
-  accel:       14.0,  // how quickly velocity builds
-  friction:    11.0,  // how quickly velocity dies when no input
-  rotSpeed:    12.0,  // how fast Luffy turns to face direction
-  runThresh:   6.5,   // velocity threshold to switch walk → run anim
-  stopThresh:  0.06,  // velocity below this = fully stopped
+  walkSpeed:   4.8,
+  runSpeed:    9.2,
+  accel:       14.0,
+  friction:    11.0,
+  rotSpeed:    12.0,
+  runThresh:   6.5,
+  stopThresh:  0.06,
 }
 
 /** Camera feel */
 const CAM = {
-  normalDist:   8.0,  // distance behind Luffy
-  normalHeight:  3.2,  // height above Luffy
-  runDist:      11.0,  // camera pulls back when running
+  normalDist:   8.0,
+  normalHeight:  3.2,
+  runDist:      11.0,
   runHeight:     3.8,
-  posLerp:       0.055, // how smoothly camera position follows
-  lookLerp:      0.08,  // how smoothly camera look target follows
-  lookOffset:    1.85,  // how high above Luffy camera looks
+  posLerp:       0.055,
+  lookLerp:      0.08,
+  lookOffset:    1.85,
   fovNormal:    68,
   fovRun:       74,
   fovLerp:       0.04,
@@ -80,7 +87,7 @@ const STATE = {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ANIMATION FILE MAP — maps state names to FBX file paths
+// ANIMATION FILE MAP
 // ─────────────────────────────────────────────────────────────────────────────
 const ANIM_FILES = {
   [STATE.IDLE]:    '/animations/Idle.fbx',
@@ -96,51 +103,32 @@ const ANIM_FILES = {
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Strips the "Armature|" prefix from Mixamo FBX track names
- * so clips loaded from different FBX files share the same bone names
- * and can be applied to one AnimationMixer.
- */
 function retargetClip(clip) {
   clip.tracks.forEach(track => {
-    // "Armature|mixamorigHips.position" → "mixamorigHips.position"
     track.name = track.name.replace(/^[^|]+\|/, '')
   })
   return clip
 }
 
-/**
- * Clamp a value between min and max.
- */
 function clamp(val, min, max) {
   return Math.max(min, Math.min(max, val))
 }
 
-/**
- * Wrap an angle into [-PI, PI].
- */
 function wrapAngle(a) {
   while (a >  Math.PI) a -= 2 * Math.PI
   while (a < -Math.PI) a += 2 * Math.PI
   return a
 }
 
-/**
- * Smooth lerp between two angles (handles 360° wrap).
- */
 function lerpAngle(current, target, t) {
   const diff = wrapAngle(target - current)
   return current + diff * t
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ANIMATION LOADER — loads all FBX clips onto a single mixer
+// ANIMATION LOADER
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Loads one FBX animation file and returns an AnimationAction
- * bound to the given mixer and base mesh.
- */
 function loadAnim(loader, path, mixer, name) {
   return new Promise((resolve, reject) => {
     loader.load(
@@ -154,7 +142,6 @@ function loadAnim(loader, path, mixer, name) {
         const clip   = retargetClip(fbx.animations[0])
         const action = mixer.clipAction(clip)
         action.setLoop(THREE.LoopRepeat)
-        // Pre-warm — play then immediately pause so first frame is set
         action.play()
         action.paused = true
         console.log(`[Luffy] ✅ ${name} loaded — ${clip.tracks.length} tracks`)
@@ -170,12 +157,9 @@ function loadAnim(loader, path, mixer, name) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MATERIAL TRANSFER — applies GLB PBR materials onto FBX mesh
+// MATERIAL TRANSFER
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Collects all unique materials from the GLB scene in traverse order.
- */
 function collectGLBMaterials(glbScene) {
   const seen = new Set()
   const list = []
@@ -194,9 +178,6 @@ function collectGLBMaterials(glbScene) {
   return list
 }
 
-/**
- * Applies GLB material list to an FBX mesh by index.
- */
 function applyMaterialsToFBX(fbx, matList) {
   let idx = 0
   fbx.traverse((child) => {
@@ -214,7 +195,7 @@ function applyMaterialsToFBX(fbx, matList) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FOOTSTEP SYSTEM — triggers visual dust puffs on footfall
+// FOOTSTEP SYSTEM
 // ─────────────────────────────────────────────────────────────────────────────
 
 function createFootpuff(scene, position) {
@@ -243,7 +224,7 @@ function createFootpuff(scene, position) {
   let age = 0
   const tick = () => {
     age += 0.016
-    group.children.forEach((m, i) => {
+    group.children.forEach((m) => {
       m.position.y += 0.012
       m.position.x += (Math.random() - 0.5) * 0.01
       m.material.opacity = Math.max(0, 0.55 - age * 1.4)
@@ -262,7 +243,7 @@ function createFootpuff(scene, position) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SHADOW BLOB — fake circular shadow beneath Luffy
+// SHADOW BLOB
 // ─────────────────────────────────────────────────────────────────────────────
 function ShadowBlob({ groupRef }) {
   const blobRef = useRef()
@@ -304,12 +285,16 @@ class CameraController {
     this._tmpLook    = new THREE.Vector3()
   }
 
-  update(camera, luffyPos, luffyRot, isRunning, dt) {
+  // ── FIX 2: workActive param — yield camera to WorkCameraTransition ────────
+  // When workActive=true this function returns immediately without touching
+  // camera.position, camera.lookAt, or camera.fov.
+  // WorldScene's WorkCameraTransition + WorkOrbitControl own the camera
+  // entirely while the player is in the basement.
+  update(camera, luffyPos, luffyRot, isRunning, dt, workActive = false) {
+    if (workActive) return   // ← hand off — do NOT write to camera
+
     const dist   = isRunning ? CAM.runDist   : CAM.normalDist
-    // In basement (Y < -5), use tighter camera so room fits in view
-    const height = luffyPos.y < -5
-      ? 4.5
-      : isRunning ? CAM.runHeight : CAM.normalHeight
+    const height = isRunning ? CAM.runHeight  : CAM.normalHeight
     const fov    = isRunning ? CAM.fovRun     : CAM.fovNormal
 
     this._tmpVec.set(
@@ -401,7 +386,7 @@ class AnimStateMachine {
   constructor() {
     this.actions = {}
     this.current = STATE.IDLE
-    this.locked  = false 
+    this.locked  = false
     this._mixer  = null
   }
 
@@ -418,7 +403,7 @@ class AnimStateMachine {
     if (this.current === next)       return
     if (!this.actions[next])         return
 
-    const prev = this.actions[this.current]
+    const prev  = this.actions[this.current]
     const nextA = this.actions[next]
 
     if (prev) {
@@ -487,7 +472,7 @@ class AnimStateMachine {
 class FootstepTimer {
   constructor() {
     this._timer     = 0
-    this._interval  = 0.42 
+    this._interval  = 0.42
   }
 
   tick(dt, moving, speed, maxSpeed) {
@@ -522,7 +507,7 @@ class RotationController {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// POSITION CONTROLLER (UPDATED WITH COLLISIONS & HEIGHT)
+// POSITION CONTROLLER
 // ─────────────────────────────────────────────────────────────────────────────
 
 class PositionController {
@@ -535,96 +520,93 @@ class PositionController {
     let nextX = p.x + vel.x * dt
     let nextZ = p.z + vel.z * dt
 
-    // 1. SHIP EXTERNAL BOUNDARIES
     nextX = clamp(nextX, BOUNDS.minX, BOUNDS.maxX)
     nextZ = clamp(nextZ, BOUNDS.minZ, BOUNDS.maxZ)
 
-    // 2. SOLID OBSTACLES (The invisible boxes Luffy can't walk through)
-    // 2. SOLID OBSTACLES (The invisible boxes Luffy can't walk through)
     const OBSTACLES = [
-      // Mikan Tree Planter Box
       { minX: -8.0, maxX: -3.5, minZ: 16.5, maxZ: 21.0 },
-      // Ship Wheel Column
       { minX: -1.0, maxX: 1.0,  minZ: 18.8, maxZ: 20.8 },
-      // Main Mast
       { minX: -1.2, maxX: 1.2,  minZ: -4.2, maxZ: -1.8 },
-      // Fore Mast
       { minX: -0.8, maxX: 0.8,  minZ: -20.0, maxZ: -18.0 },
-      
-      // ✨ NEW: LIBRARY & SURVEY ROOM ARCHITECTURE ✨
-      // Left exterior wall
       { minX: -6.2, maxX: -5.7, minZ: 21.6, maxZ: 27.6 },
-      // Right exterior wall
       { minX: 5.7,  maxX: 6.2,  minZ: 21.6, maxZ: 27.6 },
-      // Back exterior wall (windows)
       { minX: -6.2, maxX: 6.2,  minZ: 27.3, maxZ: 27.6 },
-      // Front Wall (Left of the door)
       { minX: -6.0, maxX: -1.0, minZ: 21.4, maxZ: 21.8 },
-      // Front Wall (Right of the door)
       { minX: 1.0,  maxX: 6.0,  minZ: 21.4, maxZ: 21.8 },
-      // Interior Prop: Bookshelf
       { minX: -5.7, maxX: -4.0, minZ: 22.5, maxZ: 26.5 },
-      // Interior Prop: Nami's Desk
       { minX: -2.0, maxX: 2.0,  minZ: 25.2, maxZ: 27.0 },
     ]
 
     for (const obs of OBSTACLES) {
-      // If the next step puts Luffy inside an obstacle box...
       if (nextX > obs.minX && nextX < obs.maxX && nextZ > obs.minZ && nextZ < obs.maxZ) {
-        // Cancel movement on the axis that caused the collision
         if (p.x <= obs.minX || p.x >= obs.maxX) nextX = p.x
         if (p.z <= obs.minZ || p.z >= obs.maxZ) nextZ = p.z
       }
     }
 
-    // Apply the X and Z movement
     p.x = nextX
     p.z = nextZ
 
-    // 3. ELEVATION (Y-AXIS) CONTROL
-    // The Slide (Walk up/down the ramp)
     if (p.x >= -3.8 && p.x <= -1.5 && p.z >= 9.0 && p.z <= 15.0) {
-      // Calculate how far up the ramp he is (0 = bottom, 1 = top)
-      const slopeProgress = (p.z - 9.0) / (15.0 - 9.0) 
+      const slopeProgress = (p.z - 9.0) / (15.0 - 9.0)
       p.y = 0.15 + clamp(slopeProgress, 0, 1) * 2.5
-    } 
-    // Quarterdeck (Rear stairs/raised deck)
+    }
     else if (p.z > 13.0) {
-      p.y = 2.65 
+      p.y = 2.65
     }
-    // Forecastle (Front stairs/raised deck)
     else if (p.z < -13.0) {
-      p.y = 2.65 
+      p.y = 2.65
     }
-    // The Basement Hatch (Slight bump up when walking over it)
     else if (p.x > -1.75 && p.x < 1.75 && p.z > 3.75 && p.z < 6.25) {
       p.y = 0.28
     }
-    // Main Deck (Default flat grass/wood floor)
     else {
-      p.y = 0.15 
+      p.y = 0.15
     }
   }
 
-  // Basement mode — override everything
+  // ── FIX 3: updateBasement in WORLD coordinates ──────────────────────────
+  // Luffy's world position when in basement: Y = -13.85
+  // AquariumBasement group [0,-14,2], room 22×14×12 local.
+  // World extents: X -11..+11,  Z -5..+9
+  //
+  // TANK_BLOCKS in world coords:
+  //   Left tanks:  ProjectTank at local X=-7.5 → world X=-7.5
+  //                back panel local X offset = -3.05 → world X = -7.5-3.05 = -10.55
+  //                front glass local X offset = +3.05 → world X = -7.5+3.05 = -4.45
+  //   Right tanks: ProjectTank at local X=+7.5
+  //                front glass → world X = +4.45, back panel → world X = +10.55
+  //   Tank Z: positions at local Z = -4.8, 0, +4.8 → world Z = -2.8, 2, 6.8
+  //           each tank depth 5 units → Z spans roughly -5.3 to +9.3 world
+  //
+  //   Aisle: world X = -4.45 to +4.45  (≈ 8.9 units wide — plenty of room)
+  //
   updateBasement(group, vel, dt) {
     const p = group.position
+
     let nextX = clamp(p.x + vel.x * dt, BOUNDS_BASEMENT.minX, BOUNDS_BASEMENT.maxX)
     let nextZ = clamp(p.z + vel.z * dt, BOUNDS_BASEMENT.minZ, BOUNDS_BASEMENT.maxZ)
-    // Block aquarium tank zones (walls)
+
+    // Block Luffy from walking into the aquarium tank walls.
+    // Each tank is 6.1 units wide (X) and 5 units deep (Z).
+    // Left wall tanks: world X spans -10.55 (back) → -4.45 (glass front)
+    // Right wall tanks: world X spans +4.45 (glass front) → +10.55 (back)
+    // Give 0.5 unit buffer so Luffy stops visibly in front of the glass.
     const TANK_BLOCKS = [
-      { minX: -13.5, maxX: -9.5, minZ: -8.5, maxZ: 8.5 }, // left wall tanks
-      { minX:  9.5,  maxX: 13.5, minZ: -8.5, maxZ: 8.5 }, // right wall tanks
+      { minX: -10.8, maxX: -4.0, minZ: -5.5, maxZ: 9.5 }, // left wall tanks
+      { minX:  4.0,  maxX: 10.8, minZ: -5.5, maxZ: 9.5 }, // right wall tanks
     ]
+
     for (const obs of TANK_BLOCKS) {
       if (nextX > obs.minX && nextX < obs.maxX && nextZ > obs.minZ && nextZ < obs.maxZ) {
         if (p.x <= obs.minX || p.x >= obs.maxX) nextX = p.x
         if (p.z <= obs.minZ || p.z >= obs.maxZ) nextZ = p.z
       }
     }
+
     p.x = nextX
     p.z = nextZ
-    p.y = -13.85 // basement floor Y
+    p.y = -13.85  // basement floor world Y
   }
 }
 
@@ -835,17 +817,17 @@ function Luffy3D({
   }, [glbScene])
 
   useEffect(() => {
-  if (!groupRef.current) return
-  if (workActive) {
-    // Teleport Luffy to basement start position
-    groupRef.current.position.set(0, -13.85, 5)
-    velCtrl.current.vel.set(0, 0, 0)
-  } else if (!workActive && groupRef.current.position.y < -5) {
-    // Teleport back to deck hatch position
-    groupRef.current.position.set(0, 0.15, 5)
-    velCtrl.current.vel.set(0, 0, 0)
-  }
-}, [workActive])
+    if (!groupRef.current) return
+    if (workActive) {
+      // Teleport Luffy to basement start — world position directly under hatch
+      groupRef.current.position.set(0, -13.85, 5)
+      velCtrl.current.vel.set(0, 0, 0)
+    } else if (!workActive && groupRef.current.position.y < -5) {
+      // Teleport back to deck hatch position on exit
+      groupRef.current.position.set(0, 0.15, 5)
+      velCtrl.current.vel.set(0, 0, 0)
+    }
+  }, [workActive])
 
   useFrame((_, dt) => {
     if (!loadedRef.current || !groupRef.current || !mixerRef.current) return
@@ -853,7 +835,7 @@ function Luffy3D({
     const safeDt = Math.min(dt, 0.05)
     mixerRef.current.update(safeDt)
 
-     if (aboutActive || skillsActive) {
+    if (aboutActive || skillsActive) {
       animSM.current.updateLocomotion({ moving: false, running: false })
       if (stateRef.current !== animSM.current.current) {
         stateRef.current = animSM.current.current
@@ -862,10 +844,7 @@ function Luffy3D({
       return
     }
 
-    // 🚨 BUG FIX: Handle the hook returning an object OR a ref. 
     const currentKeys = keys?.current || keys || {}
-
-    // Support Shift key to run
     const shift = currentKeys.Shift || currentKeys.ShiftLeft || currentKeys.ShiftRight || false
 
     const { moving, running, speed } = velCtrl.current.update(
@@ -906,7 +885,6 @@ function Luffy3D({
       if (onZoneChange) onZoneChange(zone)
     }
 
-    // Safely consume E key
     if ((currentKeys.e || currentKeys.E) && zone && !animSM.current.locked) {
       if (keys.current) {
         keys.current.e = false
@@ -915,7 +893,7 @@ function Luffy3D({
         keys.e = false
         keys.E = false
       }
-      
+
       animSM.current.playOnce(zone.state, 0.25, () => {
         if (zone.section && onNavigate) {
           onNavigate(zone.section)
@@ -928,12 +906,14 @@ function Luffy3D({
       if (onStateChange) onStateChange(stateRef.current)
     }
 
+    // ── FIX 4: pass workActive so camera yields when in basement ──────────
     camCtrl.current.update(
       camera,
       groupRef.current.position,
       groupRef.current.rotation.y,
       running,
       safeDt,
+      workActive,  // ← when true, CameraController.update() returns immediately
     )
 
     if (debugRef) {

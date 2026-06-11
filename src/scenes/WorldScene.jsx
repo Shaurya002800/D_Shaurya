@@ -47,14 +47,16 @@ export function SkillsCameraTransition({ active }) {
 }
 
 // ─── WORK/BASEMENT CAMERA CONTROLLER ─────────────────────────────────────────
+// AquariumBasement group is at world [0, -14, 2].
+// Room: 22 wide (X ±11), 14 deep (Z -7..+7), 12 tall (Y 0..12)
+// World: floor Y=-14, ceiling Y=-2, front wall Z=+9, back wall Z=-5
+//
+// Camera: aisle centre X=0, mid-height Y=-9 (local Y=5), near front Z=+8
+// Target: looks toward back-centre, slightly down toward floor tanks
 const CAM_WORK = {
-  // Room Y offset is -14 (AquariumBasement position prop)
-  // Room front wall is at local Z=+8 → world Z = 8 + 2 (group offset) = 10
-  // Camera sits 4 units inside the front wall at world Z=6, world Y=-8
-  // (local Y = -8 - (-14) = 6, which is mid-height in the 12-tall room)
-  position: new THREE.Vector3(0, -8, 6),
-  target:   new THREE.Vector3(0, -11, -4),   // looks slightly down and inward
-  fov:      85,
+  position: new THREE.Vector3(0, -9, 8),
+  target:   new THREE.Vector3(0, -11, -1),
+  fov:      80,
 }
 
 export function WorkCameraTransition({ active }) {
@@ -177,12 +179,13 @@ function WorkOrbitControl({ active }) {
  
   useFrame((state) => {
     if (!activeRef.current) return
- 
+
     const BASE = CAM_WORK.position
-    // Orbit radius 11 — large enough to see the whole room,
-    // small enough that target stays well within the ±11 X walls
-    const r = 11
-    state.camera.position.copy(BASE)
+    // Keep camera pinned at BASE — do NOT re-copy every frame as that
+    // creates a fight with WorkCameraTransition while it is still animating.
+    // Instead only steer the lookAt direction based on drag input.
+    // Radius 6: at max yaw ±55° → lateral offset ±4.9, well inside ±9.5 world walls.
+    const r = 6
     state.camera.lookAt(
       BASE.x + Math.sin(yaw.current) * r,
       BASE.y + Math.sin(pitch.current) * r - 1,
