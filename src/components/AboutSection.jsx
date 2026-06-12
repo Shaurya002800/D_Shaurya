@@ -265,7 +265,7 @@ export function AnimatedSail({ position = [0, 20.5, -2.5] }) {
     img.crossOrigin = 'anonymous'
     img.onload = () => drawAll(img)
     img.onerror = () => drawAll(null) // draw without photo if it fails
-    img.src = '/shaurya.png'
+    img.src = '/image copy.png'
   }, [])
 
   // Blank linen sail texture (for the other two sails)

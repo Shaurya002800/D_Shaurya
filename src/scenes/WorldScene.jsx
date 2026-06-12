@@ -16,8 +16,9 @@ const CAM_EXPLORE = {
 }
 
 const CAM_SKILLS = {
-  position: new THREE.Vector3(0, 34, 10),
-  target: new THREE.Vector3(0, 31, -10),
+  position: new THREE.Vector3(0, 25, 4),
+  target:   new THREE.Vector3(0, 18, -60),
+  fov:      55,
 }
 
 export function SkillsCameraTransition({ active }) {
