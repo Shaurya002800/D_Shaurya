@@ -23,6 +23,7 @@ function App() {
   const [skillsActive,    setSkillsActive]    = useState(false)
   const [workActive,      setWorkActive]      = useState(false)
   const [selectedProject, setSelectedProject] = useState(null)
+  const [skillsDirection, setSkillsDirection] = useState('north')
   const [hintLabel,       setHintLabel]       = useState(null)
   const [charState,       setCharState]       = useState('idle')
   const [speed,           setSpeed]           = useState(0)
@@ -92,6 +93,7 @@ function App() {
         onNavigate={handleNavigate}
         aboutActive={aboutActive}
         skillsActive={skillsActive}
+        skillsDirection={skillsDirection}
         workActive={workActive}
         onProjectSelect={setSelectedProject}
       />
@@ -131,7 +133,11 @@ function App() {
       {/* ── Section overlays ── */}
       <AboutSection active={aboutActive} onClose={handleAboutClose} />
 
-      <SkillsSection active={skillsActive} onClose={handleSkillsClose} />
+      <SkillsSection
+        active={skillsActive}
+        onClose={handleSkillsClose}
+        onDirectionChange={setSkillsDirection}
+      />
 
       <WorkSection
         active={workActive}

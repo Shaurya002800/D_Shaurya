@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, Suspense, useMemo } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { Sky, Sparkles } from '@react-three/drei'
+// Added OrbitControls to the drei import
+import { Sky, Sparkles, OrbitControls } from '@react-three/drei'
 import { Physics, RigidBody, CuboidCollider } from '@react-three/rapier'
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing'
 import * as THREE from 'three'
@@ -15,28 +16,49 @@ const CAM_EXPLORE = {
   target: new THREE.Vector3(0, 1.5, 0),
 }
 
-const CAM_SKILLS = {
-  position: new THREE.Vector3(0, 34, -3),
-  target:   new THREE.Vector3(0, 22, -90),
-  fov:      55,
+const CROWS_NEST_CAMERA = {
+  fov: 62,
+  views: {
+    north: {
+      position: new THREE.Vector3(0, 34.15, 2.8),
+      target:   new THREE.Vector3(0, 27.6, -155),
+    },
+    east: {
+      position: new THREE.Vector3(-5.8, 34.15, -3),
+      target:   new THREE.Vector3(155, 27.6, -3),
+    },
+    south: {
+      position: new THREE.Vector3(0, 34.15, -8.8),
+      target:   new THREE.Vector3(0, 27.6, 155),
+    },
+    west: {
+      position: new THREE.Vector3(5.8, 34.15, -3),
+      target:   new THREE.Vector3(-155, 27.6, -3),
+    },
+  },
 }
 
-export function SkillsCameraTransition({ active }) {
+export function SkillsCameraTransition({ active, direction = 'north' }) {
   const isAnimating = useRef(false)
   const currentTarget = useRef(new THREE.Vector3(0, 1.5, 0))
 
   useFrame((state, delta) => {
     const speed = 2.5 * delta
+    const view = CROWS_NEST_CAMERA.views[direction] ?? CROWS_NEST_CAMERA.views.north
 
     if (active) {
       isAnimating.current = true
-      state.camera.position.lerp(CAM_SKILLS.position, speed)
-      currentTarget.current.lerp(CAM_SKILLS.target, speed)
+      state.camera.position.lerp(view.position, speed)
+      currentTarget.current.lerp(view.target, speed)
       state.camera.lookAt(currentTarget.current)
+      state.camera.fov = THREE.MathUtils.lerp(state.camera.fov, CROWS_NEST_CAMERA.fov, speed)
+      state.camera.updateProjectionMatrix()
     } else if (isAnimating.current) {
       state.camera.position.lerp(CAM_EXPLORE.position, speed)
       currentTarget.current.lerp(CAM_EXPLORE.target, speed)
       state.camera.lookAt(currentTarget.current)
+      state.camera.fov = THREE.MathUtils.lerp(state.camera.fov, 68, speed)
+      state.camera.updateProjectionMatrix()
 
       if (state.camera.position.distanceTo(CAM_EXPLORE.position) < 0.1) {
         isAnimating.current = false
@@ -331,13 +353,29 @@ export default function WorldScene({
   onProjectSelect,
   aboutActive = false,
   skillsActive = false,
+  skillsDirection = 'north',
   workActive = false,
 }) {
   const [cloudsCleared, setCloudsCleared] = useState(false)
+  
+  // ─── NEW: Global Free Camera State ───
+  const [freeCam, setFreeCam] = useState(false)
 
   useEffect(() => {
     const t = setTimeout(() => setCloudsCleared(true), 2000)
     return () => clearTimeout(t)
+  }, [])
+
+  // ─── NEW: Keyboard Listener for 'O' key ───
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Pressing 'o' or 'O' toggles the free camera mode
+      if (e.key.toLowerCase() === 'o') {
+        setFreeCam((prev) => !prev)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
   return (
@@ -345,63 +383,56 @@ export default function WorldScene({
       position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden',
       background: 'linear-gradient(180deg, #cfe6f5 0%, #9fc6df 46%, #6f9dbd 100%)',
     }}>
-      <Canvas
-        shadows="soft"
-        camera={{ position: [0, 8.5, 16], fov: 68, near: 0.1, far: 2000 }}
-        performance={{ min: 0.5 }}
-        dpr={[1, 2]}
-        onCreated={({ camera }) => camera.lookAt(0, 1.5, 0)}
-        gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.84 }}
-        style={{ position: 'absolute', inset: 0, zIndex: 1 }}
-      >
-        {/* FIX: removed workActive ternaries — WorkCameraTransition manages
-            fog directly on the scene object, so this element just holds the
-            default explore values. The old near=2 was clipping the scene badly. */}
-        <fog attach="fog" args={['#e4f0f6', 60, 260]} />
+<Canvas
+  shadows="soft"
+  camera={{ position: [0, 8.5, 16], fov: 68, near: 0.1, far: 2000 }}
+  performance={{ min: 0.5 }}
+  dpr={[1, 2]}
+  gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.84 }}
+  style={{ position: 'absolute', inset: 0, zIndex: 1 }}
+>
+  {/* 1. OrbitControls is ALWAYS mounted, but disabled until you press 'O' */}
+  <OrbitControls makeDefault enabled={freeCam} />
 
-        <Lighting />
-        <Sky distance={4500} sunPosition={[82, 18, 46]} inclination={0.53} azimuth={0.21} rayleigh={0.78} turbidity={4.6} />
-        <Sparkles count={220} scale={60} size={1.25} speed={0.18} opacity={0.11} color="#ffffff" position={[0, 8, 0]} />
+  {/* 2. Your Camera Controllers */}
+  <AboutCameraController active={aboutActive} />
+  <SkillsCameraTransition active={skillsActive} direction={skillsDirection} />
+  <WorkCameraTransition active={workActive} />
+  <WorkOrbitControl active={workActive} />
 
-        <AboutCameraController active={aboutActive} />
-        <SkillsCameraTransition active={skillsActive} />
-        <WorkCameraTransition active={workActive} />
-        <WorkOrbitControl active={workActive} />
+  {/* 3. The rest of your scene... */}
+  <fog attach="fog" args={['#e4f0f6', 60, 260]} />
+  <Lighting />
+  <Sky distance={4500} sunPosition={[82, 18, 46]} inclination={0.53} azimuth={0.21} rayleigh={0.78} turbidity={4.6} />
+  <Sparkles count={220} scale={60} size={1.25} speed={0.18} opacity={0.11} color="#ffffff" position={[0, 8, 0]} />
+  
+  <Ocean />
 
-        <Ocean />
+  <Suspense fallback={null}>
+    <Physics gravity={[0, -9.81, 0]} debug={false}>
+      <Ship onProjectSelect={onProjectSelect} aboutActive={aboutActive} skillsActive={skillsActive} />
+      <RigidBody type="kinematicPosition" colliders={false} lockRotations>
+        <CuboidCollider args={[0.35, 0.9, 0.35]} position={[0, 0.9, 0]} />
+        <LuffyCharacter3D
+          position={[0, 0.15, 5]}
+          onStateChange={onStateChange}
+          onZoneChange={onZoneChange}
+          onNavigate={onNavigate}
+          debugRef={debugRef}
+          aboutActive={aboutActive}
+          skillsActive={skillsActive}
+          skillsDirection={skillsDirection}
+          workActive={workActive}
+        />
+      </RigidBody>
+    </Physics>
+  </Suspense>
 
-        <Suspense fallback={null}>
-          <Physics gravity={[0, -9.81, 0]} debug={false}>
-            <Ship aboutActive={aboutActive} onProjectSelect={onProjectSelect} />
-            <RigidBody type="kinematicPosition" colliders={false} lockRotations>
-              <CuboidCollider args={[0.35, 0.9, 0.35]} position={[0, 0.9, 0]} />
-              <LuffyCharacter3D
-                position={[0, 0.15, 5]}
-                onStateChange={onStateChange}
-                onZoneChange={onZoneChange}
-                onNavigate={onNavigate}
-                debugRef={debugRef}
-                aboutActive={aboutActive}
-                skillsActive={skillsActive}
-                workActive={workActive}
-              />
-            </RigidBody>
-          </Physics>
-        </Suspense>
-
-       <EffectComposer disableNormalPass multisampling={0}>
-  {/* Bloom is dialled back hard when inside the dark basement —
-      threshold raised so only true specular highlights bloom,
-      intensity dropped so nothing smears */}
-  <Bloom
-    luminanceThreshold={workActive ? 1.8 : 1.1}
-    mipmapBlur={!workActive}
-    intensity={workActive ? 0.06 : 0.3}
-    levels={workActive ? 2 : 4}
-  />
-  <Vignette eskil={false} offset={0.12} darkness={workActive ? 0.35 : 0.75} />
-</EffectComposer>
-      </Canvas>
+  <EffectComposer disableNormalPass multisampling={0}>
+    <Bloom luminanceThreshold={workActive ? 1.8 : 1.1} mipmapBlur={!workActive} intensity={workActive ? 0.06 : 0.3} levels={workActive ? 2 : 4} />
+    <Vignette eskil={false} offset={0.12} darkness={workActive ? 0.35 : 0.75} />
+  </EffectComposer>
+</Canvas>
 
       <AnimatePresence>
         {!cloudsCleared && (

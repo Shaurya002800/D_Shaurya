@@ -31,9 +31,6 @@ import {
   useState,
   useCallback,
 } from 'react'
-import { useThree } from '@react-three/fiber'
-import * as THREE from 'three'
-import gsap from 'gsap'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DIRECTIONS
@@ -67,12 +64,14 @@ const SKILL_DATA = {
     characterImg: '/characters/zoro.png',
 
     // % position of the transparent board area WITHIN the character image
-    boardRect: { left: '8%', top: '24%', width: '84%', height: '40%' },
+    boardRect: { left: '9.5%', top: '28%', width: '80.5%', height: '58%' },
 
     skyGradient: 'linear-gradient(180deg, #050f0a 0%, #0e2718 22%, #163d26 45%, #1f5536 68%, #0d2418 100%)',
     glowColor:   'rgba(34,180,80,0.28)',
     titleColor:  '#9dffc4',
     accentColor: '#3ddc84',
+    seaColor:    '#0f5d4c',
+    foamColor:   '#bff6d2',
 
     skills: [
       { name: 'JavaScript', iconUrl: ICONS('javascript'), color: '#F7DF1E' },
@@ -90,12 +89,14 @@ const SKILL_DATA = {
     subtitle:  "The Chef's Craft",
     characterImg: '/characters/sanji.png',
 
-    boardRect: { left: '8%', top: '22%', width: '84%', height: '40%' },
+    boardRect: { left: '10%', top: '28%', width: '80%', height: '57%' },
 
     skyGradient: 'linear-gradient(180deg, #1a0f00 0%, #4a2800 22%, #9a5400 45%, #d98e1a 68%, #f6d27a 100%)',
     glowColor:   'rgba(255,180,30,0.32)',
     titleColor:  '#ffd97a',
     accentColor: '#f0b830',
+    seaColor:    '#7f5c1a',
+    foamColor:   '#ffe7a3',
 
     skills: [
       { name: 'React.js',     iconUrl: ICONS('react'),       color: '#61DAFB' },
@@ -113,12 +114,14 @@ const SKILL_DATA = {
     subtitle:  "The Emperor's Power",
     characterImg: '/characters/shanks.png',
 
-    boardRect: { left: '14%', top: '24%', width: '78%', height: '42%' },
+    boardRect: { left: '16%', top: '30%', width: '74%', height: '59%' },
 
     skyGradient: 'linear-gradient(180deg, #100000 0%, #3d0a0a 22%, #7d1414 45%, #c52424 68%, #ef5050 100%)',
     glowColor:   'rgba(255,50,50,0.28)',
     titleColor:  '#ffb0b0',
     accentColor: '#e05050',
+    seaColor:    '#661414',
+    foamColor:   '#ffb08f',
 
     skills: [
       { name: 'LangChain',  iconUrl: ICONS('langchain'),   color: '#1C7B4B' },
@@ -140,12 +143,14 @@ const SKILL_DATA = {
     subtitle:  "The Empress's Domain",
     characterImg: '/characters/boa.png',
 
-    boardRect: { left: '34%', top: '20%', width: '60%', height: '42%' },
+    boardRect: { left: '15.5%', top: '27%', width: '74%', height: '58%' },
 
     skyGradient: 'linear-gradient(180deg, #110014 0%, #3d0a32 22%, #8a1268 45%, #d12aa8 68%, #ff8fe0 100%)',
     glowColor:   'rgba(255,100,220,0.28)',
     titleColor:  '#ffc2ee',
     accentColor: '#e050c0',
+    seaColor:    '#8b1b72',
+    foamColor:   '#ffd1f2',
 
     skills: [
       { name: 'Git',      iconUrl: ICONS('git'),               color: '#F05032' },
@@ -166,202 +171,66 @@ const DIR_META = [
 ]
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CAMERA CONFIG
-// ─────────────────────────────────────────────────────────────────────────────
-
-const CAM_EXPLORE = {
-  position: new THREE.Vector3(0, 8.5, 16),
-  target:   new THREE.Vector3(0, 1.5, 0),
-  fov:      68,
-}
-
-// Crow's nest — looking outward toward the open ocean horizon
-const CAM_SKILLS = {
-  position: new THREE.Vector3(0, 34, 12),
-  target:   new THREE.Vector3(0, 31, -25),
-  fov:      58,
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// CAMERA HOOK
-// ─────────────────────────────────────────────────────────────────────────────
-
-export function useSkillsCamera(active) {
-  const { camera } = useThree()
-  const tl       = useRef(null)
-  const inSkills = useRef(false)
-  const lookVec  = useRef(new THREE.Vector3())
-
-  useEffect(() => {
-    if (tl.current) tl.current.kill()
-
-    if (active && !inSkills.current) {
-      inSkills.current = true
-      const fromPos  = camera.position.clone()
-      const fromLook = new THREE.Vector3(0, 1.5, 0)
-      const toPos    = CAM_SKILLS.position
-      const toLook   = CAM_SKILLS.target
-      lookVec.current.copy(fromLook)
-      const proxy = {
-        px: fromPos.x,  py: fromPos.y,  pz: fromPos.z,
-        lx: fromLook.x, ly: fromLook.y, lz: fromLook.z,
-        fov: camera.fov,
-      }
-      tl.current = gsap.to(proxy, {
-        px: toPos.x,   py: toPos.y,   pz: toPos.z,
-        lx: toLook.x,  ly: toLook.y,  lz: toLook.z,
-        fov: CAM_SKILLS.fov,
-        duration: 2.8,
-        ease: 'power3.inOut',
-        onUpdate: () => {
-          camera.position.set(proxy.px, proxy.py, proxy.pz)
-          lookVec.current.set(proxy.lx, proxy.ly, proxy.lz)
-          camera.lookAt(lookVec.current)
-          camera.fov = proxy.fov
-          camera.updateProjectionMatrix()
-        },
-      })
-    } else if (!active && inSkills.current) {
-      inSkills.current = false
-      const fromPos  = camera.position.clone()
-      const fromLook = CAM_SKILLS.target.clone()
-      const toPos    = CAM_EXPLORE.position
-      const toLook   = CAM_EXPLORE.target
-      lookVec.current.copy(fromLook)
-      const proxy = {
-        px: fromPos.x,  py: fromPos.y,  pz: fromPos.z,
-        lx: fromLook.x, ly: fromLook.y, lz: fromLook.z,
-        fov: camera.fov,
-      }
-      tl.current = gsap.to(proxy, {
-        px: toPos.x,  py: toPos.y,  pz: toPos.z,
-        lx: toLook.x, ly: toLook.y, lz: toLook.z,
-        fov: CAM_EXPLORE.fov,
-        duration: 2.0,
-        ease: 'power2.inOut',
-        onUpdate: () => {
-          camera.position.set(proxy.px, proxy.py, proxy.pz)
-          lookVec.current.set(proxy.lx, proxy.ly, proxy.lz)
-          camera.lookAt(lookVec.current)
-          camera.fov = proxy.fov
-          camera.updateProjectionMatrix()
-        },
-      })
-    }
-    return () => { if (tl.current) tl.current.kill() }
-  }, [active])
-}
-
-export function SkillsCameraController({ active }) {
-  useSkillsCamera(active)
-  return null
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// SKY — full screen ocean horizon background, vibe-tinted per direction
-// ─────────────────────────────────────────────────────────────────────────────
-
-function DirectionalSky({ data, visible, transitioning }) {
-  return (
-    <div style={{
-      position:   'absolute',
-      inset:      0,
-      zIndex:     0,
-      background: data.skyGradient,
-      opacity:    visible ? 1 : 0,
-      transition: transitioning
-        ? 'opacity 0.6s cubic-bezier(0.4,0,0.2,1)'
-        : 'none',
-    }}>
-      <VibeTint data={data} visible={overlayIn} transitioning={transitioning} />
-      {/* Atmospheric glow near horizon */}
-      <div style={{
-        position:   'absolute',
-        inset:      0,
-        background: `linear-gradient(180deg, ${data.accentColor}10 0%, transparent 50%, ${data.accentColor}0c 100%)`,
-      }} />
-
-      {/* Sun / light disc on the horizon */}
-      <div style={{
-        position:     'absolute',
-        bottom:       '28%',
-        left:         '50%',
-        transform:    'translateX(-50%)',
-        width:        'clamp(120px, 16vw, 260px)',
-        height:       'clamp(120px, 16vw, 260px)',
-        borderRadius: '50%',
-        background:   `radial-gradient(circle, ${data.accentColor}aa 0%, ${data.accentColor}33 45%, transparent 75%)`,
-        filter:       'blur(6px)',
-      }} />
-
-      {/* Stars / atmosphere particles */}
-      {Array.from({ length: 30 }, (_, i) => (
-        <div
-          key={i}
-          style={{
-            position:     'absolute',
-            top:          `${Math.random() * 55}%`,
-            left:         `${Math.random() * 100}%`,
-            width:        `${1 + Math.random() * 2}px`,
-            height:       `${1 + Math.random() * 2}px`,
-            borderRadius: '50%',
-            background:   data.accentColor,
-            opacity:      0.1 + Math.random() * 0.3,
-            animation:    `starTwinkle ${2 + Math.random() * 3}s ease-in-out ${Math.random() * 2}s infinite`,
-          }}
-        />
-      ))}
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// OCEAN HORIZON — bottom strip with the sea, visible from crow's nest
-// ─────────────────────────────────────────────────────────────────────────────
-
-function OceanHorizon({ data, visible }) {
-  return (
-    <div style={{
-      position:   'fixed',
-      bottom:     0,
-      left:       0,
-      right:      0,
-      height:     '30%',
-      zIndex:     1,
-      background: `linear-gradient(to top, ${data.accentColor}33 0%, ${data.accentColor}11 35%, transparent 100%), linear-gradient(to top, rgba(0,10,25,0.85) 0%, rgba(0,15,35,0.55) 40%, transparent 100%)`,
-      pointerEvents: 'none',
-      opacity:    visible ? 1 : 0,
-      transition: 'opacity 0.6s ease',
-    }}>
-      {Array.from({ length: 5 }, (_, i) => (
-        <div key={i} style={{
-          position:   'absolute',
-          top:        `${12 + i * 16}%`,
-          left:       0,
-          right:      0,
-          height:     '1px',
-          background: `linear-gradient(to right, transparent 5%, rgba(255,255,255,${0.06 + i * 0.02}) 20%, rgba(255,255,255,${0.1 + i * 0.03}) 50%, rgba(255,255,255,${0.06 + i * 0.02}) 80%, transparent 95%)`,
-          animation:  `waveShift ${4 + i * 0.8}s ease-in-out infinite ${i * 0.3}s`,
-        }}/>
-      ))}
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // CHARACTER — floating in the sky, holding the transparent skill board
 // ─────────────────────────────────────────────────────────────────────────────
 
-function VibeTint({ data, visible, transitioning }) {
+function CinematicOcean({ data, visible, transitioning }) {
   return (
     <div style={{
-      position: 'absolute', inset: 0, zIndex: 0,
-      background: `linear-gradient(180deg, ${data.accentColor}22 0%, transparent 40%, ${data.accentColor}18 100%)`,
-      mixBlendMode: 'overlay',
+      position: 'absolute',
+      inset: 0,
+      zIndex: 0,
       opacity: visible ? 1 : 0,
       transition: transitioning ? 'opacity 0.6s ease' : 'none',
       pointerEvents: 'none',
-    }} />
+      background: `
+        radial-gradient(circle at 50% 36%, ${data.accentColor}5c 0%, ${data.accentColor}20 22%, transparent 44%),
+        linear-gradient(180deg, rgba(2,8,12,0.94) 0%, rgba(14,30,36,0.42) 16%, transparent 34%),
+        ${data.skyGradient}
+      `,
+    }}>
+      <div style={{
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: '45%',
+        height: '3px',
+        background: `linear-gradient(90deg, transparent, ${data.foamColor}cc 22%, #ffffffdd 50%, ${data.foamColor}cc 78%, transparent)`,
+        filter: 'blur(1.4px)',
+        opacity: 0.9,
+      }} />
+      <div style={{
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        height: '55%',
+        background: `
+          radial-gradient(ellipse at 50% 0%, ${data.foamColor}55 0%, transparent 42%),
+          linear-gradient(180deg, ${data.seaColor}e0 0%, #082944 48%, #02131e 100%)
+        `,
+      }} />
+      {Array.from({ length: 7 }, (_, i) => (
+        <div key={i} style={{
+          position: 'absolute',
+          left: `${-12 + i * 18}%`,
+          top: `${49 + (i % 3) * 8}%`,
+          width: '34%',
+          height: '9%',
+          borderRadius: '50%',
+          background: `linear-gradient(90deg, transparent, ${data.foamColor}8a, #ffffffb0, ${data.foamColor}72, transparent)`,
+          transform: `rotate(${i % 2 ? -5 : 4}deg)`,
+          filter: 'blur(7px)',
+          opacity: 0.55,
+          animation: `oceanDrift ${9 + i}s ease-in-out ${i * -0.8}s infinite`,
+        }} />
+      ))}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.12) 54%, rgba(0,0,0,0.54) 100%)',
+      }} />
+    </div>
   )
 }
 
@@ -369,14 +238,16 @@ function FloatingCharacter({ data, visible, transitioning, children }) {
   return (
     <div style={{
       position:   'absolute',
-      top:        '12%',
+      top:        'clamp(28px, 4vh, 58px)',
       left:       '50%',
       transform:  'translateX(-50%)',
-      width:      'clamp(260px, 32vw, 480px)',
+      width:      'clamp(560px, 54vw, 1040px)',
+      maxHeight:  'calc(100vh - 190px)',
       opacity:    visible ? 1 : 0,
       transition: transitioning ? 'opacity 0.5s ease' : 'none',
       zIndex:     2,
-      animation:  visible ? 'floatY 7s ease-in-out infinite' : 'none',
+      animation:  visible ? 'oceanMirage 8s ease-in-out infinite' : 'none',
+      pointerEvents: 'none',
     }}>
       <div style={{ position: 'relative', width: '100%' }}>
         <img
@@ -386,17 +257,28 @@ function FloatingCharacter({ data, visible, transitioning, children }) {
             width: '100%',
             height: 'auto',
             display: 'block',
-            opacity: 0.45,
-            mixBlendMode: 'luminosity',
-            filter: `sepia(0.3) saturate(1.4) hue-rotate(0deg)`,
+            opacity: 0.56,
+            filter: `saturate(1.18) contrast(1.04) drop-shadow(0 0 34px ${data.glowColor})`,
           }}
         />
+        <div style={{
+          position: 'absolute',
+          left: data.boardRect.left,
+          top: data.boardRect.top,
+          width: data.boardRect.width,
+          height: data.boardRect.height,
+          borderRadius: '14px',
+          background: `radial-gradient(circle at 50% 30%, rgba(255,255,255,0.08), transparent 64%), linear-gradient(135deg, ${data.accentColor}0d, rgba(255,255,255,0.025))`,
+          boxShadow: `inset 0 0 18px rgba(255,255,255,0.08), 0 0 28px ${data.glowColor}`,
+          pointerEvents: 'none',
+        }} />
         <div style={{
           position: 'absolute',
           left:   data.boardRect.left,
           top:    data.boardRect.top,
           width:  data.boardRect.width,
           height: data.boardRect.height,
+          pointerEvents: 'auto',
         }}>
           {children}
         </div>
@@ -414,7 +296,10 @@ function WantedCard({ skill, index, visible, accentColor, delay = 0 }) {
   const [entered, setEntered] = useState(false)
 
   useEffect(() => {
-    if (!visible) { setEntered(false); return }
+    if (!visible) {
+      const t = setTimeout(() => setEntered(false), 0)
+      return () => clearTimeout(t)
+    }
     const t = setTimeout(() => setEntered(true), delay + index * 70)
     return () => clearTimeout(t)
   }, [visible, delay, index])
@@ -427,13 +312,13 @@ function WantedCard({ skill, index, visible, accentColor, delay = 0 }) {
         display:        'flex',
         flexDirection:  'column',
         alignItems:     'center',
-        width: 'clamp(40px, 4.5vw, 70px)',
+        width: 'clamp(42px, 3.9vw, 66px)',
         background:     hovered
           ? 'linear-gradient(160deg, #f5e6cc 0%, #e8d4aa 100%)'
           : 'linear-gradient(160deg, #f0ddb8 0%, #e0c890 100%)',
         border:         `1.5px solid ${hovered ? '#8B6914' : 'rgba(139,105,20,0.6)'}`,
-        borderRadius:   '4px 4px 6px 6px',
-        padding:        'clamp(4px, 0.8vw, 10px) clamp(3px, 0.5vw, 6px)',
+        borderRadius:   '3px 3px 5px 5px',
+        padding:        'clamp(4px, 0.62vw, 8px) clamp(3px, 0.42vw, 5px)',
         cursor:         'pointer',
         transform:      entered
           ? hovered ? 'scale(1.08) translateY(-3px)' : 'scale(1) translateY(0)'
@@ -441,8 +326,8 @@ function WantedCard({ skill, index, visible, accentColor, delay = 0 }) {
         opacity:        entered ? 1 : 0,
         transition:     'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',
         boxShadow:      hovered
-          ? `0 6px 18px rgba(0,0,0,0.5), 0 0 10px ${accentColor}44`
-          : '0 3px 10px rgba(0,0,0,0.4)',
+          ? `0 4px 12px rgba(0,0,0,0.45), 0 0 8px ${accentColor}44`
+          : '0 2px 7px rgba(0,0,0,0.35)',
         position:       'relative',
         overflow:       'hidden',
       }}
@@ -461,7 +346,7 @@ function WantedCard({ skill, index, visible, accentColor, delay = 0 }) {
       {/* WANTED text */}
       <div style={{
         fontFamily:    '"Pirata One", cursive',
-        fontSize:      'clamp(7px, 0.85vw, 11px)',
+        fontSize:      'clamp(6px, 0.62vw, 9px)',
         fontWeight:    700,
         color:         '#1a0d00',
         letterSpacing: '0.1em',
@@ -477,8 +362,8 @@ function WantedCard({ skill, index, visible, accentColor, delay = 0 }) {
 
       {/* Logo */}
       <div style={{
-        width:          'clamp(28px, 3.4vw, 48px)',
-        height:         'clamp(28px, 3.4vw, 48px)',
+        width:          'clamp(24px, 2.6vw, 40px)',
+        height:         'clamp(24px, 2.6vw, 40px)',
         borderRadius:   '4px',
         display:        'flex',
         alignItems:     'center',
@@ -489,7 +374,7 @@ function WantedCard({ skill, index, visible, accentColor, delay = 0 }) {
         boxShadow:      'inset 0 1px 3px rgba(0,0,0,0.15)',
         transition:     'transform 0.2s ease',
         transform:      hovered ? 'scale(1.1)' : 'scale(1)',
-        padding:        '6px',
+        padding:        '4px',
       }}>
         <div style={{
           width:  '100%',
@@ -509,7 +394,7 @@ function WantedCard({ skill, index, visible, accentColor, delay = 0 }) {
       {/* Skill name */}
       <div style={{
         fontFamily:    '"IM Fell English", Georgia, serif',
-        fontSize:      'clamp(6.5px, 0.75vw, 10px)',
+        fontSize:      'clamp(6px, 0.58vw, 9px)',
         color:         '#1a0d00',
         textAlign:     'center',
         lineHeight:    1.2,
@@ -534,7 +419,8 @@ function SkillPanel({ data, visible }) {
       const t = setTimeout(() => setCardsIn(true), 250)
       return () => clearTimeout(t)
     }
-    setCardsIn(false)
+    const t = setTimeout(() => setCardsIn(false), 0)
+    return () => clearTimeout(t)
   }, [visible])
 
   return (
@@ -547,15 +433,18 @@ function SkillPanel({ data, visible }) {
       justifyContent: 'center',
       padding:        'clamp(4px, 1vw, 14px)',
       boxSizing:      'border-box',
+      transform:      visible ? 'scale(1)' : 'scale(0.96)',
+      opacity:        visible ? 1 : 0,
+      transition:     'opacity 0.35s ease, transform 0.45s cubic-bezier(0.22,1,0.36,1)',
     }}>
       {/* Title */}
       <div style={{
         textAlign:     'center',
-        marginBottom:  'clamp(6px, 1.2vh, 14px)',
+        marginBottom:  'clamp(8px, 1.4vh, 16px)',
       }}>
         <div style={{
           fontFamily:    '"Pirata One", cursive',
-          fontSize: 'clamp(8px, 1.2vw, 15px)',
+          fontSize: 'clamp(12px, 1.25vw, 20px)',
           color:         data.titleColor,
           letterSpacing: '0.16em',
           textShadow:    `0 0 16px ${data.accentColor}88`,
@@ -576,9 +465,10 @@ function SkillPanel({ data, visible }) {
       <div style={{
         display:        'flex',
         flexWrap:       'wrap',
-        gap:            'clamp(5px, 1vw, 12px)',
+        gap:            'clamp(7px, 0.8vw, 13px)',
         justifyContent: 'center',
         alignItems:     'flex-start',
+        maxWidth:       '86%',
       }}>
         {data.skills.map((skill, i) => (
           <WantedCard
@@ -593,10 +483,10 @@ function SkillPanel({ data, visible }) {
 
       {/* Quote */}
       <div style={{
-        marginTop:    'clamp(6px, 1.4vh, 16px)',
+        marginTop:    'clamp(8px, 1.5vh, 18px)',
         textAlign:    'center',
         fontFamily:   '"IM Fell English", Georgia, serif',
-        fontSize:     'clamp(8px, 0.95vw, 12px)',
+        fontSize:     'clamp(7px, 0.7vw, 10px)',
         fontStyle:    'italic',
         color:        `${data.accentColor}aa`,
         letterSpacing:'0.03em',
@@ -641,6 +531,129 @@ function CharacterBadge({ data, visible }) {
         {data.character}
       </span>
       <div style={{ height:'1px', width:'30px', background:`linear-gradient(to left, transparent, ${data.accentColor}66)` }}/>
+    </div>
+  )
+}
+
+function ForegroundLookout({ visible, data }) {
+  return (
+    <div style={{
+      position: 'fixed',
+      left: '50%',
+      bottom: '-3.5vh',
+      width: 'clamp(340px, 39vw, 680px)',
+      height: 'clamp(250px, 32vh, 420px)',
+      transform: `translateX(-50%) ${visible ? 'translateY(0)' : 'translateY(28px)'}`,
+      opacity: visible ? 1 : 0,
+      zIndex: 6,
+      pointerEvents: 'none',
+      transition: 'opacity 0.55s ease 0.35s, transform 0.65s cubic-bezier(0.22,1,0.36,1) 0.35s',
+      filter: `drop-shadow(0 -10px 28px ${data.glowColor}) drop-shadow(0 16px 22px rgba(0,0,0,0.55))`,
+    }}>
+      <svg viewBox="0 0 720 430" preserveAspectRatio="xMidYMax meet" style={{
+        position: 'absolute',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+      }}>
+        <defs>
+          <linearGradient id="nestWood" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#604326" />
+            <stop offset="48%" stopColor="#28190e" />
+            <stop offset="100%" stopColor="#0d0805" />
+          </linearGradient>
+          <linearGradient id="railDark" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#372619" />
+            <stop offset="100%" stopColor="#050403" />
+          </linearGradient>
+        </defs>
+        <path d="M75 210 C148 70 572 70 645 210" fill="none" stroke="url(#railDark)" strokeWidth="24" strokeLinecap="round" />
+        <path d="M110 214 C166 113 554 113 610 214" fill="none" stroke="#76502b" strokeWidth="8" strokeLinecap="round" opacity="0.38" />
+        <ellipse cx="360" cy="360" rx="286" ry="74" fill="rgba(0,0,0,0.62)" />
+        <path d="M82 226 C130 342 163 402 360 410 C557 402 590 342 638 226 L600 391 C514 432 206 432 120 391 Z" fill="url(#nestWood)" opacity="0.96" />
+        <rect x="338" y="95" width="44" height="242" rx="8" fill="url(#nestWood)" />
+        <rect x="346" y="92" width="12" height="250" rx="6" fill="rgba(255,220,130,0.13)" />
+      </svg>
+
+      <div style={{
+        position: 'absolute',
+        left: '50%',
+        bottom: '33%',
+        width: 'clamp(54px, 5vw, 86px)',
+        height: 'clamp(112px, 13vh, 170px)',
+        transform: 'translateX(-50%)',
+      }}>
+        <div style={{
+          position: 'absolute',
+          left: '50%',
+          top: '0%',
+          width: '120%',
+          height: '30%',
+          transform: 'translateX(-50%) rotate(-6deg)',
+          borderRadius: '50%',
+          background: 'radial-gradient(ellipse at center, #e4bd42 0%, #c89421 58%, #5a3510 100%)',
+          boxShadow: 'inset 0 -4px 0 #8f211b, 0 6px 10px rgba(0,0,0,0.45)',
+        }} />
+        <div style={{
+          position: 'absolute',
+          left: '50%',
+          top: '21%',
+          width: '48%',
+          height: '17%',
+          transform: 'translateX(-50%)',
+          borderRadius: '45% 45% 35% 35%',
+          background: '#1b130d',
+        }} />
+        <div style={{
+          position: 'absolute',
+          left: '50%',
+          top: '36%',
+          width: '52%',
+          height: '45%',
+          transform: 'translateX(-50%)',
+          borderRadius: '34% 34% 18% 18%',
+          background: 'linear-gradient(180deg, #b63022 0%, #7a1715 100%)',
+          boxShadow: 'inset 0 -12px 16px rgba(0,0,0,0.45)',
+        }} />
+        <div style={{
+          position: 'absolute',
+          left: '-24%',
+          top: '47%',
+          width: '52%',
+          height: '8%',
+          borderRadius: '999px',
+          transform: 'rotate(-22deg)',
+          background: '#d5aa6c',
+        }} />
+        <div style={{
+          position: 'absolute',
+          right: '-24%',
+          top: '47%',
+          width: '52%',
+          height: '8%',
+          borderRadius: '999px',
+          transform: 'rotate(22deg)',
+          background: '#d5aa6c',
+        }} />
+        <div style={{
+          position: 'absolute',
+          left: '23%',
+          bottom: 0,
+          width: '16%',
+          height: '30%',
+          borderRadius: '999px',
+          background: '#d5aa6c',
+        }} />
+        <div style={{
+          position: 'absolute',
+          right: '23%',
+          bottom: 0,
+          width: '16%',
+          height: '30%',
+          borderRadius: '999px',
+          background: '#d5aa6c',
+        }} />
+      </div>
     </div>
   )
 }
@@ -760,35 +773,6 @@ function DirectionNavigator({ current, onRotate, data, visible }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CROW'S NEST RAILING — bottom decorative wooden rim
-// ─────────────────────────────────────────────────────────────────────────────
-
-function CrowsNestRailing({ visible }) {
-  return (
-    <div style={{
-      position:  'fixed', bottom: 0, left: '50%',
-      transform: `translateX(-50%) ${visible ? 'translateY(0)' : 'translateY(100%)'}`,
-      zIndex:    245, width: 'clamp(300px, 50vw, 680px)',
-      transition: 'all 0.7s cubic-bezier(0.22,1,0.36,1) 0.3s',
-      opacity:   visible ? 1 : 0,
-    }}>
-      <svg viewBox="0 0 620 110" style={{ width: '100%', height: 'auto', display: 'block' }} preserveAspectRatio="xMidYMax meet">
-        <path d="M10 75 Q310 15 610 75" fill="none" stroke="#5C3A21" strokeWidth="10" strokeLinecap="round"/>
-        <path d="M10 60 Q310 0 610 60" fill="none" stroke="#7a5230" strokeWidth="6" strokeLinecap="round"/>
-        {Array.from({ length: 13 }, (_, i) => {
-          const t   = i / 12
-          const x   = 10 + t * 600
-          const yTop = 60 - Math.sin(Math.PI * t) * 58 + 5
-          return (
-            <line key={i} x1={x} y1={yTop} x2={x} y2={110} stroke="#4a3018" strokeWidth={i === 0 || i === 12 ? 5 : 3}/>
-          )
-        })}
-      </svg>
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // CLOSE BUTTON
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -826,7 +810,10 @@ function SkillsCloseBtn({ onClose, visible, accentColor }) {
 function SkillsGhostLabel({ active }) {
   const [op, setOp] = useState(0)
   useEffect(() => {
-    if (!active) { setOp(0); return }
+    if (!active) {
+      const t = setTimeout(() => setOp(0), 0)
+      return () => clearTimeout(t)
+    }
     const t1 = setTimeout(() => setOp(1),   50)
     const t2 = setTimeout(() => setOp(0), 1500)
     return () => { clearTimeout(t1); clearTimeout(t2) }
@@ -852,13 +839,18 @@ function SkillsLetterBox({ active }) {
   const [mounted, setMounted] = useState(false)
   const [leaving, setLeaving] = useState(false)
   useEffect(() => {
-    if (active) { setMounted(true); setLeaving(false) }
-    else if (mounted) {
-      setLeaving(true)
-      const t = setTimeout(() => setMounted(false), 700)
-      return () => clearTimeout(t)
+    const timers = []
+    if (active) {
+      timers.push(setTimeout(() => {
+        setMounted(true)
+        setLeaving(false)
+      }, 0))
+    } else if (mounted) {
+      timers.push(setTimeout(() => setLeaving(true), 0))
+      timers.push(setTimeout(() => setMounted(false), 700))
     }
-  }, [active])
+    return () => timers.forEach(clearTimeout)
+  }, [active, mounted])
   if (!mounted) return null
   const showing = active && !leaving
   return (
@@ -883,7 +875,7 @@ function SkillsLetterBox({ active }) {
 // MAIN OVERLAY
 // ─────────────────────────────────────────────────────────────────────────────
 
-function SkillsOverlay({ active, onClose }) {
+function SkillsOverlay({ active, onClose, onDirectionChange }) {
   const [currentDir,    setCurrentDir]    = useState(DIRECTIONS.NORTH)
   const [transitioning, setTransitioning] = useState(false)
   const [overlayIn,     setOverlayIn]     = useState(false)
@@ -893,32 +885,8 @@ function SkillsOverlay({ active, onClose }) {
   const data = SKILL_DATA[currentDir]
 
   useEffect(() => {
-    if (active) {
-      const t1 = setTimeout(() => setOverlayIn(true), 400)
-      const t2 = setTimeout(() => setContentIn(true), 900)
-      return () => { clearTimeout(t1); clearTimeout(t2) }
-    } else {
-      setContentIn(false)
-      const t = setTimeout(() => setOverlayIn(false), 400)
-      return () => clearTimeout(t)
-    }
-  }, [active])
-
-  useEffect(() => {
-    const fn = (e) => { if (e.key === 'Escape' && active) onClose() }
-    window.addEventListener('keydown', fn)
-    return () => window.removeEventListener('keydown', fn)
-  }, [active, onClose])
-
-  useEffect(() => {
-    const fn = (e) => {
-      if (!active) return
-      if (e.key === 'ArrowLeft')  handleRotate('prev')
-      if (e.key === 'ArrowRight') handleRotate('next')
-    }
-    window.addEventListener('keydown', fn)
-    return () => window.removeEventListener('keydown', fn)
-  }, [active, currentDir, transitioning])
+    if (active) onDirectionChange?.(currentDir)
+  }, [active, currentDir, onDirectionChange])
 
   const handleRotate = useCallback((direction, targetDir = null) => {
     if (transitioning) return
@@ -949,16 +917,50 @@ function SkillsOverlay({ active, onClose }) {
     }, 300)
   }, [currentDir, transitioning])
 
+  useEffect(() => {
+    if (active) {
+      const t1 = setTimeout(() => setOverlayIn(true), 400)
+      const t2 = setTimeout(() => setContentIn(true), 900)
+      return () => { clearTimeout(t1); clearTimeout(t2) }
+    } else {
+      const t1 = setTimeout(() => setContentIn(false), 0)
+      const t2 = setTimeout(() => setOverlayIn(false), 400)
+      return () => { clearTimeout(t1); clearTimeout(t2) }
+    }
+  }, [active])
+
+  useEffect(() => {
+    const fn = (e) => { if (e.key === 'Escape' && active) onClose() }
+    window.addEventListener('keydown', fn)
+    return () => window.removeEventListener('keydown', fn)
+  }, [active, onClose])
+
+  useEffect(() => {
+    const fn = (e) => {
+      if (!active) return
+      if (e.key === 'ArrowLeft')  handleRotate('prev')
+      if (e.key === 'ArrowRight') handleRotate('next')
+    }
+    window.addEventListener('keydown', fn)
+    return () => window.removeEventListener('keydown', fn)
+  }, [active, handleRotate])
+
   return (
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 220,
-      pointerEvents: overlayIn ? 'all' : 'none', overflow: 'hidden',
+      position: 'fixed',
+      inset: 0,
+      zIndex: 220,
+      pointerEvents: overlayIn ? 'all' : 'none',
+      overflow: 'hidden',
+      background: 'transparent',
     }}>
+      <CinematicOcean data={data} visible={overlayIn} transitioning={transitioning} />
 
       <FloatingCharacter data={data} visible={contentIn} transitioning={transitioning}>
         <SkillPanel data={data} visible={contentIn} />
       </FloatingCharacter>
 
+      <ForegroundLookout visible={contentIn} data={data} />
       <CharacterBadge data={data} visible={contentIn} />
 
       <DirectionNavigator current={currentDir} onRotate={handleRotate} data={data} visible={contentIn} />
@@ -967,17 +969,13 @@ function SkillsOverlay({ active, onClose }) {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Pirata+One&family=IM+Fell+English:ital@0;1&display=swap');
 
-        @keyframes starTwinkle {
-          0%,100% { opacity: 0.12; transform: scale(1); }
-          50%      { opacity: 0.5;  transform: scale(1.3); }
+        @keyframes oceanMirage {
+          0%,100% { transform: translateX(-50%) translateY(0px) scale(1); filter: saturate(1); }
+          50%      { transform: translateX(-50%) translateY(-8px) scale(1.01); filter: saturate(1.08); }
         }
-        @keyframes waveShift {
-          0%,100% { transform: translateX(0); }
-          50%      { transform: translateX(12px); }
-        }
-        @keyframes floatY {
-          0%,100% { transform: translateX(-50%) translateY(0px); }
-          50%      { transform: translateX(-50%) translateY(-14px); }
+        @keyframes oceanDrift {
+          0%,100% { transform: translateX(0) rotate(4deg); }
+          50%      { transform: translateX(38px) rotate(-2deg); }
         }
       `}</style>
     </div>
@@ -988,14 +986,16 @@ function SkillsOverlay({ active, onClose }) {
 // MAIN EXPORT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function SkillsSection({ active, onClose }) {
+export default function SkillsSection({ active, onClose, onDirectionChange }) {
   return (
     <>
       <SkillsLetterBox active={active} />
       <SkillsGhostLabel active={active} />
-      <SkillsOverlay active={active} onClose={onClose} />
+      <SkillsOverlay
+        active={active}
+        onClose={onClose}
+        onDirectionChange={onDirectionChange}
+      />
     </>
   )
 }
-
-

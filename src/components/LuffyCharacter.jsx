@@ -738,6 +738,7 @@ function Luffy3D({
   debugRef,
   aboutActive = false,
   skillsActive = false,
+  skillsDirection = 'north',
   workActive = false,
 }) {
   const groupRef     = useRef()
@@ -828,6 +829,31 @@ function Luffy3D({
       velCtrl.current.vel.set(0, 0, 0)
     }
   }, [workActive])
+
+  useEffect(() => {
+    if (!groupRef.current) return
+    if (skillsActive) {
+      const directionRotation = {
+        north: Math.PI,
+        east: Math.PI / 2,
+        south: 0,
+        west: -Math.PI / 2,
+      }
+      const directionPosition = {
+        north: [0, 32.1, -1.45],
+        east: [-1.45, 32.1, -3],
+        south: [0, 32.1, -4.55],
+        west: [1.45, 32.1, -3],
+      }
+      groupRef.current.position.set(...(directionPosition[skillsDirection] ?? directionPosition.north))
+      groupRef.current.rotation.y = directionRotation[skillsDirection] ?? Math.PI
+      velCtrl.current.vel.set(0, 0, 0)
+    } else if (!skillsActive && groupRef.current.position.y > 20) {
+      groupRef.current.position.set(0.8, 0.15, -3)
+      groupRef.current.rotation.y = Math.PI
+      velCtrl.current.vel.set(0, 0, 0)
+    }
+  }, [skillsActive, skillsDirection])
 
   useFrame((_, dt) => {
     if (!loadedRef.current || !groupRef.current || !mixerRef.current) return
@@ -944,6 +970,7 @@ export default function LuffyCharacter({
   onNavigate,
   aboutActive = false,
   skillsActive = false,
+  skillsDirection = 'north',
   workActive = false,
 }) {
   const [hintLabel,   setHintLabel]   = useState(null)
@@ -978,6 +1005,7 @@ export default function LuffyCharacter({
         debugRef={debugRef}
         aboutActive={aboutActive}
         skillsActive={skillsActive}
+        skillsDirection={skillsDirection}
         workActive={workActive}
       />
       <InteractionHint label={hintLabel} />

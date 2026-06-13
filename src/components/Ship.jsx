@@ -1755,15 +1755,15 @@ export function CrowsNest({ position = [0, 31.5, -3], rotation = [0, 0, 0], ...p
           <meshStandardMaterial color="#4a3525" roughness={0.9} />
         </mesh>
 
-        {/* Outer Wooden Walls (Open top and bottom) */}
-        <mesh position={[0, 1.2, 0]}>
-          <cylinderGeometry args={[2.3, 2.2, 2.4, 24, 1, true]} />
+        {/* Low outer guard wall — short enough that Luffy remains visible */}
+        <mesh position={[0, 0.62, 0]}>
+          <cylinderGeometry args={[2.3, 2.2, 1.05, 24, 1, true]} />
           <meshStandardMaterial color="#362519" side={THREE.DoubleSide} roughness={0.9} />
         </mesh>
 
         {/* Top Railing / Trim */}
-        <mesh position={[0, 2.4, 0]}>
-          <torusGeometry args={[2.3, 0.15, 8, 24]} />
+        <mesh position={[0, 1.18, 0]}>
+          <torusGeometry args={[2.3, 0.1, 8, 24]} />
           <meshStandardMaterial color="#1f140e" roughness={0.9} />
         </mesh>
       </RigidBody>
@@ -2184,7 +2184,8 @@ function BowPlatform({ position }) {
   )
 }
 
-export default function Ship({ aboutActive = false, onProjectSelect }) {
+// signature — add skillsActive to whatever props Ship already receives
+export default function Ship({ aboutActive = false, skillsActive = false, onProjectSelect }){
   const shipRef = useRef()
 
   // Gentle ocean rocking — kinematic physics body moves with waves
@@ -2468,7 +2469,7 @@ export default function Ship({ aboutActive = false, onProjectSelect }) {
       {/* ════════════════════════════════════════════════════════════
           CROW'S NEST
       ════════════════════════════════════════════════════════════ */}
-      <DomeCrowsNest position={[0, 33.5, -3]} />
+      {!skillsActive && <DomeCrowsNest position={[0, 33.5, -3]} />}
 
       {/* ════════════════════════════════════════════════════════════
           MAIN CROSS SPAR + SAIL
