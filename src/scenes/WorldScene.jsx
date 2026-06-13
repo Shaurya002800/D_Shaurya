@@ -16,8 +16,8 @@ const CAM_EXPLORE = {
 }
 
 const CAM_SKILLS = {
-  position: new THREE.Vector3(0, 25, 4),
-  target:   new THREE.Vector3(0, 18, -60),
+  position: new THREE.Vector3(0, 34, -3),
+  target:   new THREE.Vector3(0, 22, -90),
   fov:      55,
 }
 

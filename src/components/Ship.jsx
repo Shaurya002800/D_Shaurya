@@ -239,49 +239,49 @@ function LionFigurehead({ position }) {
 // ─────────────────────────────────────────────────────────────────────
 // CROW'S NEST — top of main mast
 // ─────────────────────────────────────────────────────────────────────
-function CrowsNest({ position }) {
-  return (
-    <group position={position}>
-      {/* Floor platform */}
-      <mesh castShadow receiveShadow>
-        <cylinderGeometry args={[2.2, 2.4, 0.4, 22]} />
-        <meshStandardMaterial color="#5C3A21" roughness={0.85} />
-      </mesh>
-      {/* Circular railing */}
-      <mesh position={[0, 0.85, 0]} castShadow>
-        <torusGeometry args={[2.22, 0.09, 10, 36]} />
-        <meshStandardMaterial color="#3d2410" roughness={0.75} />
-      </mesh>
-      {/* Railing posts */}
-      {Array.from({ length: 14 }, (_, i) => {
-  const angle = (i * Math.PI * 2) / 14
-  return (
-    <mesh key={i}
-      position={[Math.cos(angle) * 2.22, 0.45, Math.sin(angle) * 2.22]}
-    >
-            <boxGeometry args={[0.1, 0.9, 0.1]} />
-            <meshStandardMaterial color="#3d2410" roughness={0.8} />
-          </mesh>
-        )
-      })}
-      {/* Flag pole */}
-      <mesh position={[0, 2.5, 0]} castShadow>
-        <cylinderGeometry args={[0.05, 0.05, 5, 8]} />
-        <meshStandardMaterial color="#2a1505" roughness={0.8} />
-      </mesh>
-      {/* Straw Hat Pirates Flag */}
-      <mesh position={[1.2, 4.5, 0]} rotation={[0, -Math.PI / 2, 0]}>
-        <planeGeometry args={[2.4, 1.4]} />
-        <meshStandardMaterial color="#111111" side={THREE.DoubleSide} roughness={0.9} />
-      </mesh>
-      {/* Flag skull */}
-      <mesh position={[0.5, 4.7, 0.01]}>
-        <circleGeometry args={[0.4, 20]} />
-        <meshStandardMaterial color="#f0f0f0" side={THREE.DoubleSide} />
-      </mesh>
-    </group>
-  )
-}
+// function CrowsNest({ position }) {
+//   return (
+//     <group position={position}>
+//       {/* Floor platform */}
+//       <mesh castShadow receiveShadow>
+//         <cylinderGeometry args={[2.2, 2.4, 0.4, 22]} />
+//         <meshStandardMaterial color="#5C3A21" roughness={0.85} />
+//       </mesh>
+//       {/* Circular railing */}
+//       <mesh position={[0, 0.85, 0]} castShadow>
+//         <torusGeometry args={[2.22, 0.09, 10, 36]} />
+//         <meshStandardMaterial color="#3d2410" roughness={0.75} />
+//       </mesh>
+//       {/* Railing posts */}
+//       {Array.from({ length: 14 }, (_, i) => {
+//   const angle = (i * Math.PI * 2) / 14
+//   return (
+//     <mesh key={i}
+//       position={[Math.cos(angle) * 2.22, 0.45, Math.sin(angle) * 2.22]}
+//     >
+//             <boxGeometry args={[0.1, 0.9, 0.1]} />
+//             <meshStandardMaterial color="#3d2410" roughness={0.8} />
+//           </mesh>
+//         )
+//       })}
+//       {/* Flag pole */}
+//       <mesh position={[0, 2.5, 0]} castShadow>
+//         <cylinderGeometry args={[0.05, 0.05, 5, 8]} />
+//         <meshStandardMaterial color="#2a1505" roughness={0.8} />
+//       </mesh>
+//       {/* Straw Hat Pirates Flag */}
+//       <mesh position={[1.2, 4.5, 0]} rotation={[0, -Math.PI / 2, 0]}>
+//         <planeGeometry args={[2.4, 1.4]} />
+//         <meshStandardMaterial color="#111111" side={THREE.DoubleSide} roughness={0.9} />
+//       </mesh>
+//       {/* Flag skull */}
+//       <mesh position={[0.5, 4.7, 0.01]}>
+//         <circleGeometry args={[0.4, 20]} />
+//         <meshStandardMaterial color="#f0f0f0" side={THREE.DoubleSide} />
+//       </mesh>
+//     </group>
+//   )
+// }
 
 // ─────────────────────────────────────────────────────────────────────
 // LADDER — from deck to crow's nest
@@ -1734,6 +1734,59 @@ function TreasureChest({ position, rotation = [0, 0, 0] }) {
 
 
 
+// ─────────────────────────────────────────────────────────────────────
+// CROW'S NEST — Observation basket & invisible ladder collision
+// ─────────────────────────────────────────────────────────────────────
+export function CrowsNest({ position = [0, 31.5, -3], rotation = [0, 0, 0], ...props }) {
+  // ── Physics Ramp for Climbing ──
+  // Adjust these to match the exact slope and length of your GLTF ladder
+  const rampLength = 32; 
+  const rampAngle = 0.15; // Tilt angle (radians)
+  const rampZOffset = 1.5; // How far forward from the mast the ladder base sits
+
+  return (
+    <group position={position} rotation={rotation} {...props}>
+      
+      {/* 1. THE BASKET (Trimesh allows Luffy to stand inside the hollow shape) */}
+      <RigidBody type="fixed" colliders="trimesh">
+        {/* Floor Base */}
+        <mesh position={[0, 0, 0]}>
+          <cylinderGeometry args={[2.2, 1.8, 0.4, 24]} />
+          <meshStandardMaterial color="#4a3525" roughness={0.9} />
+        </mesh>
+
+        {/* Outer Wooden Walls (Open top and bottom) */}
+        <mesh position={[0, 1.2, 0]}>
+          <cylinderGeometry args={[2.3, 2.2, 2.4, 24, 1, true]} />
+          <meshStandardMaterial color="#362519" side={THREE.DoubleSide} roughness={0.9} />
+        </mesh>
+
+        {/* Top Railing / Trim */}
+        <mesh position={[0, 2.4, 0]}>
+          <torusGeometry args={[2.3, 0.15, 8, 24]} />
+          <meshStandardMaterial color="#1f140e" roughness={0.9} />
+        </mesh>
+      </RigidBody>
+
+      {/* 2. INVISIBLE CLIMBING RAMP */}
+      {/* This invisible box overlays your visual ladder so Luffy can walk up it */}
+      <RigidBody type="fixed">
+        <mesh 
+          position={[0, -rampLength / 2, rampZOffset]} 
+          rotation={[rampAngle, 0, 0]}
+          visible={false} // Keeps it invisible in-game
+        >
+          <boxGeometry args={[1.5, rampLength, 0.2]} />
+          <meshBasicMaterial color="red" wireframe /> 
+          {/* Pro-tip: Temporarily set visible={true} to see the red wireframe and align it perfectly with your visual ladder, then set back to false */}
+        </mesh>
+      </RigidBody>
+
+    </group>
+  )
+}
+
+
 
 // ─────────────────────────────────────────────────────────────────────
 // SANJI'S KITCHEN + DINING HALL — restaurant-style, stern second floor
@@ -2625,6 +2678,25 @@ export default function Ship({ aboutActive = false, onProjectSelect }) {
       ════════════════════════════════════════════════════════════ */}
       <PaddleWheel position={[-9.8, -1.5, 8]}  side={-1} />
       <PaddleWheel position={[9.8,  -1.5, 8]}  side={1}  />
+      {/* ════════════════════════════════════════════════════════════
+          PADDLE WHEELS — Chicken Voyage emergency propulsion
+      ════════════════════════════════════════════════════════════ */}
+{/* ════════════════════════════════════════════════════════════
+          PADDLE WHEELS — Chicken Voyage emergency propulsion
+      ════════════════════════════════════════════════════════════ */}
+      <PaddleWheel position={[-9.8, -1.5, 8]}  side={-1} />
+      <PaddleWheel position={[9.8,  -1.5, 8]}  side={1}  />
+
+      {/* ════════════════════════════════════════════════════════════
+          CROW'S NEST — Skills Section Viewpoint
+      ════════════════════════════════════════════════════════════ */}
+      {/* Target Y~31.5 to align with the CAM_SKILLS in WorldScene.jsx */}
+      <CrowsNest position={[0, 31.5, -3]} />
+
+      {/* ════════════════════════════════════════════════════════════
+          TREASURE CHESTS — atmospheric detail
+      ════════════════════════════════════════════════════════════ */}
+      <TreasureChest position={[-6.5, 0.85, 15]} rotation={[0, 0.4, 0]} />
 
       {/* ════════════════════════════════════════════════════════════
           TREASURE CHESTS — atmospheric detail
