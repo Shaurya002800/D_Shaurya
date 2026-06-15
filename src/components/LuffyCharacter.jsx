@@ -129,6 +129,91 @@ function lerpAngle(current, target, t) {
   return current + diff * t
 }
 
+const PLAYER_RADIUS = 0.52
+
+const DECK_BOX_OBSTACLES = [
+  { minX: -8.0, maxX: -3.35, minZ: 16.25, maxZ: 21.35 }, // mikan garden
+  { minX: -1.2, maxX: 1.2, minZ: 18.0, maxZ: 20.85 }, // wheel and log pose
+  { minX: -6.75, maxX: 6.75, minZ: 22.1, maxZ: 28.0 }, // stern hall and balcony props
+  { minX: -6.8, maxX: 6.8, minZ: -27.9, maxZ: -23.25 }, // bow cannon and figurehead
+  { minX: -7.65, maxX: -6.15, minZ: 14.0, maxZ: 16.2 }, // side cannons
+  { minX: 6.15, maxX: 7.65, minZ: 14.0, maxZ: 16.2 },
+  { minX: -7.65, maxX: -6.15, minZ: 2.0, maxZ: 4.2 },
+  { minX: 6.15, maxX: 7.65, minZ: 2.0, maxZ: 4.2 },
+  { minX: -7.15, maxX: -5.0, minZ: -11.25, maxZ: -8.75 }, // barrel stacks
+  { minX: 5.0, maxX: 7.15, minZ: -11.25, maxZ: -8.75 },
+  { minX: -7.2, maxX: -5.55, minZ: 7.1, maxZ: 8.95 },
+  { minX: 5.55, maxX: 7.2, minZ: 7.1, maxZ: 8.95 },
+  { minX: -7.25, maxX: -5.75, minZ: 14.2, maxZ: 15.85 }, // treasure chests
+  { minX: 5.75, maxX: 7.25, minZ: 14.2, maxZ: 15.85 },
+  { minX: 5.45, maxX: 6.95, minZ: -5.8, maxZ: -4.15 },
+  { minX: -7.7, maxX: -6.15, minZ: -22.9, maxZ: -21.05 }, // anchors
+  { minX: 6.15, maxX: 7.7, minZ: -22.9, maxZ: -21.05 },
+  { minX: 1.35, maxX: 3.75, minZ: -4.1, maxZ: -1.95 }, // swing frame
+]
+
+const DECK_CIRCLE_OBSTACLES = [
+  { x: 0, z: -3, radius: 1.15 }, // main mast
+  { x: 0, z: -19, radius: 0.82 }, // fore mast
+  { x: 0, z: -25, radius: 1.3 }, // coup de vent cannon base
+]
+
+const BASEMENT_BOX_OBSTACLES = PROJECT_GALLERY_SPOTS.map((spot) => {
+  const z = spot.frame[2] + 2
+  if (spot.side === 'left') {
+    return { minX: -7.25, maxX: -6.05, minZ: z - 2.35, maxZ: z + 2.35 }
+  }
+  return { minX: 6.05, maxX: 7.25, minZ: z - 2.35, maxZ: z + 2.35 }
+})
+
+function hitsBox(x, z, box, radius = PLAYER_RADIUS) {
+  return (
+    x > box.minX - radius &&
+    x < box.maxX + radius &&
+    z > box.minZ - radius &&
+    z < box.maxZ + radius
+  )
+}
+
+function hitsCircle(x, z, circle, radius = PLAYER_RADIUS) {
+  const dx = x - circle.x
+  const dz = z - circle.z
+  const combinedRadius = circle.radius + radius
+  return dx * dx + dz * dz < combinedRadius * combinedRadius
+}
+
+function isBlocked(x, z, boxes = [], circles = []) {
+  return (
+    boxes.some((box) => hitsBox(x, z, box)) ||
+    circles.some((circle) => hitsCircle(x, z, circle))
+  )
+}
+
+function resolveMovement(position, nextX, nextZ, bounds, boxes = [], circles = []) {
+  const targetX = clamp(nextX, bounds.minX, bounds.maxX)
+  const targetZ = clamp(nextZ, bounds.minZ, bounds.maxZ)
+
+  if (!isBlocked(targetX, targetZ, boxes, circles)) {
+    return { x: targetX, z: targetZ }
+  }
+
+  const canSlideX = !isBlocked(targetX, position.z, boxes, circles)
+  const canSlideZ = !isBlocked(position.x, targetZ, boxes, circles)
+
+  if (canSlideX && canSlideZ) {
+    const movedX = Math.abs(targetX - position.x)
+    const movedZ = Math.abs(targetZ - position.z)
+    return movedX >= movedZ
+      ? { x: targetX, z: position.z }
+      : { x: position.x, z: targetZ }
+  }
+
+  if (canSlideX) return { x: targetX, z: position.z }
+  if (canSlideZ) return { x: position.x, z: targetZ }
+
+  return { x: position.x, z: position.z }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // ANIMATION LOADER
 // ─────────────────────────────────────────────────────────────────────────────
@@ -521,35 +606,17 @@ class PositionController {
 
   update(group, vel, dt) {
     const p = group.position
-    let nextX = p.x + vel.x * dt
-    let nextZ = p.z + vel.z * dt
+    const resolved = resolveMovement(
+      p,
+      p.x + vel.x * dt,
+      p.z + vel.z * dt,
+      BOUNDS,
+      DECK_BOX_OBSTACLES,
+      DECK_CIRCLE_OBSTACLES,
+    )
 
-    nextX = clamp(nextX, BOUNDS.minX, BOUNDS.maxX)
-    nextZ = clamp(nextZ, BOUNDS.minZ, BOUNDS.maxZ)
-
-    const OBSTACLES = [
-      { minX: -8.0, maxX: -3.5, minZ: 16.5, maxZ: 21.0 },
-      { minX: -1.0, maxX: 1.0,  minZ: 18.8, maxZ: 20.8 },
-      { minX: -1.2, maxX: 1.2,  minZ: -4.2, maxZ: -1.8 },
-      { minX: -0.8, maxX: 0.8,  minZ: -20.0, maxZ: -18.0 },
-      { minX: -6.2, maxX: -5.7, minZ: 21.6, maxZ: 27.6 },
-      { minX: 5.7,  maxX: 6.2,  minZ: 21.6, maxZ: 27.6 },
-      { minX: -6.2, maxX: 6.2,  minZ: 27.3, maxZ: 27.6 },
-      { minX: -6.0, maxX: -1.0, minZ: 21.4, maxZ: 21.8 },
-      { minX: 1.0,  maxX: 6.0,  minZ: 21.4, maxZ: 21.8 },
-      { minX: -5.7, maxX: -4.0, minZ: 22.5, maxZ: 26.5 },
-      { minX: -2.0, maxX: 2.0,  minZ: 25.2, maxZ: 27.0 },
-    ]
-
-    for (const obs of OBSTACLES) {
-      if (nextX > obs.minX && nextX < obs.maxX && nextZ > obs.minZ && nextZ < obs.maxZ) {
-        if (p.x <= obs.minX || p.x >= obs.maxX) nextX = p.x
-        if (p.z <= obs.minZ || p.z >= obs.maxZ) nextZ = p.z
-      }
-    }
-
-    p.x = nextX
-    p.z = nextZ
+    p.x = resolved.x
+    p.z = resolved.z
 
     if (p.x >= -3.8 && p.x <= -1.5 && p.z >= 9.0 && p.z <= 15.0) {
       const slopeProgress = (p.z - 9.0) / (15.0 - 9.0)
@@ -570,16 +637,21 @@ class PositionController {
   }
 
   // ── Basement movement in WORLD coordinates ───────────────────────────────
-  // The old aquarium tank blockers are intentionally removed while the work
-  // section is on hold, leaving one open grass-floor room.
+  // The old aquarium tank blockers are gone, but project poster frames still
+  // behave like solid gallery props.
   updateBasement(group, vel, dt) {
     const p = group.position
 
-    let nextX = clamp(p.x + vel.x * dt, BOUNDS_BASEMENT.minX, BOUNDS_BASEMENT.maxX)
-    let nextZ = clamp(p.z + vel.z * dt, BOUNDS_BASEMENT.minZ, BOUNDS_BASEMENT.maxZ)
+    const resolved = resolveMovement(
+      p,
+      p.x + vel.x * dt,
+      p.z + vel.z * dt,
+      BOUNDS_BASEMENT,
+      BASEMENT_BOX_OBSTACLES,
+    )
 
-    p.x = nextX
-    p.z = nextZ
+    p.x = resolved.x
+    p.z = resolved.z
     p.y = -13.85  // basement floor world Y
   }
 }
