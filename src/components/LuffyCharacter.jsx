@@ -4,6 +4,7 @@ import { useGLTF }            from '@react-three/drei'
 import * as THREE              from 'three'
 import { FBXLoader }           from 'three-stdlib'
 import { useKeyboard }         from '../hooks/useKeyboard'
+import { PROJECTS, PROJECT_GALLERY_SPOTS } from '../data/projects.js'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS — tune these to perfect the feel
@@ -633,6 +634,18 @@ function getActiveZone(pos) {
   return null
 }
 
+function getActiveProjectSpot(pos) {
+  for (const spot of PROJECT_GALLERY_SPOTS) {
+    const worldZ = spot.circle[2] + 2
+    const dx = pos.x - spot.circle[0]
+    const dz = pos.z - worldZ
+    if (dx * dx + dz * dz < spot.radius * spot.radius) {
+      return spot
+    }
+  }
+  return null
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // INTERACTION HINT
 // ─────────────────────────────────────────────────────────────────────────────
@@ -708,6 +721,7 @@ function Luffy3D({
   onStateChange,
   onZoneChange,
   onNavigate,
+  onProjectSelect,
   debugRef,
   aboutActive = false,
   skillsActive = false,
@@ -719,6 +733,7 @@ function Luffy3D({
   const loadedRef    = useRef(false)
   const stateRef     = useRef(STATE.IDLE)
   const zoneRef      = useRef(null)
+  const projectZoneRef = useRef(null)
 
   const camCtrl   = useRef(new CameraController())
   const velCtrl   = useRef(new VelocityController())
@@ -884,6 +899,18 @@ function Luffy3D({
       if (onZoneChange) onZoneChange(zone)
     }
 
+    if (workActive) {
+      const projectSpot = getActiveProjectSpot(groupRef.current.position)
+      if (projectSpot?.projectIndex !== projectZoneRef.current) {
+        projectZoneRef.current = projectSpot?.projectIndex ?? null
+        if (projectSpot && onProjectSelect) {
+          onProjectSelect(PROJECTS[projectSpot.projectIndex])
+        }
+      }
+    } else if (projectZoneRef.current !== null) {
+      projectZoneRef.current = null
+    }
+
     if ((currentKeys.e || currentKeys.E) && zone && !animSM.current.locked) {
       if (keys.current) {
         keys.current.e = false
@@ -942,6 +969,7 @@ function Luffy3D({
 export default function LuffyCharacter({
   position = [0, 0.15, 5],
   onNavigate,
+  onProjectSelect,
   aboutActive = false,
   skillsActive = false,
   skillsDirection = 'north',
@@ -976,6 +1004,7 @@ export default function LuffyCharacter({
         onStateChange={handleStateChange}
         onZoneChange={handleZoneChange}
         onNavigate={onNavigate}
+        onProjectSelect={onProjectSelect}
         debugRef={debugRef}
         aboutActive={aboutActive}
         skillsActive={skillsActive}

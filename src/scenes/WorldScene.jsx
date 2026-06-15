@@ -410,6 +410,7 @@ export default function WorldScene({
           onStateChange={onStateChange}
           onZoneChange={onZoneChange}
           onNavigate={onNavigate}
+          onProjectSelect={onProjectSelect}
           debugRef={debugRef}
           aboutActive={aboutActive}
           skillsActive={skillsActive}

@@ -215,7 +215,7 @@ export function AnimatedSail({ position = [0, 20.5, -2.5] }) {
 
     // Bio paragraphs
     const lines = [
-      'Currently 2nd year at VIT Vellore —',
+      'Currently 3rd year at VIT Vellore —',
       'working full-time at a startup since day one.',
       '',
       "I'm obsessed with building things that feel alive —",

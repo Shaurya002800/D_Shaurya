@@ -5,6 +5,7 @@ import { useTexture, Text } from '@react-three/drei'
 import { RigidBody, CuboidCollider, CylinderCollider } from '@react-three/rapier'
 import * as THREE from 'three'
 import { AnimatedSail } from './AboutSection.jsx'
+import { PROJECTS, PROJECT_GALLERY_SPOTS } from '../data/projects.js'
 
 // ─────────────────────────────────────────────────────────────────────
 // PBR TEXTURE HELPER
@@ -644,6 +645,245 @@ function Lantern({ position }) {
         <meshStandardMaterial color="#555" roughness={0.5} metalness={0.6} />
       </mesh>
       {/* NO pointLight — emissive glow looks just as good, costs nothing */}
+    </group>
+  )
+}
+
+function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 3) {
+  const words = text.split(' ')
+  const lines = []
+  let line = ''
+
+  for (const word of words) {
+    const testLine = line ? `${line} ${word}` : word
+    if (ctx.measureText(testLine).width > maxWidth && line) {
+      lines.push(line)
+      line = word
+    } else {
+      line = testLine
+    }
+  }
+  if (line) lines.push(line)
+
+  lines.slice(0, maxLines).forEach((item, index) => {
+    ctx.fillText(item, x, y + index * lineHeight)
+  })
+}
+
+function useWantedPosterTexture(project) {
+  return useMemo(() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 960
+    canvas.height = 1280
+    const ctx = canvas.getContext('2d')
+    const W = canvas.width
+    const H = canvas.height
+
+    const parchment = ctx.createLinearGradient(0, 0, W, H)
+    parchment.addColorStop(0, '#f1d98d')
+    parchment.addColorStop(0.46, '#d5ad62')
+    parchment.addColorStop(1, '#a87336')
+    ctx.fillStyle = parchment
+    ctx.fillRect(0, 0, W, H)
+
+    const rand = (seed) => {
+      const value = Math.sin(seed * 43.71) * 10000
+      return value - Math.floor(value)
+    }
+    for (let i = 0; i < 1800; i += 1) {
+      const alpha = 0.018 + rand(i + 2) * 0.035
+      ctx.fillStyle = rand(i + 1) > 0.45 ? `rgba(90,47,17,${alpha})` : `rgba(255,240,173,${alpha})`
+      ctx.fillRect(rand(i + 3) * W, rand(i + 4) * H, 1 + rand(i + 5) * 3, 1 + rand(i + 6) * 3)
+    }
+
+    ctx.strokeStyle = '#4a210b'
+    ctx.lineWidth = 26
+    ctx.strokeRect(42, 42, W - 84, H - 84)
+    ctx.strokeStyle = '#e8c06f'
+    ctx.lineWidth = 8
+    ctx.strokeRect(76, 76, W - 152, H - 152)
+
+    ctx.fillStyle = '#56220f'
+    ctx.fillRect(118, 110, W - 236, 118)
+    ctx.fillStyle = '#f2d681'
+    ctx.font = '900 78px Georgia, serif'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText('WANTED', W / 2, 169)
+
+    const photoX = 168
+    const photoY = 285
+    const photoW = W - 336
+    const photoH = 390
+    ctx.fillStyle = '#ead393'
+    ctx.fillRect(photoX, photoY, photoW, photoH)
+    ctx.strokeStyle = '#5b2a12'
+    ctx.lineWidth = 12
+    ctx.strokeRect(photoX, photoY, photoW, photoH)
+
+    const accent = project.color
+    ctx.fillStyle = '#2e1b0e'
+    ctx.beginPath()
+    ctx.arc(W / 2, 470, 116, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.strokeStyle = accent
+    ctx.lineWidth = 18
+    ctx.stroke()
+    ctx.fillStyle = '#f5d781'
+    ctx.font = '900 42px Georgia, serif'
+    ctx.fillText('GRAND', W / 2, 430)
+    ctx.fillText('LINE', W / 2, 476)
+    ctx.fillText('FILE', W / 2, 522)
+
+    ctx.strokeStyle = '#6c3b18'
+    ctx.lineWidth = 6
+    ctx.beginPath()
+    ctx.moveTo(194, 610)
+    ctx.bezierCurveTo(270, 560, 340, 650, 432, 594)
+    ctx.bezierCurveTo(530, 532, 608, 630, 764, 574)
+    ctx.stroke()
+    ;[[194, 610], [334, 622], [432, 594], [764, 574]].forEach(([x, y]) => {
+      ctx.fillStyle = '#6c3b18'
+      ctx.beginPath()
+      ctx.arc(x, y, 11, 0, Math.PI * 2)
+      ctx.fill()
+    })
+
+    ctx.fillStyle = '#321607'
+    ctx.font = project.name.length > 15 ? '900 58px Georgia, serif' : '900 68px Georgia, serif'
+    ctx.fillText(project.name, W / 2, 755)
+
+    ctx.fillStyle = '#633016'
+    ctx.font = '700 30px Georgia, serif'
+    ctx.fillText(project.stack.slice(0, 3).join('  /  '), W / 2, 822)
+
+    ctx.fillStyle = accent
+    ctx.font = '900 38px Georgia, serif'
+    ctx.fillText(`BOUNTY ${project.bounty}`, W / 2, 908)
+
+    ctx.fillStyle = '#4d210d'
+    ctx.font = '800 30px Georgia, serif'
+    ctx.fillText(`DEAD OR ALIVE - ${project.year}`, W / 2, 960)
+
+    ctx.fillStyle = '#5f2b12'
+    ctx.font = '24px Georgia, serif'
+    wrapCanvasText(ctx, project.desc, W / 2, 1032, 650, 34, 3)
+
+    ctx.fillStyle = accent
+    ctx.globalAlpha = 0.9
+    ctx.beginPath()
+    ctx.arc(154, 1028, 46, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.globalAlpha = 1
+    ctx.strokeStyle = '#3d1b0b'
+    ctx.lineWidth = 5
+    ctx.stroke()
+
+    ctx.save()
+    ctx.translate(W - 154, 1028)
+    ctx.rotate(-0.18)
+    ctx.strokeStyle = accent
+    ctx.lineWidth = 7
+    ctx.strokeRect(-62, -38, 124, 76)
+    ctx.font = '900 24px Georgia, serif'
+    ctx.fillStyle = accent
+    ctx.fillText('LOG', 0, -7)
+    ctx.fillText('POSE', 0, 22)
+    ctx.restore()
+
+    const texture = new THREE.CanvasTexture(canvas)
+    texture.colorSpace = THREE.SRGBColorSpace
+    texture.anisotropy = 4
+    texture.needsUpdate = true
+    return texture
+  }, [project])
+}
+
+function ProjectPaintingFrame({ project, spot, onSelect }) {
+  const rotationY = spot.side === 'left' ? Math.PI / 2 - 0.24 : -Math.PI / 2 + 0.24
+  const posterTexture = useWantedPosterTexture(project)
+
+  return (
+    <group position={spot.frame} rotation={[0, rotationY, 0]}>
+      <mesh position={[0, 0, -0.11]} castShadow receiveShadow>
+        <boxGeometry args={[3.55, 4.95, 0.25]} />
+        <meshStandardMaterial color="#4c2a12" roughness={0.88} metalness={0.02} />
+      </mesh>
+      <mesh position={[0, 0, 0.02]} castShadow>
+        <planeGeometry args={[3.18, 4.48]} />
+        <meshStandardMaterial map={posterTexture} roughness={0.74} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh position={[0, 2.62, 0.03]} rotation={[0, 0, Math.PI / 2]} castShadow>
+        <cylinderGeometry args={[0.055, 0.055, 3.85, 10]} />
+        <RopeMaterial />
+      </mesh>
+      {[-1.6, 1.6].map((x) => (
+        <mesh key={`poster-rope-${x}`} position={[x, 2.25, 0.02]} castShadow>
+          <cylinderGeometry args={[0.036, 0.036, 0.78, 8]} />
+          <RopeMaterial />
+        </mesh>
+      ))}
+      <mesh
+        position={[0, 0, 0.08]}
+        onClick={(event) => {
+          event.stopPropagation()
+          onSelect?.(project)
+        }}
+        onPointerOver={(event) => {
+          event.stopPropagation()
+          document.body.style.cursor = 'pointer'
+        }}
+        onPointerOut={() => {
+          document.body.style.cursor = 'default'
+        }}
+      >
+        <planeGeometry args={[3.55, 4.95]} />
+        <meshBasicMaterial transparent opacity={0} side={THREE.DoubleSide} depthWrite={false} />
+      </mesh>
+
+      <mesh position={[0, -2.62, -0.08]} castShadow>
+        <boxGeometry args={[3.35, 0.2, 0.28]} />
+        <meshStandardMaterial color="#2b1a0c" roughness={0.82} />
+      </mesh>
+      <mesh position={[-1.55, -1.35, -0.09]} castShadow>
+        <boxGeometry args={[0.16, 2.45, 0.16]} />
+        <meshStandardMaterial color="#2b1a0c" roughness={0.82} />
+      </mesh>
+      <mesh position={[1.55, -1.35, -0.09]} castShadow>
+        <boxGeometry args={[0.16, 2.45, 0.16]} />
+        <meshStandardMaterial color="#2b1a0c" roughness={0.82} />
+      </mesh>
+    </group>
+  )
+}
+
+function ProjectInteractionCircle({ project, spot }) {
+  return (
+    <group position={spot.circle}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[spot.radius * 0.72, spot.radius, 56]} />
+        <meshStandardMaterial
+          color={project.color}
+          emissive={project.color}
+          emissiveIntensity={0.55}
+          roughness={0.55}
+          transparent
+          opacity={0.86}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[spot.radius * 0.22, 32]} />
+        <meshStandardMaterial
+          color="#fff9c8"
+          emissive={project.color}
+          emissiveIntensity={0.28}
+          roughness={0.7}
+          transparent
+          opacity={0.72}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
     </group>
   )
 }
@@ -1359,60 +1599,6 @@ function CausticFloor({ position }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// FULL AQUARIUM BASEMENT — the Work section
-// ─────────────────────────────────────────────────────────────────────
-const PROJECTS = [
-  {
-    name: 'SentinelMesh',
-    desc: 'Autonomous threat intelligence network — ESP32 swarm with on-device AI inference, blockchain audit log, live D3 attack heatmap.',
-    stack: ['ESP32', 'TFLite', 'React', 'Web3'],
-    color: '#ff4444',
-    year: '2026',
-    url: '#'
-  },
-  {
-    name: 'Vivayu',
-    desc: 'Proactive AgTech platform — XGBoost crop disease detection, voice-first RAG assistant, auto-generated pesticide reports.',
-    stack: ['Python', 'LangChain', 'FAISS', 'Groq'],
-    color: '#44ff88',
-    year: '2025',
-    url: 'https://ml-project-6c8bzwvgvr8xibunhdsjtt.streamlit.app'
-  },
-  {
-    name: 'DevBoard',
-    desc: 'Full-stack indie talent marketplace — founders post projects, developers pitch. JWT auth, PostgreSQL, fully deployed.',
-    stack: ['Next.js', 'Node', 'PostgreSQL', 'Railway'],
-    color: '#4488ff',
-    year: '2025',
-    url: 'https://devboard-gamma-gilt.vercel.app'
-  },
-  {
-    name: 'Hack Battle',
-    desc: '36-hour hackathon platform serving 500+ participants. Game-inspired visuals, high-concurrency registration — zero UI failures.',
-    stack: ['React', 'Tailwind', 'Figma'],
-    color: '#ff8844',
-    year: '2025',
-    url: 'https://hackbattle25.ieeecsvit.com'
-  },
-  {
-    name: 'Model Arena',
-    desc: 'Competitive ML hackathon platform — futuristic design system, strong visual hierarchy across the full event lifecycle.',
-    stack: ['React', 'Tailwind', 'Figma'],
-    color: '#cc44ff',
-    year: '2025',
-    url: 'https://model-arena.netlify.app'
-  },
-  {
-    name: 'IEEE CS Website',
-    desc: 'Official IEEE CS VIT chapter platform — modern UI, responsive architecture, brand consistency, accessibility standards.',
-    stack: ['React', 'Tailwind', 'Figma'],
-    color: '#44ddff',
-    year: '2025',
-    url: 'https://ieeecsvit.com'
-  },
-]
-
-// ─────────────────────────────────────────────────────────────────────
 // AQUARIUM TANK — one of 6 project tanks built into the wall
 // ─────────────────────────────────────────────────────────────────────
 function ProjectTank({ project, position, facingRight = true, onSelect }) {
@@ -1528,11 +1714,10 @@ function ProjectTank({ project, position, facingRight = true, onSelect }) {
 // ─────────────────────────────────────────────────────────────────────
 // BASEMENT ROOM — ship-footprint garden room while work stays on hold
 // ─────────────────────────────────────────────────────────────────────
-function AquariumBasement({ position = [0, -14, 2] }) {
+function AquariumBasement({ position = [0, -14, 2], onProjectSelect }) {
   const floorShape = useMemo(() => createBasementFootprintShape(0.38), [])
   const ceilingShape = useMemo(() => createBasementFootprintShape(0.18), [])
   const wallShape = useMemo(() => createBasementWallShape(), [])
-  const wallColors = ['#ffcf40', '#ff6b6b', '#5fd3ff', '#ffffff', '#7de36d', '#ff9fd8']
 
   return (
     <group position={position}>
@@ -1572,31 +1757,15 @@ function AquariumBasement({ position = [0, -14, 2] }) {
         />
       </mesh>
 
-      {/* Bright painted wall patches */}
-      {[-14, -8, -2, 4, 10].map((z, i) => (
-        <group key={`left-paint-${z}`}>
-          <mesh position={[-8.03, 5.6, z]} rotation={[0, Math.PI / 2, 0]}>
-            <planeGeometry args={[3.0, 4.2]} />
-            <meshStandardMaterial
-              color={wallColors[i % wallColors.length]}
-              emissive={wallColors[i % wallColors.length]}
-              emissiveIntensity={0.08}
-              roughness={0.7}
-              side={THREE.DoubleSide}
-            />
-          </mesh>
-          <mesh position={[8.03, 5.6, z + 2.3]} rotation={[0, -Math.PI / 2, 0]}>
-            <planeGeometry args={[3.0, 4.2]} />
-            <meshStandardMaterial
-              color={wallColors[(i + 2) % wallColors.length]}
-              emissive={wallColors[(i + 2) % wallColors.length]}
-              emissiveIntensity={0.08}
-              roughness={0.7}
-              side={THREE.DoubleSide}
-            />
-          </mesh>
-        </group>
-      ))}
+      {PROJECT_GALLERY_SPOTS.map((spot) => {
+        const project = PROJECTS[spot.projectIndex]
+        return (
+          <group key={project.name}>
+            <ProjectPaintingFrame project={project} spot={spot} onSelect={onProjectSelect} />
+            <ProjectInteractionCircle project={project} spot={spot} />
+          </group>
+        )
+      })}
 
       {/* Back focal paint panel visible from the entrance */}
       <mesh position={[0, 5.3, -20.55]} rotation={[0, 0, 0]}>
