@@ -130,6 +130,7 @@ function lerpAngle(current, target, t) {
 }
 
 const PLAYER_RADIUS = 0.52
+const LADDER_DECK_SPOT = new THREE.Vector3(2.35, 0.15, -3.05)
 
 const DECK_BOX_OBSTACLES = [
   { minX: -8.0, maxX: -3.35, minZ: 16.25, maxZ: 21.35 }, // mikan garden
@@ -679,8 +680,8 @@ const ZONES = [
   {
     id:       'ladder',
     label:    'Press E — Climb to Crow\'s Nest',
-    center:   new THREE.Vector3(0.8, 0.15, -3),
-    radius:   2.0,
+    center:   LADDER_DECK_SPOT,
+    radius:   1.75,
     state:    STATE.CLIMB,
     section:  'skills',
   },
@@ -908,8 +909,9 @@ function Luffy3D({
       groupRef.current.rotation.y = directionRotation[skillsDirection] ?? Math.PI
       velCtrl.current.vel.set(0, 0, 0)
     } else if (!skillsActive && groupRef.current.position.y > 20) {
-      groupRef.current.position.set(0.8, 0.15, -3)
-      groupRef.current.rotation.y = Math.PI
+      groupRef.current.position.copy(LADDER_DECK_SPOT)
+      groupRef.current.rotation.y = -Math.PI / 2
+      rotCtrl.current.current = -Math.PI / 2
       velCtrl.current.vel.set(0, 0, 0)
     }
   }, [skillsActive, skillsDirection])

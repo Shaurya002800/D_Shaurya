@@ -399,28 +399,84 @@ function LionFigurehead({ position }) {
 // ─────────────────────────────────────────────────────────────────────
 // LADDER — from deck to crow's nest
 // ─────────────────────────────────────────────────────────────────────
-function Ladder({ position, height = 30, rungs = 18 }) {
+function Ladder({ position, height = 30, rungs = 18, rotation = [0, 0, 0] }) {
+  const bottom = -height / 2
+  const top = height / 2
   return (
-    <group position={position}>
-      {/* Left rail */}
-      <mesh castShadow>
-        <boxGeometry args={[0.07, height, 0.07]} />
-        <meshStandardMaterial color="#3d2410" roughness={0.85} />
-      </mesh>
-      {/* Right rail */}
-      <mesh position={[0.6, 0, 0]} castShadow>
-        <boxGeometry args={[0.07, height, 0.07]} />
-        <meshStandardMaterial color="#3d2410" roughness={0.85} />
-      </mesh>
-      {/* Rungs */}
-      {Array.from({ length: rungs }, (_, i) => (
-  <mesh key={i}
-    position={[0.3, -height / 2 + 1.5 + i * (height / rungs), 0]}
-  >
-          <boxGeometry args={[0.62, 0.07, 0.07]} />
-          <meshStandardMaterial color="#5C3A21" roughness={0.9} />
+    <group position={position} rotation={rotation}>
+      {/* rope rails */}
+      {[-0.46, 0.46].map((x) => (
+        <mesh key={`ladder-rail-${x}`} position={[x, 0, 0]} castShadow>
+          <cylinderGeometry args={[0.055, 0.055, height, 10]} />
+          <meshStandardMaterial color="#6f4b21" roughness={0.92} />
         </mesh>
       ))}
+
+      {/* darker side shadows so the ladder reads from distance */}
+      {[-0.56, 0.56].map((x) => (
+        <mesh key={`ladder-shadow-${x}`} position={[x, 0, -0.045]} castShadow>
+          <cylinderGeometry args={[0.025, 0.025, height * 0.98, 8]} />
+          <meshStandardMaterial color="#241407" roughness={0.95} />
+        </mesh>
+      ))}
+
+      {/* thicker end clamps */}
+      {[bottom + 0.45, top - 0.45].map((y) => (
+        <mesh key={`ladder-clamp-${y}`} position={[0, y, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+          <cylinderGeometry args={[0.08, 0.08, 1.18, 10]} />
+          <meshStandardMaterial color="#3d2410" roughness={0.9} />
+        </mesh>
+      ))}
+
+      {/* wooden rungs */}
+      {Array.from({ length: rungs }, (_, i) => {
+        const y = bottom + 1.05 + i * ((height - 2.1) / Math.max(1, rungs - 1))
+        return (
+          <group key={i} position={[0, y, 0]}>
+            <mesh rotation={[0, 0, Math.PI / 2]} castShadow>
+              <cylinderGeometry args={[0.065, 0.065, 1.0, 10]} />
+              <meshStandardMaterial color="#8a5a26" roughness={0.88} />
+            </mesh>
+            {[-0.46, 0.46].map((x) => (
+              <mesh key={x} position={[x, 0, 0.01]} castShadow>
+                <torusGeometry args={[0.105, 0.018, 6, 12]} />
+                <meshStandardMaterial color="#2a1708" roughness={0.9} />
+              </mesh>
+            ))}
+          </group>
+        )
+      })}
+
+      {/* tiny deck foot plates */}
+      {[-0.46, 0.46].map((x) => (
+        <mesh key={`ladder-foot-${x}`} position={[x, bottom - 0.1, 0.1]} rotation={[-Math.PI / 2, 0, 0]} castShadow>
+          <cylinderGeometry args={[0.14, 0.14, 0.08, 12]} />
+          <meshStandardMaterial color="#2a1708" roughness={0.85} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+function CrowsNestFlag() {
+  return (
+    <group>
+      <mesh position={[0, 2.65, 0]} castShadow>
+        <cylinderGeometry args={[0.045, 0.045, 5.1, 8]} />
+        <meshStandardMaterial color="#2a1505" roughness={0.82} />
+      </mesh>
+      <mesh position={[1.25, 4.55, 0]} rotation={[0, -Math.PI / 2, 0]} castShadow>
+        <planeGeometry args={[2.35, 1.35]} />
+        <meshStandardMaterial color="#111111" side={THREE.DoubleSide} roughness={0.9} />
+      </mesh>
+      <mesh position={[0.75, 4.56, 0.015]}>
+        <circleGeometry args={[0.33, 18]} />
+        <meshStandardMaterial color="#f3eee2" side={THREE.DoubleSide} roughness={0.8} />
+      </mesh>
+      <mesh position={[0.75, 4.83, 0.025]} rotation={[0.05, 0, 0]}>
+        <torusGeometry args={[0.39, 0.065, 8, 22]} />
+        <meshStandardMaterial color="#caa23d" side={THREE.DoubleSide} roughness={0.82} />
+      </mesh>
     </group>
   )
 }
@@ -2041,38 +2097,42 @@ export function CrowsNest({ position = [0, 31.5, -3], rotation = [0, 0, 0], ...p
   return (
     <group position={position} rotation={rotation} {...props}>
       
-      {/* 1. THE BASKET (Trimesh allows Luffy to stand inside the hollow shape) */}
+      {/* Open Sunny lookout basket. Kept low and airy so Luffy stays visible. */}
       <RigidBody type="fixed" colliders="trimesh">
-        {/* Floor Base */}
         <mesh position={[0, 0, 0]}>
-          <cylinderGeometry args={[2.2, 1.8, 0.4, 24]} />
-          <meshStandardMaterial color="#4a3525" roughness={0.9} />
+          <cylinderGeometry args={[2.25, 2.45, 0.38, 28]} />
+          <meshStandardMaterial color="#5C3A21" roughness={0.88} />
         </mesh>
-
-        {/* Low outer guard wall — short enough that Luffy remains visible */}
-        <mesh position={[0, 0.62, 0]}>
-          <cylinderGeometry args={[2.3, 2.2, 1.05, 24, 1, true]} />
-          <meshStandardMaterial color="#362519" side={THREE.DoubleSide} roughness={0.9} />
+        <mesh position={[0, 0.28, 0]}>
+          <torusGeometry args={[2.35, 0.11, 10, 32]} />
+          <meshStandardMaterial color="#2a1708" roughness={0.86} />
         </mesh>
-
-        {/* Top Railing / Trim */}
-        <mesh position={[0, 1.18, 0]}>
-          <torusGeometry args={[2.3, 0.1, 8, 24]} />
-          <meshStandardMaterial color="#1f140e" roughness={0.9} />
+        <mesh position={[0, 1.08, 0]}>
+          <torusGeometry args={[2.42, 0.085, 10, 36]} />
+          <meshStandardMaterial color="#c8a050" roughness={0.75} />
         </mesh>
+        {Array.from({ length: 16 }, (_, i) => {
+          const angle = (i * Math.PI * 2) / 16
+          return (
+            <mesh key={i} position={[Math.cos(angle) * 2.42, 0.65, Math.sin(angle) * 2.42]} castShadow>
+              <cylinderGeometry args={[0.045, 0.055, 0.9, 8]} />
+              <meshStandardMaterial color={i % 2 ? '#f5efe1' : '#8b1f16'} roughness={0.82} />
+            </mesh>
+          )
+        })}
       </RigidBody>
 
-      {/* 2. INVISIBLE CLIMBING RAMP */}
-      {/* This invisible box overlays your visual ladder so Luffy can walk up it */}
+      <CrowsNestFlag />
+
+      {/* Invisible climb ramp, aligned with the starboard ladder. */}
       <RigidBody type="fixed">
         <mesh 
-          position={[0, -rampLength / 2, rampZOffset]} 
+          position={[2.2, -rampLength / 2, rampZOffset]} 
           rotation={[rampAngle, 0, 0]}
-          visible={false} // Keeps it invisible in-game
+          visible={false}
         >
-          <boxGeometry args={[1.5, rampLength, 0.2]} />
+          <boxGeometry args={[1.2, rampLength, 0.2]} />
           <meshBasicMaterial color="red" wireframe /> 
-          {/* Pro-tip: Temporarily set visible={true} to see the red wireframe and align it perfectly with your visual ladder, then set back to false */}
         </mesh>
       </RigidBody>
 
@@ -2871,7 +2931,7 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       {/* ════════════════════════════════════════════════════════════
           CROW'S NEST
       ════════════════════════════════════════════════════════════ */}
-      <DomeCrowsNest position={[0, 31.5, -3]} />
+      <CrowsNest position={[0, 31.5, -3]} />
 
       {/* ════════════════════════════════════════════════════════════
           MAIN CROSS SPAR + SAIL
@@ -2896,7 +2956,7 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       {/* ════════════════════════════════════════════════════════════
           LADDER TO CROW'S NEST
       ════════════════════════════════════════════════════════════ */}
-      {!aboutActive && <Ladder position={[0.8, 17, -2.2]} height={30} rungs={20} />}
+      {!aboutActive && <Ladder position={[2.2, 17, -1.55]} height={30} rungs={23} rotation={[0.04, 0, -0.015]} />}
 
       {/* ════════════════════════════════════════════════════════════
           RIGGING ROPES — full network

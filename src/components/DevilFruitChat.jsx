@@ -181,7 +181,7 @@ INTERNSHIP HUNT SUMMER 2026
 ${INTERNSHIP_HUNT.map((item) => `- ${item}`).join('\n')}
 
 CONTACT POLICY
-If someone wants to contact, hire, collaborate, recruit, or interview Shaurya, ask for name, email, and message. The UI will send the confirmed transcript to Shaurya.
+If someone wants to contact, hire, collaborate, recruit, interview, offer an internship, or asks Shaurya to call them, collect their name, any contact method, and the message. The UI sends the full transcript to Shaurya.
 UNKNOWN FACTS
 This portfolio does not provide Shaurya's age or date of birth. If asked, say age is not listed. Do not infer it from school year. For the latest internship or availability updates, suggest contacting Shaurya because statuses may change.
 
@@ -193,21 +193,31 @@ Do not invent internships, awards, company names, education details, ages, salar
 
 function wantsContact(text) {
   const q = normalize(text)
+  const hasPhone = Boolean(extractPhone(text))
+  const hasInternshipOffer = q.includes('internship') && [
+    'got', 'have', 'offer', 'opportunity', 'for him', 'for shaurya',
+  ].some((term) => q.includes(term))
+
+  if (hasPhone || hasInternshipOffer) return true
+
   return [
     'contact', 'hire', 'recruit', 'interview', 'collaborate', 'collab',
     'message shaurya', 'reach out', 'get in touch', 'email shaurya',
-    'talk to shaurya', 'work with', 'available',
+    'talk to shaurya', 'work with', 'call me', 'call back', 'call on',
+    'my number', 'phone number', 'whatsapp', 'opportunity for him',
+    'opportunity for shaurya',
   ].some((term) => q.includes(term))
 }
 
 function isGenericContactIntent(text) {
   const q = normalize(text)
   const wordCount = q.split(' ').filter(Boolean).length
-  return wantsContact(q) && wordCount <= 6
-}
-
-function isAffirmative(text) {
-  return /^(yes|yep|yeah|sure|send|confirm|ok|okay|go ahead|please do)\b/i.test(text.trim())
+  const genericTerms = [
+    'contact', 'hire', 'recruit', 'interview', 'collaborate', 'collab',
+    'message shaurya', 'reach out', 'get in touch', 'email shaurya',
+    'talk to shaurya',
+  ]
+  return genericTerms.some((term) => q === term || q === `i want to ${term}`) && wordCount <= 6
 }
 
 function isNegative(text) {
@@ -218,48 +228,70 @@ function extractEmail(text) {
   return text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] || ''
 }
 
+function extractPhone(text) {
+  const match = text.match(/(?:\+?\d[\d\s-]{7,}\d)/)
+  if (!match) return ''
+  const phone = match[0].replace(/[^\d+]/g, '')
+  const digitCount = phone.replace(/\D/g, '').length
+  return digitCount >= 8 && digitCount <= 15 ? phone : ''
+}
+
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
+function isValidPhone(phone) {
+  const digitCount = phone.replace(/\D/g, '').length
+  return digitCount >= 8 && digitCount <= 15
+}
+
 function extractName(text) {
-  const match = text.match(/\b(?:my name is|i am|i'm|this is|name is|name:)\s+([a-z][a-z\s.'-]{1,42})/i)
+  const match = text.match(/\b(?:my name is|my name|share my name|i am|i'm|this is|name is|name:)\s+([a-z][a-z\s.'-]{1,42})/i)
   if (!match) return ''
-  return match[1].replace(/\b(email|message|contact|hire|for)\b.*$/i, '').trim()
+  return match[1].replace(/\b(email|message|contact|hire|for|he|she|they|knows|know)\b.*$/i, '').trim()
 }
 
 function cleanLeadMessage(text) {
   return text
     .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/ig, '')
-    .replace(/\b(?:my name is|i am|i'm|this is|name is|name:)\s+[a-z][a-z\s.'-]{1,42}/ig, '')
+    .replace(/(?:\+?\d[\d\s-]{7,}\d)/g, '')
+    .replace(/\b(?:my name is|my name|share my name|i am|i'm|this is|name is|name:)\s+[a-z][a-z\s.'-]{1,42}/ig, '')
     .replace(/\s+/g, ' ')
     .trim()
 }
 
 function missingLeadField(lead) {
   if (!lead.name.trim()) return 'name'
-  if (!isValidEmail(lead.email)) return 'email'
+  if (!isValidEmail(lead.email) && !isValidPhone(lead.phone)) return 'contact'
   if (!lead.message.trim()) return 'message'
   return null
 }
 
 function fieldPrompt(field) {
   if (field === 'name') return 'Sure. What name should I attach to the message?'
-  if (field === 'email') return 'Got it. What email should Shaurya reply to?'
+  if (field === 'contact') return 'Got it. What phone number or email should Shaurya use to reply?'
   return 'Perfect. What should I tell Shaurya? A short message is enough.'
 }
 
 function mergeLeadFromText(lead, text, expectedField) {
   const next = { ...lead }
   const email = extractEmail(text)
+  const phone = extractPhone(text)
   const name = extractName(text)
   const cleaned = cleanLeadMessage(text)
 
-  if (expectedField === 'name') next.name = text.trim()
-  else if (expectedField === 'email') next.email = email || text.trim()
+  if (email) next.email = email
+  if (phone) next.phone = phone
+
+  if (expectedField === 'name') {
+    if (name) next.name = name
+    else if (!email && !phone) next.name = text.trim()
+  }
+  else if (expectedField === 'contact') {
+    if (!email && !phone) next.phone = text.trim()
+  }
   else if (expectedField === 'message') next.message = text.trim()
   else {
-    if (email) next.email = email
     if (name) next.name = name
     if (cleaned && cleaned.length > 12 && !isGenericContactIntent(cleaned)) {
       next.message = cleaned
@@ -543,11 +575,17 @@ async function generateReply(userText, history) {
 }
 
 async function sendContactLead({ lead, chat }) {
+  const contact = [
+    lead.email && `Email: ${lead.email}`,
+    lead.phone && `Phone: ${lead.phone}`,
+  ].filter(Boolean).join('\n') || 'Contact method not provided'
+  const replyTo = isValidEmail(lead.email) ? lead.email : PROFILE.email
+
   const body = [
     '--- NEW PORTFOLIO CONTACT HANDOFF ---',
     '',
     `Name: ${lead.name}`,
-    `Email: ${lead.email}`,
+    contact,
     `Message: ${lead.message}`,
     '',
     '--- CHAT TRANSCRIPT ---',
@@ -559,9 +597,11 @@ async function sendContactLead({ lead, chat }) {
     EMAILJS.templateId,
     {
       message: body,
-      from_name: lead.name,
-      reply_to: lead.email,
-      visitor_email: lead.email,
+      from_name: lead.name || 'Portfolio visitor',
+      reply_to: replyTo,
+      visitor_email: lead.email || '',
+      visitor_phone: lead.phone || '',
+      visitor_contact: [lead.email, lead.phone].filter(Boolean).join(' / '),
       visitor_message: lead.message,
     },
     { publicKey: EMAILJS.publicKey },
@@ -581,17 +621,15 @@ export default function OnePieceChatbot() {
   const [assistantStatus, setAssistantStatus] = useState(initialAssistantStatus)
   const [contactFlow, setContactFlow] = useState({
     active: false,
-    awaitingConfirmation: false,
     expectedField: null,
-    lead: { name: '', email: '', message: '' },
+    lead: { name: '', email: '', phone: '', message: '' },
   })
   const chatEndRef = useRef(null)
 
   const inputPlaceholder = useMemo(() => {
     if (!contactFlow.active) return 'Ask about Shaurya...'
-    if (contactFlow.awaitingConfirmation) return 'Type yes to send, or no to cancel'
-    return contactFlow.expectedField === 'email'
-      ? 'visitor@email.com'
+    return contactFlow.expectedField === 'contact'
+      ? 'Phone number or email'
       : contactFlow.expectedField === 'name'
         ? 'Your name'
         : 'Your message for Shaurya'
@@ -614,9 +652,29 @@ export default function OnePieceChatbot() {
     setMessages((prev) => [...prev, message('crew', text, meta)])
   }
 
+  const resetContactFlow = () => {
+    setContactFlow({
+      active: false,
+      expectedField: null,
+      lead: { name: '', email: '', phone: '', message: '' },
+    })
+  }
+
+  const sendLeadNow = async (lead, chat) => {
+    try {
+      await sendContactLead({ lead, chat })
+      appendBot("Done. I sent Shaurya the full chat history with your contact details, so he can follow up directly.")
+    } catch (err) {
+      console.error(err)
+      appendBot("I could not send the handoff right now. Please try again in a moment, or use the portfolio links while I steady the connection.")
+    } finally {
+      resetContactFlow()
+    }
+  }
+
   const beginContactFlow = async (userText, chat) => {
     const lead = mergeLeadFromText(
-      { name: '', email: '', message: '' },
+      { name: '', email: '', phone: '', message: '' },
       userText,
       null,
     )
@@ -625,7 +683,6 @@ export default function OnePieceChatbot() {
     if (missing) {
       setContactFlow({
         active: true,
-        awaitingConfirmation: false,
         expectedField: missing,
         lead,
       })
@@ -633,47 +690,13 @@ export default function OnePieceChatbot() {
       return
     }
 
-    setContactFlow({
-      active: true,
-      awaitingConfirmation: true,
-      expectedField: null,
-      lead,
-    })
-    appendBot(`I can send this to Shaurya now.\n\nName: ${lead.name}\nEmail: ${lead.email}\nMessage: ${lead.message}\n\nType yes to send, or no to cancel.`)
+    await sendLeadNow(lead, chat)
   }
 
   const handleContactStep = async (userText, chat) => {
-    if (contactFlow.awaitingConfirmation) {
-      if (isNegative(userText)) {
-        setContactFlow({
-          active: false,
-          awaitingConfirmation: false,
-          expectedField: null,
-          lead: { name: '', email: '', message: '' },
-        })
-        appendBot('No problem. I cancelled the handoff. You can still ask me anything about Shaurya.')
-        return
-      }
-
-      if (!isAffirmative(userText)) {
-        appendBot('Type yes to send the message to Shaurya, or no to cancel.')
-        return
-      }
-
-      try {
-        await sendContactLead({ lead: contactFlow.lead, chat })
-        appendBot("Done. I sent the conversation and your contact details to Shaurya. He can reply using the email you shared.")
-      } catch (err) {
-        console.error(err)
-        appendBot("I could not send the handoff right now. Please try again in a moment, or use the portfolio links while I steady the Den Den Mushi.")
-      } finally {
-        setContactFlow({
-          active: false,
-          awaitingConfirmation: false,
-          expectedField: null,
-          lead: { name: '', email: '', message: '' },
-        })
-      }
+    if (isNegative(userText)) {
+      resetContactFlow()
+      appendBot('No problem. I cancelled the handoff. You can still ask me anything about Shaurya.')
       return
     }
 
@@ -683,7 +706,6 @@ export default function OnePieceChatbot() {
     if (missing) {
       setContactFlow({
         active: true,
-        awaitingConfirmation: false,
         expectedField: missing,
         lead,
       })
@@ -691,13 +713,7 @@ export default function OnePieceChatbot() {
       return
     }
 
-    setContactFlow({
-      active: true,
-      awaitingConfirmation: true,
-      expectedField: null,
-      lead,
-    })
-    appendBot(`Ready to send this to Shaurya?\n\nName: ${lead.name}\nEmail: ${lead.email}\nMessage: ${lead.message}\n\nType yes to send, or no to cancel.`)
+    await sendLeadNow(lead, chat)
   }
 
   const submitText = async (rawText) => {
