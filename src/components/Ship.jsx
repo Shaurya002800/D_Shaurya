@@ -33,6 +33,82 @@ function usePBR(folder, repeat = [1, 1]) {
 // WOOD PLANK MATERIAL — deck floor
 const NORMAL_SCALE_DECK = new THREE.Vector2(1.2, 1.2)
 const NORMAL_SCALE_WOOD = new THREE.Vector2(1.5, 1.5)
+const BASEMENT_MIN_Z = -23
+const BASEMENT_MAX_Z = 17
+const BASEMENT_HALF_WIDTH = 8.5
+const BASEMENT_HEIGHT = 12
+
+function createBasementFootprintShape(inset = 0) {
+  const halfWidth = BASEMENT_HALF_WIDTH - inset
+  const minZ = BASEMENT_MIN_Z + inset
+  const maxZ = BASEMENT_MAX_Z - inset
+
+  const shape = new THREE.Shape()
+  const moveTo = (x, z) => shape.moveTo(x, -z)
+  const lineTo = (x, z) => shape.lineTo(x, -z)
+  const curveTo = (cp1x, cp1z, cp2x, cp2z, x, z) => {
+    shape.bezierCurveTo(cp1x, -cp1z, cp2x, -cp2z, x, -z)
+  }
+
+  moveTo(0, minZ)
+  curveTo(halfWidth * 0.58, minZ + 1.2, halfWidth, minZ + 5.8, halfWidth, minZ + 10.8)
+  lineTo(halfWidth, maxZ - 5.2)
+  curveTo(halfWidth, maxZ - 1.4, halfWidth * 0.64, maxZ, 0, maxZ)
+  curveTo(-halfWidth * 0.64, maxZ, -halfWidth, maxZ - 1.4, -halfWidth, maxZ - 5.2)
+  lineTo(-halfWidth, minZ + 10.8)
+  curveTo(-halfWidth, minZ + 5.8, -halfWidth * 0.58, minZ + 1.2, 0, minZ)
+  shape.closePath()
+
+  return shape
+}
+
+function createBasementWallShape() {
+  const outer = createBasementFootprintShape(0)
+  const innerShape = createBasementFootprintShape(0.52)
+  const points = innerShape.getPoints(96).reverse()
+  const hole = new THREE.Path()
+  points.forEach((point, index) => {
+    if (index === 0) hole.moveTo(point.x, point.y)
+    else hole.lineTo(point.x, point.y)
+  })
+  hole.closePath()
+  outer.holes.push(hole)
+  return outer
+}
+
+function useGrassTexture() {
+  return useMemo(() => {
+    const rand = (seed) => {
+      const value = Math.sin(seed * 91.17) * 10000
+      return value - Math.floor(value)
+    }
+    const canvas = document.createElement('canvas')
+    canvas.width = 256
+    canvas.height = 256
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = '#2f8f3b'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+    for (let i = 0; i < 1300; i += 1) {
+      const x = rand(i + 1) * canvas.width
+      const y = rand(i + 2) * canvas.height
+      const length = 3 + rand(i + 3) * 9
+      ctx.strokeStyle = rand(i + 4) > 0.55 ? 'rgba(174,231,89,0.42)' : 'rgba(19,92,37,0.42)'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.moveTo(x, y)
+      ctx.lineTo(x + (rand(i + 5) - 0.5) * 2, y - length)
+      ctx.stroke()
+    }
+
+    const texture = new THREE.CanvasTexture(canvas)
+    texture.wrapS = THREE.RepeatWrapping
+    texture.wrapT = THREE.RepeatWrapping
+    texture.repeat.set(7, 16)
+    texture.colorSpace = THREE.SRGBColorSpace
+    return texture
+  }, [])
+}
 
 function DeckMaterial({ repeat = [3, 8] }) {
   const maps = usePBR('WoodFloor040_1K-JPG', repeat)
@@ -56,6 +132,18 @@ function WoodMaterial({ repeat = [2, 2], roughness = 0.88 }) {
       metalness={0.0}
       aoMapIntensity={1.3}
       normalScale={NORMAL_SCALE_WOOD}   // ← stable reference
+    />
+  )
+}
+
+function GrassMaterial() {
+  const texture = useGrassTexture()
+  return (
+    <meshStandardMaterial
+      map={texture}
+      color="#57b84b"
+      roughness={0.96}
+      metalness={0.0}
     />
   )
 }
@@ -1438,110 +1526,123 @@ function ProjectTank({ project, position, facingRight = true, onSelect }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// BASEMENT ROOM — proper wooden room + 6 aquarium project tanks
+// BASEMENT ROOM — ship-footprint garden room while work stays on hold
 // ─────────────────────────────────────────────────────────────────────
-function AquariumBasement({ position = [0, -14, 2], onProjectSelect }) {
+function AquariumBasement({ position = [0, -14, 2] }) {
+  const floorShape = useMemo(() => createBasementFootprintShape(0.38), [])
+  const ceilingShape = useMemo(() => createBasementFootprintShape(0.18), [])
+  const wallShape = useMemo(() => createBasementWallShape(), [])
+  const wallColors = ['#ffcf40', '#ff6b6b', '#5fd3ff', '#ffffff', '#7de36d', '#ff9fd8']
+
   return (
     <group position={position}>
  
-      {/* ── FLOOR ── */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
-        <planeGeometry args={[22, 14]} />
-        <meshStandardMaterial color="#060c14" roughness={0.96} />
+      {/* Grass floor using the same long ship footprint as the upper deck */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]} receiveShadow>
+        <shapeGeometry args={[floorShape, 96]} />
+        <GrassMaterial />
       </mesh>
-      {/* Caustic centre strip */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
-        <planeGeometry args={[4.5, 12]} />
-        <meshStandardMaterial color="#010c1c" roughness={0.9}
-          emissive="#011a36" emissiveIntensity={0.22} />
+
+      {/* Visible center lawn lane so the entry camera has a clear floor cue */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.075, -3]} receiveShadow>
+        <planeGeometry args={[4.8, 29]} />
+        <meshStandardMaterial color="#45b943" roughness={0.95} />
       </mesh>
-      {/* Sci-fi floor lines */}
-      {[-3, -1.5, 0, 1.5, 3].map((z, i) => (
-        <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, z]}>
-          <planeGeometry args={[22, 0.025]} />
-          <meshStandardMaterial color="#0a2a55" emissive="#0a2a55" emissiveIntensity={0.7} />
+      {[-10, 0, 10].map((z) => (
+        <mesh key={`lawn-ring-${z}`} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.09, z]}>
+          <ringGeometry args={[1.8, 2.05, 40]} />
+          <meshStandardMaterial color="#b8f05b" roughness={0.8} side={THREE.DoubleSide} />
         </mesh>
       ))}
- 
-      {/* ── CEILING ── */}
-      <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 12, 0]}>
-        <planeGeometry args={[22, 14]} />
-        <meshStandardMaterial color="#030710" roughness={0.96} />
+
+      {/* Slightly raised grassy edge so the floor reads as a soft indoor lawn */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]}>
+        <extrudeGeometry args={[createBasementWallShape(), { depth: 0.08, bevelEnabled: false, steps: 1 }]} />
+        <meshStandardMaterial color="#7fd45a" roughness={0.92} />
       </mesh>
-      {/* Ceiling beams */}
-      {[-7, 0, 7].map((x, i) => (
-        <mesh key={i} position={[x, 11.75, 0]}>
-          <boxGeometry args={[0.45, 0.45, 14]} />
-          <meshStandardMaterial color="#070510" roughness={0.9} />
+
+      {/* Curved painted shell, following the outer-ship footprint */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} castShadow receiveShadow>
+        <extrudeGeometry args={[wallShape, { depth: BASEMENT_HEIGHT, bevelEnabled: false, steps: 1 }]} />
+        <meshStandardMaterial
+          color="#fff4c8"
+          roughness={0.78}
+          metalness={0.0}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+
+      {/* Bright painted wall patches */}
+      {[-14, -8, -2, 4, 10].map((z, i) => (
+        <group key={`left-paint-${z}`}>
+          <mesh position={[-8.03, 5.6, z]} rotation={[0, Math.PI / 2, 0]}>
+            <planeGeometry args={[3.0, 4.2]} />
+            <meshStandardMaterial
+              color={wallColors[i % wallColors.length]}
+              emissive={wallColors[i % wallColors.length]}
+              emissiveIntensity={0.08}
+              roughness={0.7}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+          <mesh position={[8.03, 5.6, z + 2.3]} rotation={[0, -Math.PI / 2, 0]}>
+            <planeGeometry args={[3.0, 4.2]} />
+            <meshStandardMaterial
+              color={wallColors[(i + 2) % wallColors.length]}
+              emissive={wallColors[(i + 2) % wallColors.length]}
+              emissiveIntensity={0.08}
+              roughness={0.7}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Back focal paint panel visible from the entrance */}
+      <mesh position={[0, 5.3, -20.55]} rotation={[0, 0, 0]}>
+        <planeGeometry args={[6.2, 4.4]} />
+        <meshStandardMaterial color="#ffcf40" emissive="#ffcf40" emissiveIntensity={0.1} roughness={0.68} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh position={[0, 5.35, -20.48]} rotation={[0, 0, 0]}>
+        <ringGeometry args={[1.15, 1.45, 48]} />
+        <meshStandardMaterial color="#ff6b6b" emissive="#ff6b6b" emissiveIntensity={0.16} roughness={0.6} side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* Grass creeps up the wall base */}
+      {[-16, -10, -4, 2, 8, 14].map((z, i) => (
+        <group key={`wall-grass-${z}`}>
+          <mesh position={[-8.07, 0.86, z]} rotation={[0, Math.PI / 2, 0]}>
+            <planeGeometry args={[3.2, 1.45]} />
+            <meshStandardMaterial color={i % 2 ? '#3fa34d' : '#6ecf58'} roughness={0.95} side={THREE.DoubleSide} />
+          </mesh>
+          <mesh position={[8.07, 0.86, z]} rotation={[0, -Math.PI / 2, 0]}>
+            <planeGeometry args={[3.2, 1.45]} />
+            <meshStandardMaterial color={i % 2 ? '#6ecf58' : '#3fa34d'} roughness={0.95} side={THREE.DoubleSide} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Ceiling and roof beams */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, BASEMENT_HEIGHT, 0]}>
+        <shapeGeometry args={[ceilingShape, 96]} />
+        <meshStandardMaterial color="#f7e6b6" roughness={0.8} side={THREE.DoubleSide} />
+      </mesh>
+      {[-12, -4, 4, 12].map((z) => (
+        <mesh key={`basement-beam-${z}`} position={[0, 11.75, z]} castShadow>
+          <boxGeometry args={[15.5, 0.28, 0.28]} />
+          <meshStandardMaterial color="#6b3b18" roughness={0.85} />
         </mesh>
       ))}
- 
-      {/* ── WALLS ── */}
-      <mesh position={[0, 6, -7]}>
-        <boxGeometry args={[22, 12, 0.28]} />
-        <meshStandardMaterial color="#08060e" roughness={0.9} />
+
+      {/* Hanging roof light */}
+      <mesh position={[0, 11.05, -2]} castShadow>
+        <cylinderGeometry args={[0.035, 0.035, 1.3, 8]} />
+        <meshStandardMaterial color="#3d3424" roughness={0.65} metalness={0.35} />
       </mesh>
-      <mesh position={[0, 6, 7]}>
-        <boxGeometry args={[22, 12, 0.28]} />
-        <meshStandardMaterial color="#08060e" roughness={0.9} />
-      </mesh>
-      <mesh position={[-11, 6, 0]}>
-        <boxGeometry args={[0.28, 12, 14]} />
-        <meshStandardMaterial color="#08060e" roughness={0.9} />
-      </mesh>
-      <mesh position={[11, 6, 0]}>
-        <boxGeometry args={[0.28, 12, 14]} />
-        <meshStandardMaterial color="#08060e" roughness={0.9} />
-      </mesh>
- 
-      {/* ── THIN LED ACCENT STRIPS on left/right walls between tanks ── */}
-      {[-4.8, 0, 4.8].map((z, i) => (
-        <mesh key={i} position={[-10.85, 5, z]}>
-          <boxGeometry args={[0.04, 7, 0.6]} />
-          <meshStandardMaterial color="#ffffff" emissive="#4488ff" emissiveIntensity={1.4} />
-        </mesh>
-      ))}
-      {[-4.8, 0, 4.8].map((z, i) => (
-        <mesh key={i} position={[10.85, 5, z]}>
-          <boxGeometry args={[0.04, 7, 0.6]} />
-          <meshStandardMaterial color="#ffffff" emissive="#4488ff" emissiveIntensity={1.4} />
-        </mesh>
-      ))}
- 
-      {/* ── DECORATIVE: small barrels in front corners ── */}
-      <Barrel position={[-9.5, 0.45, 5.8]} />
-      <Barrel position={[9.5,  0.45, 5.8]} />
-      <Barrel position={[-9.5, 0.45,-5.8]} />
-      <Barrel position={[9.5,  0.45,-5.8]} />
- 
-      {/* ── LANTERNS on ceiling ── emissive only, zero cost ── */}
-      <Lantern position={[0,  11.5,  0]} />
-      <Lantern position={[-4, 11.5, -4]} />
-      <Lantern position={[4,  11.5, -4]} />
-      <Lantern position={[-4, 11.5,  4]} />
-      <Lantern position={[4,  11.5,  4]} />
- 
-      {/* ── 6 PROJECT TANKS ──
-          X=±7.5: front glass ends at ±10.55, just inside walls at ±11
-          Z=±4.8: gap between tanks = 5 - 4.8 - (-4.8 + 5) = 0.4 units each side
-      ── */}
-      <ProjectTank project={PROJECTS[0]} position={[-7.5, 0, -4.8]} facingRight={true}  onSelect={onProjectSelect} />
-      <ProjectTank project={PROJECTS[1]} position={[-7.5, 0,  0  ]} facingRight={true}  onSelect={onProjectSelect} />
-      <ProjectTank project={PROJECTS[2]} position={[-7.5, 0,  4.8]} facingRight={true}  onSelect={onProjectSelect} />
-      <ProjectTank project={PROJECTS[3]} position={[7.5,  0, -4.8]} facingRight={false} onSelect={onProjectSelect} />
-      <ProjectTank project={PROJECTS[4]} position={[7.5,  0,  0  ]} facingRight={false} onSelect={onProjectSelect} />
-      <ProjectTank project={PROJECTS[5]} position={[7.5,  0,  4.8]} facingRight={false} onSelect={onProjectSelect} />
- 
-      {/* ── ROOM LIGHTING — 5 lights total ──
-          Key light at Y=7 (not Y=12) so it hits the floor and tank fronts
-          Two side fills aimed at tank faces from the aisle
-          Two fore/aft fills to prevent dark corners
-      ── */}
-      <pointLight position={[0,   7,  0]}  color="#ffe0aa" intensity={20} distance={26} decay={0.85} />
-      <pointLight position={[-5,  5,  0]}  color="#2255ee" intensity={11} distance={18} decay={1.1} />
-      <pointLight position={[5,   5,  0]}  color="#2255ee" intensity={11} distance={18} decay={1.1} />
-      <pointLight position={[0,   4, -5]}  color="#0d1a33" intensity={7}  distance={14} decay={1.2} />
-      <pointLight position={[0,   4,  5]}  color="#0d1a33" intensity={7}  distance={14} decay={1.2} />
+      <Lantern position={[0, 10.25, -2]} />
+      <pointLight position={[0, 9.7, -2]} color="#fff0b8" intensity={34} distance={34} decay={1.15} />
+      <pointLight position={[0, 4.2, -14]} color="#7bdcff" intensity={4.5} distance={20} decay={1.3} />
+      <pointLight position={[0, 4.2, 10]} color="#ff9fd8" intensity={4.0} distance={18} decay={1.35} />
     </group>
   )
 }
@@ -2216,11 +2317,13 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       ════════════════════════════════════════════════════════════ */}
       {/* Main deck floor */}
       <CuboidCollider args={[8.5, 0.25, 20]} position={[0, 0.1, -1]} />
-      <CuboidCollider args={[11, 0.25, 7]} position={[0, -13.75, 2]} />
+      <CuboidCollider args={[8.5, 0.25, 20]} position={[0, -13.75, -1]} />
 
-      {/* Basement side walls — stop Luffy walking into tank glass */}
-      <CuboidCollider args={[0.14, 6, 7]} position={[-11, -8, 2]} />
-      <CuboidCollider args={[0.14, 6, 7]} position={[ 11, -8, 2]} />
+      {/* Basement shell walls — broad collision matching the new ship footprint */}
+      <CuboidCollider args={[0.18, 6, 16]} position={[-8.65, -8, -1]} />
+      <CuboidCollider args={[0.18, 6, 16]} position={[ 8.65, -8, -1]} />
+      <CuboidCollider args={[7.2, 6, 0.18]} position={[0, -8, 17.2]} />
+      <CuboidCollider args={[2.4, 6, 0.18]} position={[0, -8, -22.2]} />
       {/* ════════════════════════════════════════════════════════════
           NEW COLLIDERS (TREES, SLIDE, HATCH, WHEEL)
       ════════════════════════════════════════════════════════════ */}
@@ -2474,19 +2577,23 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       {/* ════════════════════════════════════════════════════════════
           MAIN CROSS SPAR + SAIL
       ════════════════════════════════════════════════════════════ */}
-      {/* Upper cross spar */}
-      <mesh position={[0, 25, -3]} rotation={[0, 0, Math.PI / 2]} castShadow>
-        <cylinderGeometry args={[0.18, 0.18, 26, 10]} />
-        <WoodMaterial repeat={[1, 5]} roughness={0.82} />
-      </mesh>
-      {/* Lower cross spar */}
-      <mesh position={[0, 14, -3]} rotation={[0, 0, Math.PI / 2]} castShadow>
-        <cylinderGeometry args={[0.14, 0.14, 20, 8]} />
-        <WoodMaterial repeat={[1, 4]} roughness={0.82} />
-      </mesh>
-      {/* Main printed sail */}
-      {/* THE REAL MULTI-TEXTURED SHADER SAIL */}
-<AnimatedSail position={[0, 18, -2.5]} active={aboutActive} />
+      {!skillsActive && (
+        <>
+          {/* Upper cross spar */}
+          <mesh position={[0, 25, -3]} rotation={[0, 0, Math.PI / 2]} castShadow>
+            <cylinderGeometry args={[0.18, 0.18, 26, 10]} />
+            <WoodMaterial repeat={[1, 5]} roughness={0.82} />
+          </mesh>
+          {/* Lower cross spar */}
+          <mesh position={[0, 14, -3]} rotation={[0, 0, Math.PI / 2]} castShadow>
+            <cylinderGeometry args={[0.14, 0.14, 20, 8]} />
+            <WoodMaterial repeat={[1, 4]} roughness={0.82} />
+          </mesh>
+          {/* Main printed sail */}
+          {/* THE REAL MULTI-TEXTURED SHADER SAIL */}
+          <AnimatedSail position={[0, 18, -2.5]} active={aboutActive} />
+        </>
+      )}
       {/* ════════════════════════════════════════════════════════════
           LADDER TO CROW'S NEST
       ════════════════════════════════════════════════════════════ */}
@@ -2707,7 +2814,7 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       <TreasureChest position={[6.2,  0.85, -5]} rotation={[0, 0.8, 0]} />
 
           {/* ══════════════════════════════════════════════════════
-        AQUARIUM BASEMENT — Work Section
+          GARDEN BASEMENT — work section held for now
         Positioned below deck (y = -14 puts it under the ship floor)
     ══════════════════════════════════════════════════════ */}
     <AquariumBasement position={[0, -14, 2]} onProjectSelect={onProjectSelect} />

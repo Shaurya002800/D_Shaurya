@@ -174,63 +174,22 @@ const DIR_META = [
 // CHARACTER — floating in the sky, holding the transparent skill board
 // ─────────────────────────────────────────────────────────────────────────────
 
-function CinematicOcean({ data, visible, transitioning }) {
+function RealWorldTint({ data, visible, transitioning }) {
   return (
     <div style={{
       position: 'absolute',
       inset: 0,
       zIndex: 0,
-      opacity: visible ? 1 : 0,
+      opacity: visible ? 0.42 : 0,
       transition: transitioning ? 'opacity 0.6s ease' : 'none',
       pointerEvents: 'none',
       background: `
-        radial-gradient(circle at 50% 36%, ${data.accentColor}5c 0%, ${data.accentColor}20 22%, transparent 44%),
-        linear-gradient(180deg, rgba(2,8,12,0.94) 0%, rgba(14,30,36,0.42) 16%, transparent 34%),
-        ${data.skyGradient}
+        radial-gradient(circle at 50% 35%, ${data.accentColor}36 0%, transparent 34%),
+        linear-gradient(180deg, rgba(0,0,0,0.22) 0%, transparent 34%, ${data.accentColor}1f 100%),
+        linear-gradient(90deg, rgba(0,0,0,0.24), transparent 30%, transparent 70%, rgba(0,0,0,0.24))
       `,
-    }}>
-      <div style={{
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        top: '45%',
-        height: '3px',
-        background: `linear-gradient(90deg, transparent, ${data.foamColor}cc 22%, #ffffffdd 50%, ${data.foamColor}cc 78%, transparent)`,
-        filter: 'blur(1.4px)',
-        opacity: 0.9,
-      }} />
-      <div style={{
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        bottom: 0,
-        height: '55%',
-        background: `
-          radial-gradient(ellipse at 50% 0%, ${data.foamColor}55 0%, transparent 42%),
-          linear-gradient(180deg, ${data.seaColor}e0 0%, #082944 48%, #02131e 100%)
-        `,
-      }} />
-      {Array.from({ length: 7 }, (_, i) => (
-        <div key={i} style={{
-          position: 'absolute',
-          left: `${-12 + i * 18}%`,
-          top: `${49 + (i % 3) * 8}%`,
-          width: '34%',
-          height: '9%',
-          borderRadius: '50%',
-          background: `linear-gradient(90deg, transparent, ${data.foamColor}8a, #ffffffb0, ${data.foamColor}72, transparent)`,
-          transform: `rotate(${i % 2 ? -5 : 4}deg)`,
-          filter: 'blur(7px)',
-          opacity: 0.55,
-          animation: `oceanDrift ${9 + i}s ease-in-out ${i * -0.8}s infinite`,
-        }} />
-      ))}
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        background: 'radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.12) 54%, rgba(0,0,0,0.54) 100%)',
-      }} />
-    </div>
+      mixBlendMode: 'multiply',
+    }} />
   )
 }
 
@@ -238,14 +197,14 @@ function FloatingCharacter({ data, visible, transitioning, children }) {
   return (
     <div style={{
       position:   'absolute',
-      top:        'clamp(28px, 4vh, 58px)',
+      top:        'clamp(72px, 9vh, 122px)',
       left:       '50%',
       transform:  'translateX(-50%)',
-      width:      'clamp(560px, 54vw, 1040px)',
-      maxHeight:  'calc(100vh - 190px)',
+      width:      'clamp(560px, 52vw, 980px)',
+      maxHeight:  'calc(100vh - 230px)',
       opacity:    visible ? 1 : 0,
       transition: transitioning ? 'opacity 0.5s ease' : 'none',
-      zIndex:     2,
+      zIndex:     3,
       animation:  visible ? 'oceanMirage 8s ease-in-out infinite' : 'none',
       pointerEvents: 'none',
     }}>
@@ -531,129 +490,6 @@ function CharacterBadge({ data, visible }) {
         {data.character}
       </span>
       <div style={{ height:'1px', width:'30px', background:`linear-gradient(to left, transparent, ${data.accentColor}66)` }}/>
-    </div>
-  )
-}
-
-function ForegroundLookout({ visible, data }) {
-  return (
-    <div style={{
-      position: 'fixed',
-      left: '50%',
-      bottom: '-3.5vh',
-      width: 'clamp(340px, 39vw, 680px)',
-      height: 'clamp(250px, 32vh, 420px)',
-      transform: `translateX(-50%) ${visible ? 'translateY(0)' : 'translateY(28px)'}`,
-      opacity: visible ? 1 : 0,
-      zIndex: 6,
-      pointerEvents: 'none',
-      transition: 'opacity 0.55s ease 0.35s, transform 0.65s cubic-bezier(0.22,1,0.36,1) 0.35s',
-      filter: `drop-shadow(0 -10px 28px ${data.glowColor}) drop-shadow(0 16px 22px rgba(0,0,0,0.55))`,
-    }}>
-      <svg viewBox="0 0 720 430" preserveAspectRatio="xMidYMax meet" style={{
-        position: 'absolute',
-        inset: 0,
-        width: '100%',
-        height: '100%',
-      }}>
-        <defs>
-          <linearGradient id="nestWood" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="#604326" />
-            <stop offset="48%" stopColor="#28190e" />
-            <stop offset="100%" stopColor="#0d0805" />
-          </linearGradient>
-          <linearGradient id="railDark" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="#372619" />
-            <stop offset="100%" stopColor="#050403" />
-          </linearGradient>
-        </defs>
-        <path d="M75 210 C148 70 572 70 645 210" fill="none" stroke="url(#railDark)" strokeWidth="24" strokeLinecap="round" />
-        <path d="M110 214 C166 113 554 113 610 214" fill="none" stroke="#76502b" strokeWidth="8" strokeLinecap="round" opacity="0.38" />
-        <ellipse cx="360" cy="360" rx="286" ry="74" fill="rgba(0,0,0,0.62)" />
-        <path d="M82 226 C130 342 163 402 360 410 C557 402 590 342 638 226 L600 391 C514 432 206 432 120 391 Z" fill="url(#nestWood)" opacity="0.96" />
-        <rect x="338" y="95" width="44" height="242" rx="8" fill="url(#nestWood)" />
-        <rect x="346" y="92" width="12" height="250" rx="6" fill="rgba(255,220,130,0.13)" />
-      </svg>
-
-      <div style={{
-        position: 'absolute',
-        left: '50%',
-        bottom: '33%',
-        width: 'clamp(54px, 5vw, 86px)',
-        height: 'clamp(112px, 13vh, 170px)',
-        transform: 'translateX(-50%)',
-      }}>
-        <div style={{
-          position: 'absolute',
-          left: '50%',
-          top: '0%',
-          width: '120%',
-          height: '30%',
-          transform: 'translateX(-50%) rotate(-6deg)',
-          borderRadius: '50%',
-          background: 'radial-gradient(ellipse at center, #e4bd42 0%, #c89421 58%, #5a3510 100%)',
-          boxShadow: 'inset 0 -4px 0 #8f211b, 0 6px 10px rgba(0,0,0,0.45)',
-        }} />
-        <div style={{
-          position: 'absolute',
-          left: '50%',
-          top: '21%',
-          width: '48%',
-          height: '17%',
-          transform: 'translateX(-50%)',
-          borderRadius: '45% 45% 35% 35%',
-          background: '#1b130d',
-        }} />
-        <div style={{
-          position: 'absolute',
-          left: '50%',
-          top: '36%',
-          width: '52%',
-          height: '45%',
-          transform: 'translateX(-50%)',
-          borderRadius: '34% 34% 18% 18%',
-          background: 'linear-gradient(180deg, #b63022 0%, #7a1715 100%)',
-          boxShadow: 'inset 0 -12px 16px rgba(0,0,0,0.45)',
-        }} />
-        <div style={{
-          position: 'absolute',
-          left: '-24%',
-          top: '47%',
-          width: '52%',
-          height: '8%',
-          borderRadius: '999px',
-          transform: 'rotate(-22deg)',
-          background: '#d5aa6c',
-        }} />
-        <div style={{
-          position: 'absolute',
-          right: '-24%',
-          top: '47%',
-          width: '52%',
-          height: '8%',
-          borderRadius: '999px',
-          transform: 'rotate(22deg)',
-          background: '#d5aa6c',
-        }} />
-        <div style={{
-          position: 'absolute',
-          left: '23%',
-          bottom: 0,
-          width: '16%',
-          height: '30%',
-          borderRadius: '999px',
-          background: '#d5aa6c',
-        }} />
-        <div style={{
-          position: 'absolute',
-          right: '23%',
-          bottom: 0,
-          width: '16%',
-          height: '30%',
-          borderRadius: '999px',
-          background: '#d5aa6c',
-        }} />
-      </div>
     </div>
   )
 }
@@ -954,13 +790,12 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
       overflow: 'hidden',
       background: 'transparent',
     }}>
-      <CinematicOcean data={data} visible={overlayIn} transitioning={transitioning} />
+      <RealWorldTint data={data} visible={overlayIn} transitioning={transitioning} />
 
       <FloatingCharacter data={data} visible={contentIn} transitioning={transitioning}>
         <SkillPanel data={data} visible={contentIn} />
       </FloatingCharacter>
 
-      <ForegroundLookout visible={contentIn} data={data} />
       <CharacterBadge data={data} visible={contentIn} />
 
       <DirectionNavigator current={currentDir} onRotate={handleRotate} data={data} visible={contentIn} />
@@ -972,10 +807,6 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
         @keyframes oceanMirage {
           0%,100% { transform: translateX(-50%) translateY(0px) scale(1); filter: saturate(1); }
           50%      { transform: translateX(-50%) translateY(-8px) scale(1.01); filter: saturate(1.08); }
-        }
-        @keyframes oceanDrift {
-          0%,100% { transform: translateX(0) rotate(4deg); }
-          50%      { transform: translateX(38px) rotate(-2deg); }
         }
       `}</style>
     </div>

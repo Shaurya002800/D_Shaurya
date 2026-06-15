@@ -17,23 +17,23 @@ const CAM_EXPLORE = {
 }
 
 const CROWS_NEST_CAMERA = {
-  fov: 62,
+  fov: 58,
   views: {
     north: {
-      position: new THREE.Vector3(0, 34.15, 2.8),
-      target:   new THREE.Vector3(0, 27.6, -155),
+      position: new THREE.Vector3(0.42, 33.35, 0.18),
+      target:   new THREE.Vector3(0, 36.6, -165),
     },
     east: {
-      position: new THREE.Vector3(-5.8, 34.15, -3),
-      target:   new THREE.Vector3(155, 27.6, -3),
+      position: new THREE.Vector3(-3.18, 33.35, -2.58),
+      target:   new THREE.Vector3(165, 36.6, -3),
     },
     south: {
-      position: new THREE.Vector3(0, 34.15, -8.8),
-      target:   new THREE.Vector3(0, 27.6, 155),
+      position: new THREE.Vector3(-0.42, 33.35, -6.18),
+      target:   new THREE.Vector3(0, 36.6, 165),
     },
     west: {
-      position: new THREE.Vector3(5.8, 34.15, -3),
-      target:   new THREE.Vector3(-155, 27.6, -3),
+      position: new THREE.Vector3(3.18, 33.35, -3.42),
+      target:   new THREE.Vector3(-165, 36.6, -3),
     },
   },
 }
@@ -70,16 +70,15 @@ export function SkillsCameraTransition({ active, direction = 'north' }) {
 }
 
 // ─── WORK/BASEMENT CAMERA CONTROLLER ─────────────────────────────────────────
-// AquariumBasement group is at world [0, -14, 2].
-// Room: 22 wide (X ±11), 14 deep (Z -7..+7), 12 tall (Y 0..12)
-// World: floor Y=-14, ceiling Y=-2, front wall Z=+9, back wall Z=-5
+// Basement group is at world [0, -14, 2].
+// Room: ship-footprint floor matching the upper deck, 12 tall (Y 0..12)
+// World: floor Y=-14, ceiling Y=-2, Z roughly -21..+19
 //
-// Camera: aisle centre X=0, mid-height Y=-9 (local Y=5), near front Z=+8
-// Target: looks toward back-centre, slightly down toward floor tanks
+// Camera: low enough to see the grass floor, pulled back enough to read depth.
 const CAM_WORK = {
-  position: new THREE.Vector3(0, -9, 8),
-  target:   new THREE.Vector3(0, -11, -1),
-  fov:      80,
+  position: new THREE.Vector3(0, -10.0, 13.5),
+  target:   new THREE.Vector3(0, -13.25, -4.5),
+  fov:      78,
 }
 
 export function WorkCameraTransition({ active }) {
@@ -203,17 +202,13 @@ function WorkOrbitControl({ active }) {
   useFrame((state) => {
     if (!activeRef.current) return
 
-    const BASE = CAM_WORK.position
-    // Keep camera pinned at BASE — do NOT re-copy every frame as that
-    // creates a fight with WorkCameraTransition while it is still animating.
-    // Instead only steer the lookAt direction based on drag input.
-    // Radius 6: at max yaw ±55° → lateral offset ±4.9, well inside ±9.5 world walls.
-    const r = 6
-    state.camera.lookAt(
-      BASE.x + Math.sin(yaw.current) * r,
-      BASE.y + Math.sin(pitch.current) * r - 1,
-      BASE.z - Math.cos(yaw.current) * r,
-    )
+    const base = CAM_WORK.position
+    const forward = CAM_WORK.target.clone().sub(base)
+    forward.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw.current)
+
+    const lookTarget = base.clone().add(forward)
+    lookTarget.y += Math.sin(pitch.current + 0.08) * 8
+    state.camera.lookAt(lookTarget)
   })
  
   return null
@@ -397,9 +392,6 @@ export default function WorldScene({
   {/* 2. Your Camera Controllers */}
   <AboutCameraController active={aboutActive} />
   <SkillsCameraTransition active={skillsActive} direction={skillsDirection} />
-  <WorkCameraTransition active={workActive} />
-  <WorkOrbitControl active={workActive} />
-
   {/* 3. The rest of your scene... */}
   <fog attach="fog" args={['#e4f0f6', 60, 260]} />
   <Lighting />

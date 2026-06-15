@@ -17,13 +17,12 @@ const BOUNDS_DECK = {
 
 // ── FIX 1: BOUNDS_BASEMENT in WORLD coordinates ───────────────────────────
 // Luffy teleports to world [0, -13.85, 5] when workActive.
-// AquariumBasement group sits at world [0, -14, 2].
-// Room local extents: X -11..+11, Z -7..+7
-// → world X: -11..+11,  world Z: (2-7)..(2+7) = -5..+9
-// Kept 1.5 units inside each wall so Luffy never clips the geometry.
+// Basement group sits at world [0, -14, 2], with a ship-footprint floor
+// matching the main deck: local Z -23..17, so world Z -21..19.
+// Kept safely inside the curved wall shell.
 const BOUNDS_BASEMENT = {
-  minX: -9.5, maxX: 9.5,
-  minZ: -3.5, maxZ: 8.5,
+  minX: -7.1, maxX: 7.1,
+  minZ: -20.2, maxZ: 16.2,
 }
 
 // keep BOUNDS pointing to deck for backward compat
@@ -46,11 +45,15 @@ const CAM = {
   normalHeight:  3.2,
   runDist:      11.0,
   runHeight:     3.8,
+  basementDist:  7.0,
+  basementHeight: 3.0,
   posLerp:       0.055,
   lookLerp:      0.08,
   lookOffset:    1.85,
+  basementLookOffset: 1.55,
   fovNormal:    68,
   fovRun:       74,
+  fovBasement:  76,
   fovLerp:       0.04,
 }
 
@@ -285,17 +288,11 @@ class CameraController {
     this._tmpLook    = new THREE.Vector3()
   }
 
-  // ── FIX 2: workActive param — yield camera to WorkCameraTransition ────────
-  // When workActive=true this function returns immediately without touching
-  // camera.position, camera.lookAt, or camera.fov.
-  // WorldScene's WorkCameraTransition + WorkOrbitControl own the camera
-  // entirely while the player is in the basement.
   update(camera, luffyPos, luffyRot, isRunning, dt, workActive = false) {
-    if (workActive) return   // ← hand off — do NOT write to camera
-
-    const dist   = isRunning ? CAM.runDist   : CAM.normalDist
-    const height = isRunning ? CAM.runHeight  : CAM.normalHeight
-    const fov    = isRunning ? CAM.fovRun     : CAM.fovNormal
+    const dist   = workActive ? CAM.basementDist : (isRunning ? CAM.runDist : CAM.normalDist)
+    const height = workActive ? CAM.basementHeight : (isRunning ? CAM.runHeight : CAM.normalHeight)
+    const fov    = workActive ? CAM.fovBasement : (isRunning ? CAM.fovRun : CAM.fovNormal)
+    const lookOffset = workActive ? CAM.basementLookOffset : CAM.lookOffset
 
     this._tmpVec.set(
       luffyPos.x - Math.sin(luffyRot) * dist,
@@ -303,15 +300,21 @@ class CameraController {
       luffyPos.z - Math.cos(luffyRot) * dist,
     )
 
-    this.position.lerp(this._tmpVec, CAM.posLerp)
+    if (workActive) {
+      this._tmpVec.x = clamp(this._tmpVec.x, BOUNDS_BASEMENT.minX, BOUNDS_BASEMENT.maxX)
+      this._tmpVec.z = clamp(this._tmpVec.z, BOUNDS_BASEMENT.minZ, BOUNDS_BASEMENT.maxZ)
+      this._tmpVec.y = Math.min(this._tmpVec.y, -9.6)
+    }
+
+    this.position.lerp(this._tmpVec, workActive ? 0.16 : CAM.posLerp)
     camera.position.copy(this.position)
 
     this._tmpLook.set(
       luffyPos.x,
-      luffyPos.y + CAM.lookOffset,
+      luffyPos.y + lookOffset,
       luffyPos.z,
     )
-    this.lookTarget.lerp(this._tmpLook, CAM.lookLerp)
+    this.lookTarget.lerp(this._tmpLook, workActive ? 0.18 : CAM.lookLerp)
     camera.lookAt(this.lookTarget)
 
     this.currentFov += (fov - this.currentFov) * CAM.fovLerp
@@ -565,44 +568,14 @@ class PositionController {
     }
   }
 
-  // ── FIX 3: updateBasement in WORLD coordinates ──────────────────────────
-  // Luffy's world position when in basement: Y = -13.85
-  // AquariumBasement group [0,-14,2], room 22×14×12 local.
-  // World extents: X -11..+11,  Z -5..+9
-  //
-  // TANK_BLOCKS in world coords:
-  //   Left tanks:  ProjectTank at local X=-7.5 → world X=-7.5
-  //                back panel local X offset = -3.05 → world X = -7.5-3.05 = -10.55
-  //                front glass local X offset = +3.05 → world X = -7.5+3.05 = -4.45
-  //   Right tanks: ProjectTank at local X=+7.5
-  //                front glass → world X = +4.45, back panel → world X = +10.55
-  //   Tank Z: positions at local Z = -4.8, 0, +4.8 → world Z = -2.8, 2, 6.8
-  //           each tank depth 5 units → Z spans roughly -5.3 to +9.3 world
-  //
-  //   Aisle: world X = -4.45 to +4.45  (≈ 8.9 units wide — plenty of room)
-  //
+  // ── Basement movement in WORLD coordinates ───────────────────────────────
+  // The old aquarium tank blockers are intentionally removed while the work
+  // section is on hold, leaving one open grass-floor room.
   updateBasement(group, vel, dt) {
     const p = group.position
 
     let nextX = clamp(p.x + vel.x * dt, BOUNDS_BASEMENT.minX, BOUNDS_BASEMENT.maxX)
     let nextZ = clamp(p.z + vel.z * dt, BOUNDS_BASEMENT.minZ, BOUNDS_BASEMENT.maxZ)
-
-    // Block Luffy from walking into the aquarium tank walls.
-    // Each tank is 6.1 units wide (X) and 5 units deep (Z).
-    // Left wall tanks: world X spans -10.55 (back) → -4.45 (glass front)
-    // Right wall tanks: world X spans +4.45 (glass front) → +10.55 (back)
-    // Give 0.5 unit buffer so Luffy stops visibly in front of the glass.
-    const TANK_BLOCKS = [
-      { minX: -10.8, maxX: -4.0, minZ: -5.5, maxZ: 9.5 }, // left wall tanks
-      { minX:  4.0,  maxX: 10.8, minZ: -5.5, maxZ: 9.5 }, // right wall tanks
-    ]
-
-    for (const obs of TANK_BLOCKS) {
-      if (nextX > obs.minX && nextX < obs.maxX && nextZ > obs.minZ && nextZ < obs.maxZ) {
-        if (p.x <= obs.minX || p.x >= obs.maxX) nextX = p.x
-        if (p.z <= obs.minZ || p.z >= obs.maxZ) nextZ = p.z
-      }
-    }
 
     p.x = nextX
     p.z = nextZ
@@ -840,10 +813,10 @@ function Luffy3D({
         west: -Math.PI / 2,
       }
       const directionPosition = {
-        north: [0, 32.1, -1.45],
-        east: [-1.45, 32.1, -3],
-        south: [0, 32.1, -4.55],
-        west: [1.45, 32.1, -3],
+        north: [0, 32.1, -1.85],
+        east: [-1.85, 32.1, -3],
+        south: [0, 32.1, -4.15],
+        west: [1.85, 32.1, -3],
       }
       groupRef.current.position.set(...(directionPosition[skillsDirection] ?? directionPosition.north))
       groupRef.current.rotation.y = directionRotation[skillsDirection] ?? Math.PI
@@ -932,14 +905,15 @@ function Luffy3D({
       if (onStateChange) onStateChange(stateRef.current)
     }
 
-    // ── FIX 4: pass workActive so camera yields when in basement ──────────
+    // Let the camera follow Luffy in the basement too; fixed POV made the
+    // room unreadable from several entry angles.
     camCtrl.current.update(
       camera,
       groupRef.current.position,
       groupRef.current.rotation.y,
       running,
       safeDt,
-      workActive,  // ← when true, CameraController.update() returns immediately
+      workActive,
     )
 
     if (debugRef) {

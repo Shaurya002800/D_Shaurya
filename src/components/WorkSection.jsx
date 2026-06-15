@@ -106,17 +106,17 @@ export function WorkSectionLabel({ active }) {
       <div style={{
         marginTop:      '18px',
         padding:        '6px 28px',
-        background:     'rgba(0,20,44,0.85)',
-        border:         '1px solid rgba(0,160,255,0.3)',
+        background:     'rgba(28,58,24,0.84)',
+        border:         '1px solid rgba(174,231,89,0.38)',
         borderRadius:   '40px',
         /* backdrop-filter removed to disable blur for clarity */
         fontFamily:     '"Courier New", monospace',
         fontSize:       '12px',
         letterSpacing:  '4px',
-        color:          'rgba(100,210,255,0.9)',
+        color:          'rgba(231,255,190,0.92)',
         textTransform:  'uppercase',
       }}>
-        ⚓ AQUARIUM · WORK
+        BASEMENT
       </div>
     </div>
   )
@@ -407,14 +407,14 @@ export default function WorkSection({
 
   return (
     <>
-      {/* ── Ambient underwater tint (non-blocking, behind everything) ── */}
+      {/* ── Soft garden tint (non-blocking, behind everything) ── */}
       <div
         aria-hidden="true"
         style={{
           position:       'fixed',
           inset:          0,
           zIndex:         8800,
-          background:     'radial-gradient(ellipse at 50% 30%, rgba(0,60,100,0.14), rgba(0,6,16,0.46))',
+          background:     'radial-gradient(ellipse at 50% 30%, rgba(130,210,80,0.08), rgba(8,24,10,0.20))',
             /* backdrop-filter removed to disable blur for clarity */
           opacity:        visible ? 1 : 0,
           transition:     'opacity 0.5s ease',
@@ -434,9 +434,9 @@ export default function WorkSection({
           width:          '44px',
           height:         '44px',
           borderRadius:   '50%',
-          background:     'rgba(0,16,36,0.88)',
-          border:         '1px solid rgba(0,160,255,0.38)',
-          color:          'rgba(120,210,255,0.9)',
+          background:     'rgba(20,45,18,0.88)',
+          border:         '1px solid rgba(174,231,89,0.42)',
+          color:          'rgba(231,255,190,0.94)',
           fontSize:       '17px',
           cursor:         'pointer',
           display:        'flex',
@@ -448,64 +448,16 @@ export default function WorkSection({
           transition:     'opacity 0.4s ease, transform 0.4s ease, background 0.18s, border-color 0.18s',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background  = 'rgba(0,100,200,0.25)'
-          e.currentTarget.style.borderColor = 'rgba(0,200,255,0.7)'
+          e.currentTarget.style.background  = 'rgba(76,130,42,0.28)'
+          e.currentTarget.style.borderColor = 'rgba(210,255,140,0.72)'
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.background  = 'rgba(0,16,36,0.88)'
-          e.currentTarget.style.borderColor = 'rgba(0,160,255,0.38)'
+          e.currentTarget.style.background  = 'rgba(20,45,18,0.88)'
+          e.currentTarget.style.borderColor = 'rgba(174,231,89,0.42)'
         }}
       >
         ✕
       </button>
-
-      {/* ── Bottom hint bar ── */}
-      <div
-        aria-hidden="true"
-        style={{
-          position:       'fixed',
-          bottom:         '32px',
-          width:          '100%',
-          display:        'flex',
-          justifyContent: 'center',
-          pointerEvents:  'none',
-          zIndex:         9100,
-          opacity:        visible ? 1 : 0,
-          transform:      visible ? 'translateY(0)' : 'translateY(10px)',
-          transition:     'opacity 0.5s ease, transform 0.5s ease',
-        }}
-      >
-        <div style={{
-          padding:        '10px 26px',
-          background:     'rgba(0,14,30,0.9)',
-          border:         '1px solid rgba(0,150,255,0.25)',
-          borderRadius:   '40px',
-          /* backdrop-filter removed to disable blur for clarity */
-          fontFamily:     '"Courier New", monospace',
-          fontSize:       '11px',
-          letterSpacing:  '2.5px',
-          color:          'rgba(100,200,255,0.78)',
-          textTransform:  'uppercase',
-          display:        'flex',
-          alignItems:     'center',
-          gap:            '12px',
-        }}>
-          <span style={{ color: 'rgba(100,200,255,0.45)' }}>🖱</span>
-          Drag to look around
-          <span style={{ color: 'rgba(100,200,255,0.25)' }}>·</span>
-          Click a tank to inspect
-          <span style={{ color: 'rgba(100,200,255,0.25)' }}>·</span>
-          <kbd style={{
-            padding:       '2px 7px',
-            border:        '1px solid rgba(100,200,255,0.3)',
-            borderRadius:  '4px',
-            fontSize:      '10px',
-            background:    'rgba(0,40,80,0.5)',
-            fontFamily:    '"Courier New", monospace',
-          }}>ESC</kbd>
-          to surface
-        </div>
-      </div>
 
       {/* ── Project detail modal ── */}
       {selectedProject && (
