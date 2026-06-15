@@ -17,23 +17,23 @@ const CAM_EXPLORE = {
 }
 
 const CROWS_NEST_CAMERA = {
-  fov: 58,
+  fov: 46,
   views: {
     north: {
-      position: new THREE.Vector3(0.42, 33.35, 0.18),
-      target:   new THREE.Vector3(0, 36.6, -165),
+      position: new THREE.Vector3(1.2, 37.2, 12.5),
+      target:   new THREE.Vector3(0, 42, -320),
     },
     east: {
-      position: new THREE.Vector3(-3.18, 33.35, -2.58),
-      target:   new THREE.Vector3(165, 36.6, -3),
+      position: new THREE.Vector3(-16.5, 37.2, -1.8),
+      target:   new THREE.Vector3(320, 42, -3),
     },
     south: {
-      position: new THREE.Vector3(-0.42, 33.35, -6.18),
-      target:   new THREE.Vector3(0, 36.6, 165),
+      position: new THREE.Vector3(-1.2, 37.2, -18.5),
+      target:   new THREE.Vector3(0, 42, 320),
     },
     west: {
-      position: new THREE.Vector3(3.18, 33.35, -3.42),
-      target:   new THREE.Vector3(-165, 36.6, -3),
+      position: new THREE.Vector3(16.5, 37.2, -4.2),
+      target:   new THREE.Vector3(-320, 42, -3),
     },
   },
 }

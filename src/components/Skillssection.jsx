@@ -180,15 +180,37 @@ function RealWorldTint({ data, visible, transitioning }) {
       position: 'absolute',
       inset: 0,
       zIndex: 0,
-      opacity: visible ? 0.42 : 0,
+      opacity: visible ? 0.86 : 0,
       transition: transitioning ? 'opacity 0.6s ease' : 'none',
       pointerEvents: 'none',
       background: `
-        radial-gradient(circle at 50% 35%, ${data.accentColor}36 0%, transparent 34%),
-        linear-gradient(180deg, rgba(0,0,0,0.22) 0%, transparent 34%, ${data.accentColor}1f 100%),
-        linear-gradient(90deg, rgba(0,0,0,0.24), transparent 30%, transparent 70%, rgba(0,0,0,0.24))
+        radial-gradient(circle at 50% 35%, ${data.accentColor}55 0%, transparent 30%),
+        linear-gradient(180deg, ${data.seaColor}82 0%, ${data.accentColor}44 48%, ${data.seaColor}88 100%),
+        linear-gradient(90deg, rgba(0,0,0,0.30), transparent 28%, transparent 72%, rgba(0,0,0,0.30))
       `,
-      mixBlendMode: 'multiply',
+      mixBlendMode: 'color',
+    }} />
+  )
+}
+
+function HorizonDepthHaze({ data, visible, transitioning }) {
+  return (
+    <div style={{
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      top: '46%',
+      height: '28%',
+      zIndex: 2,
+      opacity: visible ? 0.28 : 0,
+      transition: transitioning ? 'opacity 0.6s ease' : 'none',
+      pointerEvents: 'none',
+      background: `
+        linear-gradient(180deg, transparent 0%, rgba(220,238,244,0.22) 35%, rgba(185,220,226,0.42) 62%, transparent 100%),
+        radial-gradient(ellipse at 50% 48%, ${data.accentColor}20 0%, transparent 58%)
+      `,
+      filter: 'blur(10px)',
+      mixBlendMode: 'screen',
     }} />
   )
 }
@@ -197,16 +219,19 @@ function FloatingCharacter({ data, visible, transitioning, children }) {
   return (
     <div style={{
       position:   'absolute',
-      top:        'clamp(72px, 9vh, 122px)',
+      top:        'clamp(70px, 8vh, 118px)',
       left:       '50%',
-      transform:  'translateX(-50%)',
-      width:      'clamp(560px, 52vw, 980px)',
-      maxHeight:  'calc(100vh - 230px)',
+      transform:  `translateX(-50%) perspective(1200px) rotateX(1.5deg) scale(${visible ? 1 : 0.96})`,
+      transformOrigin: '50% 45%',
+      width:      'clamp(720px, 62vw, 1180px)',
+      maxHeight:  'calc(100vh - 210px)',
       opacity:    visible ? 1 : 0,
-      transition: transitioning ? 'opacity 0.5s ease' : 'none',
+      transition: transitioning ? 'opacity 0.5s ease, transform 0.55s ease' : 'none',
       zIndex:     3,
       animation:  visible ? 'oceanMirage 8s ease-in-out infinite' : 'none',
       pointerEvents: 'none',
+      WebkitMaskImage: 'linear-gradient(180deg, #000 0%, #000 76%, rgba(0,0,0,0.82) 89%, transparent 100%)',
+      maskImage:       'linear-gradient(180deg, #000 0%, #000 76%, rgba(0,0,0,0.82) 89%, transparent 100%)',
     }}>
       <div style={{ position: 'relative', width: '100%' }}>
         <img
@@ -216,8 +241,8 @@ function FloatingCharacter({ data, visible, transitioning, children }) {
             width: '100%',
             height: 'auto',
             display: 'block',
-            opacity: 0.56,
-            filter: `saturate(1.18) contrast(1.04) drop-shadow(0 0 34px ${data.glowColor})`,
+            opacity: 0.54,
+            filter: `saturate(1.18) contrast(1.04) drop-shadow(0 0 30px ${data.glowColor})`,
           }}
         />
         <div style={{
@@ -227,8 +252,8 @@ function FloatingCharacter({ data, visible, transitioning, children }) {
           width: data.boardRect.width,
           height: data.boardRect.height,
           borderRadius: '14px',
-          background: `radial-gradient(circle at 50% 30%, rgba(255,255,255,0.08), transparent 64%), linear-gradient(135deg, ${data.accentColor}0d, rgba(255,255,255,0.025))`,
-          boxShadow: `inset 0 0 18px rgba(255,255,255,0.08), 0 0 28px ${data.glowColor}`,
+          background: `radial-gradient(circle at 50% 30%, rgba(255,255,255,0.06), transparent 64%), linear-gradient(135deg, ${data.accentColor}0a, rgba(255,255,255,0.018))`,
+          boxShadow: `inset 0 0 18px rgba(255,255,255,0.07), 0 0 28px ${data.glowColor}`,
           pointerEvents: 'none',
         }} />
         <div style={{
@@ -271,13 +296,13 @@ function WantedCard({ skill, index, visible, accentColor, delay = 0 }) {
         display:        'flex',
         flexDirection:  'column',
         alignItems:     'center',
-        width: 'clamp(42px, 3.9vw, 66px)',
+        width: 'clamp(62px, 5.2vw, 92px)',
         background:     hovered
           ? 'linear-gradient(160deg, #f5e6cc 0%, #e8d4aa 100%)'
           : 'linear-gradient(160deg, #f0ddb8 0%, #e0c890 100%)',
         border:         `1.5px solid ${hovered ? '#8B6914' : 'rgba(139,105,20,0.6)'}`,
         borderRadius:   '3px 3px 5px 5px',
-        padding:        'clamp(4px, 0.62vw, 8px) clamp(3px, 0.42vw, 5px)',
+        padding:        'clamp(6px, 0.75vw, 10px) clamp(4px, 0.55vw, 7px)',
         cursor:         'pointer',
         transform:      entered
           ? hovered ? 'scale(1.08) translateY(-3px)' : 'scale(1) translateY(0)'
@@ -305,7 +330,7 @@ function WantedCard({ skill, index, visible, accentColor, delay = 0 }) {
       {/* WANTED text */}
       <div style={{
         fontFamily:    '"Pirata One", cursive',
-        fontSize:      'clamp(6px, 0.62vw, 9px)',
+        fontSize:      'clamp(8px, 0.78vw, 12px)',
         fontWeight:    700,
         color:         '#1a0d00',
         letterSpacing: '0.1em',
@@ -321,8 +346,8 @@ function WantedCard({ skill, index, visible, accentColor, delay = 0 }) {
 
       {/* Logo */}
       <div style={{
-        width:          'clamp(24px, 2.6vw, 40px)',
-        height:         'clamp(24px, 2.6vw, 40px)',
+        width:          'clamp(34px, 3.4vw, 58px)',
+        height:         'clamp(34px, 3.4vw, 58px)',
         borderRadius:   '4px',
         display:        'flex',
         alignItems:     'center',
@@ -353,7 +378,7 @@ function WantedCard({ skill, index, visible, accentColor, delay = 0 }) {
       {/* Skill name */}
       <div style={{
         fontFamily:    '"IM Fell English", Georgia, serif',
-        fontSize:      'clamp(6px, 0.58vw, 9px)',
+        fontSize:      'clamp(8px, 0.78vw, 12px)',
         color:         '#1a0d00',
         textAlign:     'center',
         lineHeight:    1.2,
@@ -390,7 +415,7 @@ function SkillPanel({ data, visible }) {
       flexDirection:  'column',
       alignItems:     'center',
       justifyContent: 'center',
-      padding:        'clamp(4px, 1vw, 14px)',
+      padding:        'clamp(8px, 1.2vw, 18px)',
       boxSizing:      'border-box',
       transform:      visible ? 'scale(1)' : 'scale(0.96)',
       opacity:        visible ? 1 : 0,
@@ -403,7 +428,7 @@ function SkillPanel({ data, visible }) {
       }}>
         <div style={{
           fontFamily:    '"Pirata One", cursive',
-          fontSize: 'clamp(12px, 1.25vw, 20px)',
+          fontSize: 'clamp(16px, 1.65vw, 28px)',
           color:         data.titleColor,
           letterSpacing: '0.16em',
           textShadow:    `0 0 16px ${data.accentColor}88`,
@@ -424,10 +449,10 @@ function SkillPanel({ data, visible }) {
       <div style={{
         display:        'flex',
         flexWrap:       'wrap',
-        gap:            'clamp(7px, 0.8vw, 13px)',
+        gap:            'clamp(10px, 1vw, 18px)',
         justifyContent: 'center',
         alignItems:     'flex-start',
-        maxWidth:       '86%',
+        maxWidth:       '92%',
       }}>
         {data.skills.map((skill, i) => (
           <WantedCard
@@ -445,7 +470,7 @@ function SkillPanel({ data, visible }) {
         marginTop:    'clamp(8px, 1.5vh, 18px)',
         textAlign:    'center',
         fontFamily:   '"IM Fell English", Georgia, serif',
-        fontSize:     'clamp(7px, 0.7vw, 10px)',
+        fontSize:     'clamp(9px, 0.82vw, 13px)',
         fontStyle:    'italic',
         color:        `${data.accentColor}aa`,
         letterSpacing:'0.03em',
@@ -795,6 +820,7 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
       <FloatingCharacter data={data} visible={contentIn} transitioning={transitioning}>
         <SkillPanel data={data} visible={contentIn} />
       </FloatingCharacter>
+      <HorizonDepthHaze data={data} visible={contentIn} transitioning={transitioning} />
 
       <CharacterBadge data={data} visible={contentIn} />
 
@@ -805,8 +831,8 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
         @import url('https://fonts.googleapis.com/css2?family=Pirata+One&family=IM+Fell+English:ital@0;1&display=swap');
 
         @keyframes oceanMirage {
-          0%,100% { transform: translateX(-50%) translateY(0px) scale(1); filter: saturate(1); }
-          50%      { transform: translateX(-50%) translateY(-8px) scale(1.01); filter: saturate(1.08); }
+          0%,100% { transform: translateX(-50%) perspective(1200px) rotateX(1.5deg) translateY(0px) scale(1); filter: saturate(1); }
+          50%      { transform: translateX(-50%) perspective(1200px) rotateX(1.5deg) translateY(-4px) scale(1.004); filter: saturate(1.035); }
         }
       `}</style>
     </div>
