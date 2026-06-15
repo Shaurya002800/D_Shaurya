@@ -149,7 +149,6 @@ const DECK_BOX_OBSTACLES = [
   { minX: 5.45, maxX: 6.95, minZ: -5.8, maxZ: -4.15 },
   { minX: -7.7, maxX: -6.15, minZ: -22.9, maxZ: -21.05 }, // anchors
   { minX: 6.15, maxX: 7.7, minZ: -22.9, maxZ: -21.05 },
-  { minX: 1.35, maxX: 3.75, minZ: -4.1, maxZ: -1.95 }, // swing frame
 ]
 
 const DECK_CIRCLE_OBSTACLES = [

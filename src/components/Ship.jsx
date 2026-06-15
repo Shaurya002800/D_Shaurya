@@ -249,18 +249,33 @@ function ShipWheel({ position }) {
 function LionFigurehead({ position }) {
   return (
     <group position={position}>
+      {/* Sun-ray mane plates */}
+      {Array.from({ length: 14 }, (_, i) => {
+        const angle = (i * Math.PI * 2) / 14
+        return (
+          <mesh
+            key={i}
+            position={[Math.cos(angle) * 3.55, Math.sin(angle) * 3.55, -0.18]}
+            rotation={[0, 0, Math.PI / 2 - angle]}
+            castShadow
+          >
+            <coneGeometry args={[0.38, 1.05, 4]} />
+            <meshStandardMaterial color={i % 2 ? '#f57c00' : '#ffb300'} roughness={0.58} />
+          </mesh>
+        )
+      })}
       {/* Main head */}
       <mesh castShadow>
         <sphereGeometry args={[2.8, 20, 20]} />
         <meshStandardMaterial color="#FFB300" roughness={0.45} metalness={0.0} />
       </mesh>
       {/* Mane ring */}
-      <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
+      <mesh castShadow>
         <torusGeometry args={[3.5, 0.72, 12, 24]} />
         <meshStandardMaterial color="#E65100" roughness={0.5} metalness={0.0} />
       </mesh>
       {/* Inner mane detail ring */}
-      <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
+      <mesh castShadow>
         <torusGeometry args={[3.0, 0.35, 10, 24]} />
         <meshStandardMaterial color="#FF8F00" roughness={0.55} metalness={0.0} />
       </mesh>
@@ -273,6 +288,15 @@ function LionFigurehead({ position }) {
       <mesh position={[0, 0.1, -3.9]} castShadow>
         <sphereGeometry args={[0.42, 16, 16]} />
         <meshStandardMaterial color="#1a1a1a" roughness={0.6} metalness={0.0} />
+      </mesh>
+      {/* Gaon cannon mouth hidden inside the lion face */}
+      <mesh position={[0, -0.78, -3.42]} rotation={[0, 0, 0]}>
+        <circleGeometry args={[0.72, 24]} />
+        <meshBasicMaterial color="#050505" />
+      </mesh>
+      <mesh position={[0, -0.78, -3.36]} rotation={[0, 0, 0]} castShadow>
+        <torusGeometry args={[0.74, 0.08, 10, 24]} />
+        <meshStandardMaterial color="#6b350f" roughness={0.5} />
       </mesh>
       {/* Left eye */}
       <mesh position={[-1.1, 0.9, -2.4]} castShadow>
@@ -306,8 +330,8 @@ function LionFigurehead({ position }) {
       </mesh>
       {/* Smile teeth */}
       {[-0.5, 0, 0.5].map((x, i) => (
-        <mesh key={i} position={[x, -1.0, -3.3]} castShadow>
-          <boxGeometry args={[0.3, 0.45, 0.2]} />
+        <mesh key={i} position={[x, -1.08, -3.6]} castShadow>
+          <boxGeometry args={[0.3, 0.38, 0.18]} />
           <meshStandardMaterial color="#f5f5f5" roughness={0.3} metalness={0.0} />
         </mesh>
       ))}
@@ -2425,6 +2449,113 @@ function FlowerGarden({ position }) {
 // THE THOUSAND SUNNY — COMPLETE SHIP
 // ─────────────────────────────────────────────────────────────────────
 
+function SunnyHullDetails() {
+  const portHoles = [-18, -9, 0, 9, 18]
+  const ribs = [-22, -16, -10, -4, 2, 8, 14, 20]
+
+  return (
+    <group>
+      {/* plank ribs break up the old boxy hull silhouette */}
+      {[-1, 1].map((side) => (
+        <group key={`hull-side-${side}`}>
+          {ribs.map((z) => (
+            <mesh key={`${side}-${z}`} position={[side * 9.62, -2.65, z]} castShadow>
+              <boxGeometry args={[0.18, 4.6, 0.18]} />
+              <meshStandardMaterial color="#2d190b" roughness={0.92} />
+            </mesh>
+          ))}
+
+          {portHoles.map((z) => (
+            <group key={`port-${side}-${z}`} position={[side * 9.68, -1.55, z]}>
+              <mesh rotation={[0, Math.PI / 2, 0]}>
+                <ringGeometry args={[0.34, 0.48, 24]} />
+                <meshStandardMaterial color="#f4ead2" roughness={0.55} side={THREE.DoubleSide} />
+              </mesh>
+              <mesh rotation={[0, Math.PI / 2, 0]}>
+                <circleGeometry args={[0.31, 24]} />
+                <meshStandardMaterial
+                  color="#163b4d"
+                  roughness={0.2}
+                  metalness={0.05}
+                  transparent
+                  opacity={0.78}
+                  emissive="#0e7ca1"
+                  emissiveIntensity={0.1}
+                  side={THREE.DoubleSide}
+                />
+              </mesh>
+            </group>
+          ))}
+        </group>
+      ))}
+
+      {/* stern transom trim */}
+      {[-5.8, -2.9, 0, 2.9, 5.8].map((x) => (
+        <mesh key={`stern-trim-${x}`} position={[x, -1.35, 29.28]} castShadow>
+          <boxGeometry args={[1.55, 0.28, 0.2]} />
+          <meshStandardMaterial color="#f4ead2" roughness={0.7} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+function SunnyLawnDetails() {
+  return (
+    <group>
+      {/* circular Sunny lawn motif around the mast */}
+      <mesh position={[0, 0.565, -3]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[1.55, 1.78, 40]} />
+        <meshStandardMaterial color="#d7f27a" roughness={0.9} />
+      </mesh>
+      <mesh position={[0, 0.568, -3]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[2.35, 2.48, 48]} />
+        <meshStandardMaterial color="#1f6f2a" roughness={0.96} />
+      </mesh>
+
+      {/* lawn mowing bands so the grass feels intentional, not a flat rectangle */}
+      {[-10.5, -6.5, -1.5, 3.5, 7.2].map((z, i) => (
+        <mesh key={`lawn-band-${z}`} position={[0, 0.555, z]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[13.8, 1.15]} />
+          <meshStandardMaterial
+            color={i % 2 ? '#3fa34d' : '#65bf55'}
+            roughness={1}
+            transparent
+            opacity={0.32}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      ))}
+
+      {/* low rope fence protecting the lawn edge */}
+      {[[-7.05, -3, true], [7.05, -3, true], [0, -14.35, false], [0, 8.35, false]].map(([x, z, vertical], i) => (
+        <mesh key={`lawn-rope-${i}`} position={[x, 0.76, z]} rotation={vertical ? [Math.PI / 2, 0, 0] : [0, 0, Math.PI / 2]} castShadow>
+          <cylinderGeometry args={[0.055, 0.055, vertical ? 22.4 : 14.1, 8]} />
+          <RopeMaterial />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+function SunnySideDeckTrim() {
+  return (
+    <group>
+      {[-1, 1].map((side) => (
+        <group key={`side-trim-${side}`}>
+          {[-18, -10, -2, 6, 14].map((z) => (
+            <mesh key={`${side}-${z}`} position={[side * 8.08, 1.62, z]} castShadow>
+              <sphereGeometry args={[0.22, 12, 12]} />
+              <meshStandardMaterial color="#f4ead2" roughness={0.72} />
+            </mesh>
+          ))}
+          <RigLine from={[side * 8.08, 1.62, -18]} to={[side * 8.08, 1.62, 14]} thickness={0.035} />
+        </group>
+      ))}
+    </group>
+  )
+}
+
 function BowPlatform({ position }) {
   return (
     <group position={position}>
@@ -2499,9 +2630,6 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       {/* Mikan Tree Planter & Trunks */}
       <CuboidCollider args={[2.25, 1.5, 2.25]} position={[-5.8, 3.5, 18.8]} />
       
-      {/* The Slide (Matches rotation and angle so Luffy walks up/down it) */}
-      <CuboidCollider args={[0.75, 0.2, 3]} position={[-3, 1.6, 12]} rotation={[-0.6, 0, 0]} />
-      
       {/* The Basement Hatch (Allows Luffy to step up onto the wood panel) */}
       <CuboidCollider args={[1.75, 0.1, 1.25]} position={[0, 0.46, 5]} />
       
@@ -2535,7 +2663,6 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       {/* ════════════════════════════════════════════════════════════
           ICONIC EXTERIOR DETAILS
       ════════════════════════════════════════════════════════════ */}
-      <SlideAndSwing />
       <SoldierDockHatches />
       <CuboidCollider args={[8.5, 0.25, 6]} position={[0, 2.65, 19]} />
       {/* Forecastle floor */}
@@ -2594,6 +2721,7 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
         <boxGeometry args={[18.2, 0.18, 52.2]} />
         <meshStandardMaterial color="#fafafa" roughness={0.7} />
       </mesh>
+      <SunnyHullDetails />
 
       {/* ════════════════════════════════════════════════════════════
           MAIN DECK
@@ -2616,7 +2744,7 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       ════════════════════════════════════════════════════════════ */}
       <mesh position={[0, 0.42, -3]} receiveShadow castShadow>
         <boxGeometry args={[15, 0.12, 24]} />
-        <meshStandardMaterial color="#388e3c" roughness={1.0} metalness={0.0} />
+        <GrassMaterial />
       </mesh>
       {/* Grass texture overlay */}
       <mesh position={[0, 0.49, -3]}>
@@ -2634,6 +2762,7 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
           </mesh>
         )
       })}
+      <SunnyLawnDetails />
 
       {/* ════════════════════════════════════════════════════════════
           RAILINGS — Red and white Thousand Sunny style
@@ -2659,6 +2788,7 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
           ))}
         </group>
       ))}
+      <SunnySideDeckTrim />
 
       {/* ════════════════════════════════════════════════════════════
           QUARTERDECK — raised rear deck with wheel
@@ -2711,7 +2841,7 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       <ShipWheel position={[0, 3.62, 19.5]} />
       <LogPosePillar position={[0, 4.05, 18.2]} />
       <FlowerGarden position={[-5.5, 2.85, 22]} />
-<FlowerGarden position={[5.5,  2.85, 22]} />
+      <FlowerGarden position={[5.5,  2.85, 22]} />
       {/* Wheel post */}
       <mesh position={[0, 2.9, 19.8]} castShadow>
         <cylinderGeometry args={[0.1, 0.12, 1.5, 10]} />
@@ -2741,7 +2871,7 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       {/* ════════════════════════════════════════════════════════════
           CROW'S NEST
       ════════════════════════════════════════════════════════════ */}
-      {!skillsActive && <DomeCrowsNest position={[0, 33.5, -3]} />}
+      <DomeCrowsNest position={[0, 31.5, -3]} />
 
       {/* ════════════════════════════════════════════════════════════
           MAIN CROSS SPAR + SAIL
@@ -2943,7 +3073,7 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       {/* ════════════════════════════════════════════════════════════
           COUP DE VENT CANNON — giant front cannon
       ════════════════════════════════════════════════════════════ */}
-      <CoupDeVentCannon position={[0, 3.4, -25]} />
+      {/* The Sunny's main cannon is now represented inside the lion mouth. */}
 
       {/* ════════════════════════════════════════════════════════════
           STERN BALCONY — observation deck at the rear
@@ -2955,25 +3085,6 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       ════════════════════════════════════════════════════════════ */}
       <PaddleWheel position={[-9.8, -1.5, 8]}  side={-1} />
       <PaddleWheel position={[9.8,  -1.5, 8]}  side={1}  />
-      {/* ════════════════════════════════════════════════════════════
-          PADDLE WHEELS — Chicken Voyage emergency propulsion
-      ════════════════════════════════════════════════════════════ */}
-{/* ════════════════════════════════════════════════════════════
-          PADDLE WHEELS — Chicken Voyage emergency propulsion
-      ════════════════════════════════════════════════════════════ */}
-      <PaddleWheel position={[-9.8, -1.5, 8]}  side={-1} />
-      <PaddleWheel position={[9.8,  -1.5, 8]}  side={1}  />
-
-      {/* ════════════════════════════════════════════════════════════
-          CROW'S NEST — Skills Section Viewpoint
-      ════════════════════════════════════════════════════════════ */}
-      {/* Target Y~31.5 to align with the CAM_SKILLS in WorldScene.jsx */}
-      <CrowsNest position={[0, 31.5, -3]} />
-
-      {/* ════════════════════════════════════════════════════════════
-          TREASURE CHESTS — atmospheric detail
-      ════════════════════════════════════════════════════════════ */}
-      <TreasureChest position={[-6.5, 0.85, 15]} rotation={[0, 0.4, 0]} />
 
       {/* ════════════════════════════════════════════════════════════
           TREASURE CHESTS — atmospheric detail
