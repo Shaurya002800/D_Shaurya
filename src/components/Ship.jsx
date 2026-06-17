@@ -481,6 +481,25 @@ function CrowsNestFlag() {
   )
 }
 
+function CrowsNestBaseOnly({ position = [0, 31.5, -3] }) {
+  return (
+    <group position={position}>
+      <mesh position={[0, -0.04, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[2.25, 2.48, 0.28, 32]} />
+        <meshStandardMaterial color="#5C3A21" roughness={0.88} />
+      </mesh>
+      <mesh position={[0, 0.12, 0]} castShadow>
+        <torusGeometry args={[2.36, 0.075, 8, 36]} />
+        <meshStandardMaterial color="#c8a050" roughness={0.78} />
+      </mesh>
+      <mesh position={[0, -0.23, 0]} castShadow>
+        <torusGeometry args={[2.02, 0.08, 8, 32]} />
+        <meshStandardMaterial color="#2a1708" roughness={0.9} />
+      </mesh>
+    </group>
+  )
+}
+
 // ─────────────────────────────────────────────────────────────────────
 // JOLLY ROGER ON SAIL — Straw Hat Pirates emblem
 // ─────────────────────────────────────────────────────────────────────
@@ -2931,7 +2950,9 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       {/* ════════════════════════════════════════════════════════════
           CROW'S NEST
       ════════════════════════════════════════════════════════════ */}
-      <CrowsNest position={[0, 31.5, -3]} />
+      {skillsActive
+        ? <CrowsNestBaseOnly position={[0, 31.5, -3]} />
+        : <CrowsNest position={[0, 31.5, -3]} />}
 
       {/* ════════════════════════════════════════════════════════════
           MAIN CROSS SPAR + SAIL
@@ -2956,7 +2977,9 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       {/* ════════════════════════════════════════════════════════════
           LADDER TO CROW'S NEST
       ════════════════════════════════════════════════════════════ */}
-      {!aboutActive && <Ladder position={[2.2, 17, -1.55]} height={30} rungs={23} rotation={[0.04, 0, -0.015]} />}
+      {!aboutActive && !skillsActive && (
+        <Ladder position={[2.2, 17, -1.55]} height={30} rungs={23} rotation={[0.04, 0, -0.015]} />
+      )}
 
       {/* ════════════════════════════════════════════════════════════
           RIGGING ROPES — full network
