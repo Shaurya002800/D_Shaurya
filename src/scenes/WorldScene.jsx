@@ -38,13 +38,25 @@ const CROWS_NEST_CAMERA = {
   },
 }
 
-export function SkillsCameraTransition({ active, direction = 'north' }) {
+export function SkillsCameraTransition({
+  active,
+  direction = 'north',
+  cameraClaimedByOtherSection = false,
+}) {
   const isAnimating = useRef(false)
   const currentTarget = useRef(new THREE.Vector3(0, 1.5, 0))
 
   useFrame((state, delta) => {
     const speed = 2.5 * delta
     const view = CROWS_NEST_CAMERA.views[direction] ?? CROWS_NEST_CAMERA.views.north
+
+    // A newly opened section owns the camera immediately. Do not let the
+    // previous Skills exit animation overwrite its camera transition.
+    if (!active && cameraClaimedByOtherSection) {
+      isAnimating.current = false
+      currentTarget.current.copy(CAM_EXPLORE.target)
+      return
+    }
 
     if (active) {
       isAnimating.current = true
@@ -391,7 +403,11 @@ export default function WorldScene({
 
   {/* 2. Your Camera Controllers */}
   <AboutCameraController active={aboutActive} />
-  <SkillsCameraTransition active={skillsActive} direction={skillsDirection} />
+  <SkillsCameraTransition
+    active={skillsActive}
+    direction={skillsDirection}
+    cameraClaimedByOtherSection={aboutActive || workActive}
+  />
   {/* 3. The rest of your scene... */}
   <fog attach="fog" args={['#e4f0f6', 60, 260]} />
   <Lighting />
