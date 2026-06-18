@@ -724,10 +724,10 @@ function CoiledRope({ position }) {
 // LANTERN — hanging from ropes
 // ─────────────────────────────────────────────────────────────────────
 // AFTER — remove the pointLight entirely, emissive on the glass is enough
-function Lantern({ position }) {
+function Lantern({ position, castShadow = true }) {
   return (
     <group position={position}>
-      <mesh castShadow>
+      <mesh castShadow={castShadow}>
         <cylinderGeometry args={[0.14, 0.14, 0.4, 8]} />
         <meshStandardMaterial color="#ffdd88" roughness={0.1} transparent opacity={0.6} emissive="#ffcc44" emissiveIntensity={1.5} />
       </mesh>
@@ -916,6 +916,19 @@ function ProjectPaintingFrame({ project, spot, onSelect }) {
         <cylinderGeometry args={[0.055, 0.055, 3.85, 10]} />
         <RopeMaterial />
       </mesh>
+      <mesh position={[0, 2.82, 0.24]}>
+        <boxGeometry args={[1.45, 0.1, 0.12]} />
+        <meshStandardMaterial color="#b98a3d" roughness={0.38} metalness={0.62} />
+      </mesh>
+      <mesh position={[0, 2.7, 0.29]} rotation={[0.22, 0, 0]}>
+        <boxGeometry args={[1.1, 0.14, 0.16]} />
+        <meshStandardMaterial
+          color="#fff0a8"
+          emissive={project.color}
+          emissiveIntensity={0.55}
+          roughness={0.38}
+        />
+      </mesh>
       {[-1.6, 1.6].map((x) => (
         <mesh key={`poster-rope-${x}`} position={[x, 2.25, 0.02]} castShadow>
           <cylinderGeometry args={[0.036, 0.036, 0.78, 8]} />
@@ -959,30 +972,44 @@ function ProjectPaintingFrame({ project, spot, onSelect }) {
 function ProjectInteractionCircle({ project, spot }) {
   return (
     <group position={spot.circle}>
+      <mesh position={[0, -0.015, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[spot.radius * 1.08, 24]} />
+        <meshStandardMaterial color="#17351e" roughness={0.9} transparent opacity={0.76} />
+      </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[spot.radius * 0.72, spot.radius, 56]} />
+        <ringGeometry args={[spot.radius * 0.82, spot.radius, 32]} />
         <meshStandardMaterial
           color={project.color}
           emissive={project.color}
-          emissiveIntensity={0.55}
+          emissiveIntensity={0.72}
           roughness={0.55}
           transparent
-          opacity={0.86}
+          opacity={0.92}
           side={THREE.DoubleSide}
         />
       </mesh>
-      <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[spot.radius * 0.22, 32]} />
+      <mesh position={[0, 0.025, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[spot.radius * 0.27, spot.radius * 0.36, 20]} />
         <meshStandardMaterial
-          color="#fff9c8"
+          color="#f2cf78"
           emissive={project.color}
-          emissiveIntensity={0.28}
-          roughness={0.7}
+          emissiveIntensity={0.35}
+          roughness={0.58}
           transparent
-          opacity={0.72}
+          opacity={0.9}
           side={THREE.DoubleSide}
         />
       </mesh>
+      {[0, Math.PI / 2, Math.PI, Math.PI * 1.5].map((angle) => (
+        <mesh
+          key={angle}
+          position={[Math.cos(angle) * spot.radius * 1.01, 0.055, Math.sin(angle) * spot.radius * 1.01]}
+          rotation={[-Math.PI / 2, 0, angle]}
+        >
+          <boxGeometry args={[0.12, 0.28, 0.05]} />
+          <meshStandardMaterial color="#f2cf78" emissive={project.color} emissiveIntensity={0.25} />
+        </mesh>
+      ))}
     </group>
   )
 }
@@ -1810,8 +1837,172 @@ function ProjectTank({ project, position, facingRight = true, onSelect }) {
   )
 }
 
+function ArchiveHullDetails() {
+  const ribZ = [-18, -11.5, -3, 5.5, 13]
+
+  return (
+    <group>
+      {[-1, 1].map((side) => (
+        <group key={`archive-wall-${side}`}>
+          <mesh position={[side * 8.02, 1.25, -2.5]} receiveShadow>
+            <boxGeometry args={[0.2, 2.5, 34]} />
+            <meshStandardMaterial color="#4a2914" roughness={0.9} />
+          </mesh>
+          <mesh position={[side * 7.88, 2.55, -2.5]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.065, 0.065, 34, 6]} />
+            <meshStandardMaterial color="#c29347" roughness={0.4} metalness={0.58} />
+          </mesh>
+          {ribZ.map((z) => (
+            <group key={`archive-rib-${side}-${z}`}>
+              <mesh position={[side * 7.72, 5.5, z]}>
+                <boxGeometry args={[0.34, 10.5, 0.32]} />
+                <meshStandardMaterial color="#5b3217" roughness={0.88} />
+              </mesh>
+              <mesh position={[side * 7.54, 3.3, z]} rotation={[0, 0, side * 0.18]}>
+                <boxGeometry args={[0.22, 2.2, 0.5]} />
+                <meshStandardMaterial color="#b78942" roughness={0.5} metalness={0.3} />
+              </mesh>
+            </group>
+          ))}
+        </group>
+      ))}
+    </group>
+  )
+}
+
+function ArchivePromenade() {
+  return (
+    <group>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.055, -3]} receiveShadow>
+        <planeGeometry args={[5.7, 32.5]} />
+        <meshStandardMaterial color="#5a3219" roughness={0.9} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.075, -3]} receiveShadow>
+        <planeGeometry args={[4.55, 31.8]} />
+        <meshStandardMaterial color="#4fa444" roughness={0.94} />
+      </mesh>
+      {[-2.52, 2.52].map((x) => (
+        <mesh key={`promenade-edge-${x}`} position={[x, 0.12, -3]}>
+          <boxGeometry args={[0.16, 0.14, 32.4]} />
+          <meshStandardMaterial color="#d0a451" roughness={0.55} metalness={0.22} />
+        </mesh>
+      ))}
+      {[-14, -8.5, -3, 2.5, 8, 13.5].map((z) => (
+        <group key={`compass-${z}`} position={[0, 0.095, z]}>
+          <mesh rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[0.62, 0.77, 20]} />
+            <meshStandardMaterial color="#d8b45e" roughness={0.54} metalness={0.2} />
+          </mesh>
+          <mesh rotation={[-Math.PI / 2, 0, Math.PI / 4]}>
+            <boxGeometry args={[0.14, 1.15, 0.035]} />
+            <meshStandardMaterial color="#f5df91" emissive="#d8b45e" emissiveIntensity={0.12} />
+          </mesh>
+          <mesh rotation={[-Math.PI / 2, 0, -Math.PI / 4]}>
+            <boxGeometry args={[0.14, 1.15, 0.035]} />
+            <meshStandardMaterial color="#f5df91" emissive="#d8b45e" emissiveIntensity={0.12} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  )
+}
+
+function GrandLineArchiveCrest() {
+  return (
+    <group position={[0, 5.6, -20.45]}>
+      <mesh position={[0, 0, -0.12]}>
+        <boxGeometry args={[7.4, 4.8, 0.28]} />
+        <meshStandardMaterial color="#3b2010" roughness={0.88} />
+      </mesh>
+      <mesh position={[0, 0, 0.04]}>
+        <planeGeometry args={[6.9, 4.3]} />
+        <meshStandardMaterial color="#d5aa52" roughness={0.72} emissive="#8a4b17" emissiveIntensity={0.08} />
+      </mesh>
+      <mesh position={[0, 0.35, 0.12]}>
+        <ringGeometry args={[0.92, 1.2, 28]} />
+        <meshStandardMaterial color="#8b1f16" emissive="#8b1f16" emissiveIntensity={0.18} roughness={0.6} />
+      </mesh>
+      <mesh position={[0, 0.35, 0.14]} rotation={[0, 0, Math.PI / 4]}>
+        <boxGeometry args={[0.22, 2.25, 0.08]} />
+        <meshStandardMaterial color="#f3df9c" roughness={0.65} />
+      </mesh>
+      <mesh position={[0, 0.35, 0.15]} rotation={[0, 0, -Math.PI / 4]}>
+        <boxGeometry args={[0.22, 2.25, 0.08]} />
+        <meshStandardMaterial color="#f3df9c" roughness={0.65} />
+      </mesh>
+      <Text
+        position={[0, -1.42, 0.18]}
+        fontSize={0.46}
+        color="#3b2010"
+        anchorX="center"
+        anchorY="middle"
+        letterSpacing={0.12}
+      >
+        GRAND LINE ARCHIVE
+      </Text>
+      <Text
+        position={[0, -1.92, 0.18]}
+        fontSize={0.22}
+        color="#70401c"
+        anchorX="center"
+        anchorY="middle"
+        letterSpacing={0.08}
+      >
+        PROJECT LOGS OF THE SUNNY
+      </Text>
+    </group>
+  )
+}
+
+function ArchivePropCluster({ side = 1, z = 10 }) {
+  return (
+    <group position={[side * 7.05, 0.12, z]} rotation={[0, side > 0 ? -0.28 : 0.28, 0]}>
+      <mesh position={[0, 0.48, 0]}>
+        <cylinderGeometry args={[0.32, 0.36, 0.76, 8]} />
+        <meshStandardMaterial color="#5C3A21" roughness={0.9} />
+      </mesh>
+      {[-0.22, 0.22].map((y) => (
+        <mesh key={`archive-barrel-ring-${y}`} position={[0, 0.48 + y, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.34, 0.025, 6, 12]} />
+          <meshStandardMaterial color="#665845" roughness={0.55} metalness={0.35} />
+        </mesh>
+      ))}
+      {[0, 0.07].map((y, index) => (
+        <mesh key={`archive-rope-${y}`} position={[side * -0.62, 0.08 + y, 0.42]} rotation={[-Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.24 - index * 0.025, 0.04, 6, 14]} />
+          <RopeMaterial />
+        </mesh>
+      ))}
+      <mesh position={[side * -0.55, 0.35, -0.42]} rotation={[0, side * 0.18, 0]}>
+        <boxGeometry args={[0.9, 0.68, 0.78]} />
+        <meshStandardMaterial color="#6b3b18" roughness={0.9} />
+      </mesh>
+      <mesh position={[side * -0.55, 0.72, -0.42]}>
+        <boxGeometry args={[0.94, 0.08, 0.82]} />
+        <meshStandardMaterial color="#b78942" roughness={0.58} metalness={0.2} />
+      </mesh>
+    </group>
+  )
+}
+
+function ArchiveLanternRow() {
+  return (
+    <group>
+      {[-14, -6, 2, 10].map((z) => (
+        <group key={`archive-lantern-${z}`}>
+          <mesh position={[0, 11.35, z]}>
+            <cylinderGeometry args={[0.035, 0.035, 0.85, 6]} />
+            <meshStandardMaterial color="#342719" roughness={0.65} metalness={0.32} />
+          </mesh>
+          <Lantern position={[0, 10.62, z]} castShadow={false} />
+        </group>
+      ))}
+    </group>
+  )
+}
+
 // ─────────────────────────────────────────────────────────────────────
-// BASEMENT ROOM — ship-footprint garden room while work stays on hold
+// BASEMENT ROOM — Grand Line project archive inside the Sunny
 // ─────────────────────────────────────────────────────────────────────
 function AquariumBasement({ position = [0, -14, 2], onProjectSelect }) {
   const floorShape = useMemo(() => createBasementFootprintShape(0.38), [])
@@ -1823,21 +2014,11 @@ function AquariumBasement({ position = [0, -14, 2], onProjectSelect }) {
  
       {/* Grass floor using the same long ship footprint as the upper deck */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]} receiveShadow>
-        <shapeGeometry args={[floorShape, 96]} />
+        <shapeGeometry args={[floorShape, 48]} />
         <GrassMaterial />
       </mesh>
 
-      {/* Visible center lawn lane so the entry camera has a clear floor cue */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.075, -3]} receiveShadow>
-        <planeGeometry args={[4.8, 29]} />
-        <meshStandardMaterial color="#45b943" roughness={0.95} />
-      </mesh>
-      {[-10, 0, 10].map((z) => (
-        <mesh key={`lawn-ring-${z}`} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.09, z]}>
-          <ringGeometry args={[1.8, 2.05, 40]} />
-          <meshStandardMaterial color="#b8f05b" roughness={0.8} side={THREE.DoubleSide} />
-        </mesh>
-      ))}
+      <ArchivePromenade />
 
       {/* Slightly raised grassy edge so the floor reads as a soft indoor lawn */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]}>
@@ -1849,12 +2030,14 @@ function AquariumBasement({ position = [0, -14, 2], onProjectSelect }) {
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} castShadow receiveShadow>
         <extrudeGeometry args={[wallShape, { depth: BASEMENT_HEIGHT, bevelEnabled: false, steps: 1 }]} />
         <meshStandardMaterial
-          color="#fff4c8"
-          roughness={0.78}
+          color="#f6e5b8"
+          roughness={0.82}
           metalness={0.0}
           side={THREE.DoubleSide}
         />
       </mesh>
+
+      <ArchiveHullDetails />
 
       {PROJECT_GALLERY_SPOTS.map((spot) => {
         const project = PROJECTS[spot.projectIndex]
@@ -1866,15 +2049,7 @@ function AquariumBasement({ position = [0, -14, 2], onProjectSelect }) {
         )
       })}
 
-      {/* Back focal paint panel visible from the entrance */}
-      <mesh position={[0, 5.3, -20.55]} rotation={[0, 0, 0]}>
-        <planeGeometry args={[6.2, 4.4]} />
-        <meshStandardMaterial color="#ffcf40" emissive="#ffcf40" emissiveIntensity={0.1} roughness={0.68} side={THREE.DoubleSide} />
-      </mesh>
-      <mesh position={[0, 5.35, -20.48]} rotation={[0, 0, 0]}>
-        <ringGeometry args={[1.15, 1.45, 48]} />
-        <meshStandardMaterial color="#ff6b6b" emissive="#ff6b6b" emissiveIntensity={0.16} roughness={0.6} side={THREE.DoubleSide} />
-      </mesh>
+      <GrandLineArchiveCrest />
 
       {/* Grass creeps up the wall base */}
       {[-16, -10, -4, 2, 8, 14].map((z, i) => (
@@ -1890,27 +2065,32 @@ function AquariumBasement({ position = [0, -14, 2], onProjectSelect }) {
         </group>
       ))}
 
+      <ArchivePropCluster side={-1} z={11.8} />
+      <ArchivePropCluster side={1} z={11.8} />
+      <ArchivePropCluster side={-1} z={-19.1} />
+      <ArchivePropCluster side={1} z={-19.1} />
+
       {/* Ceiling and roof beams */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, BASEMENT_HEIGHT, 0]}>
-        <shapeGeometry args={[ceilingShape, 96]} />
+        <shapeGeometry args={[ceilingShape, 48]} />
         <meshStandardMaterial color="#f7e6b6" roughness={0.8} side={THREE.DoubleSide} />
       </mesh>
       {[-12, -4, 4, 12].map((z) => (
-        <mesh key={`basement-beam-${z}`} position={[0, 11.75, z]} castShadow>
+        <mesh key={`basement-beam-${z}`} position={[0, 11.75, z]}>
           <boxGeometry args={[15.5, 0.28, 0.28]} />
           <meshStandardMaterial color="#6b3b18" roughness={0.85} />
         </mesh>
       ))}
+      {[-6.8, 6.8].map((x) => (
+        <mesh key={`basement-longitudinal-${x}`} position={[x, 11.58, -2.5]}>
+          <boxGeometry args={[0.24, 0.24, 35]} />
+          <meshStandardMaterial color="#9b6b31" roughness={0.66} metalness={0.16} />
+        </mesh>
+      ))}
 
-      {/* Hanging roof light */}
-      <mesh position={[0, 11.05, -2]} castShadow>
-        <cylinderGeometry args={[0.035, 0.035, 1.3, 8]} />
-        <meshStandardMaterial color="#3d3424" roughness={0.65} metalness={0.35} />
-      </mesh>
-      <Lantern position={[0, 10.25, -2]} />
-      <pointLight position={[0, 9.7, -2]} color="#fff0b8" intensity={34} distance={34} decay={1.15} />
-      <pointLight position={[0, 4.2, -14]} color="#7bdcff" intensity={4.5} distance={20} decay={1.3} />
-      <pointLight position={[0, 4.2, 10]} color="#ff9fd8" intensity={4.0} distance={18} decay={1.35} />
+      <ArchiveLanternRow />
+      <pointLight position={[0, 8.8, -11]} color="#ffe3a0" intensity={11} distance={19} decay={1.65} />
+      <pointLight position={[0, 8.8, 7]} color="#ffd27a" intensity={9} distance={18} decay={1.7} />
     </group>
   )
 }
