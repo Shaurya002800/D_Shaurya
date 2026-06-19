@@ -815,6 +815,7 @@ function Luffy3D({
   onSkillsClimbingChange,
   skillsDirection = 'north',
   workActive = false,
+  freeCam = false,
 }) {
   const groupRef     = useRef()
   const mixerRef     = useRef(null)
@@ -1168,14 +1169,16 @@ function Luffy3D({
 
     // Let the camera follow Luffy in the basement too; fixed POV made the
     // room unreadable from several entry angles.
-    camCtrl.current.update(
-      camera,
-      groupRef.current.position,
-      groupRef.current.rotation.y,
-      running,
-      safeDt,
-      workActive,
-    )
+    if (!freeCam) {
+      camCtrl.current.update(
+        camera,
+        groupRef.current.position,
+        groupRef.current.rotation.y,
+        running,
+        safeDt,
+        workActive,
+      )
+    }
 
     if (debugRef) {
       debugRef.current = {

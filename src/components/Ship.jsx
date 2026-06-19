@@ -77,6 +77,108 @@ function createBasementWallShape() {
   return outer
 }
 
+const SUNNY_HULL_SECTIONS = [
+  { z: -31, width: 1.1, top: -0.5, depth: 4.0 },
+  { z: -28, width: 5.2, top: -0.25, depth: 5.8 },
+  { z: -24, width: 8.2, top: 0.0, depth: 7.15 },
+  { z: -16, width: 9.35, top: 0.1, depth: 8.0 },
+  { z: -4, width: 9.65, top: 0.12, depth: 8.45 },
+  { z: 9, width: 9.55, top: 0.12, depth: 8.35 },
+  { z: 19, width: 9.2, top: 0.25, depth: 7.85 },
+  { z: 26, width: 8.0, top: 0.5, depth: 6.8 },
+  { z: 30, width: 4.6, top: 0.0, depth: 5.4 },
+]
+
+function createSunnyHullGeometry() {
+  const ringSegments = 18
+  const positions = []
+  const uvs = []
+  const indices = []
+
+  SUNNY_HULL_SECTIONS.forEach((section, sectionIndex) => {
+    for (let index = 0; index <= ringSegments; index += 1) {
+      const angle = (index / ringSegments) * Math.PI
+      const x = Math.cos(angle) * section.width
+      const y = section.top - Math.sin(angle) * section.depth
+      positions.push(x, y, section.z)
+      uvs.push(index / ringSegments, sectionIndex / (SUNNY_HULL_SECTIONS.length - 1))
+    }
+  })
+
+  const ringSize = ringSegments + 1
+  for (let section = 0; section < SUNNY_HULL_SECTIONS.length - 1; section += 1) {
+    for (let index = 0; index < ringSegments; index += 1) {
+      const current = section * ringSize + index
+      const next = current + ringSize
+      indices.push(current, next, current + 1)
+      indices.push(current + 1, next, next + 1)
+    }
+  }
+
+  const addCap = (sectionIndex, reverse = false) => {
+    const section = SUNNY_HULL_SECTIONS[sectionIndex]
+    const centerIndex = positions.length / 3
+    positions.push(0, section.top - section.depth * 0.48, section.z)
+    uvs.push(0.5, 0.5)
+    const offset = sectionIndex * ringSize
+    for (let index = 0; index < ringSegments; index += 1) {
+      if (reverse) indices.push(centerIndex, offset + index + 1, offset + index)
+      else indices.push(centerIndex, offset + index, offset + index + 1)
+    }
+  }
+
+  addCap(0, true)
+  addCap(SUNNY_HULL_SECTIONS.length - 1)
+
+  const geometry = new THREE.BufferGeometry()
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
+  geometry.setIndex(indices)
+  geometry.computeVertexNormals()
+  return geometry
+}
+
+function createSunnyDeckShape(inset = 0) {
+  const shape = new THREE.Shape()
+  const bow = -27 + inset
+  const stern = 27 - inset
+  const halfWidth = 8.55 - inset
+
+  shape.moveTo(0, -bow)
+  shape.bezierCurveTo(halfWidth * 0.55, -bow + 1.2, halfWidth, -bow + 5.0, halfWidth, -bow + 9.0)
+  shape.lineTo(halfWidth, -stern + 5.5)
+  shape.bezierCurveTo(halfWidth, -stern + 1.7, halfWidth * 0.62, -stern, 0, -stern)
+  shape.bezierCurveTo(-halfWidth * 0.62, -stern, -halfWidth, -stern + 1.7, -halfWidth, -stern + 5.5)
+  shape.lineTo(-halfWidth, -bow + 9.0)
+  shape.bezierCurveTo(-halfWidth, -bow + 5.0, -halfWidth * 0.55, -bow + 1.2, 0, -bow)
+  shape.closePath()
+  return shape
+}
+
+function createRaisedDeckShape(section, inset = 0) {
+  const shape = new THREE.Shape()
+  const isBow = section === 'bow'
+  const minZ = isBow ? -26 + inset : 13 + inset
+  const maxZ = isBow ? -13 - inset : 27 - inset
+  const wide = 8.45 - inset
+  const narrow = (isBow ? 3.2 : 5.4) - inset * 0.5
+
+  if (isBow) {
+    shape.moveTo(0, -minZ)
+    shape.bezierCurveTo(narrow * 0.72, -minZ + 0.8, wide, -minZ + 5.6, wide, -maxZ)
+    shape.lineTo(-wide, -maxZ)
+    shape.bezierCurveTo(-wide, -minZ + 5.6, -narrow * 0.72, -minZ + 0.8, 0, -minZ)
+  } else {
+    shape.moveTo(wide, -minZ)
+    shape.lineTo(wide, -maxZ + 5.2)
+    shape.bezierCurveTo(wide, -maxZ + 1.4, narrow * 0.75, -maxZ, 0, -maxZ)
+    shape.bezierCurveTo(-narrow * 0.75, -maxZ, -wide, -maxZ + 1.4, -wide, -maxZ + 5.2)
+    shape.lineTo(-wide, -minZ)
+  }
+  shape.closePath()
+  return shape
+}
+
 function useGrassTexture() {
   return useMemo(() => {
     const rand = (seed) => {
@@ -249,6 +351,11 @@ function ShipWheel({ position }) {
 function LionFigurehead({ position }) {
   return (
     <group position={position}>
+      {/* thick carved mane body keeps the lion readable from side views */}
+      <mesh position={[0, 0, 0.15]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <cylinderGeometry args={[3.38, 3.1, 1.65, 24]} />
+        <meshStandardMaterial color="#E56A16" roughness={0.58} />
+      </mesh>
       {/* Sun-ray mane plates */}
       {Array.from({ length: 14 }, (_, i) => {
         const angle = (i * Math.PI * 2) / 14
@@ -344,6 +451,15 @@ function LionFigurehead({ position }) {
       <mesh position={[1.8, -0.2, -2.6]}>
         <sphereGeometry args={[0.55, 14, 14]} />
         <meshStandardMaterial color="#FF6060" roughness={1.0} metalness={0.0} transparent opacity={0.45} />
+      </mesh>
+      {/* carved neck and gold collar tie the figurehead into the bow */}
+      <mesh position={[0, -0.25, 2.3]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <cylinderGeometry args={[1.15, 1.75, 3.2, 18]} />
+        <meshStandardMaterial color="#7a3c17" roughness={0.82} />
+      </mesh>
+      <mesh position={[0, -0.25, 0.85]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <torusGeometry args={[1.55, 0.18, 10, 28]} />
+        <meshStandardMaterial color="#d5a93a" roughness={0.45} metalness={0.2} />
       </mesh>
     </group>
   )
@@ -2759,6 +2875,255 @@ function FlowerGarden({ position }) {
 // THE THOUSAND SUNNY — COMPLETE SHIP
 // ─────────────────────────────────────────────────────────────────────
 
+function SunnyGalleonHull() {
+  const geometry = useMemo(() => createSunnyHullGeometry(), [])
+
+  return (
+    <group>
+      <mesh geometry={geometry} castShadow receiveShadow>
+        <WoodMaterial repeat={[5, 2.5]} roughness={0.9} />
+      </mesh>
+
+      {/* dark keel gives the hull a readable galleon belly */}
+      <mesh position={[0, -6.35, 1.5]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <cylinderGeometry args={[0.34, 0.48, 45, 10]} />
+        <meshStandardMaterial color="#2b170b" roughness={0.94} />
+      </mesh>
+
+      {/* layered waterline bands follow the long hull instead of boxing it in */}
+      {[-1, 1].map((side) => (
+        <group key={`waterline-${side}`}>
+          <mesh position={[side * 9.12, -0.72, 1.5]} castShadow>
+            <boxGeometry args={[0.22, 0.54, 39]} />
+            <meshStandardMaterial color="#2f7a43" roughness={0.8} />
+          </mesh>
+          <mesh position={[side * 9.18, -0.34, 1.5]} castShadow>
+            <boxGeometry args={[0.18, 0.18, 40]} />
+            <meshStandardMaterial color="#f6ead0" roughness={0.68} />
+          </mesh>
+          <mesh position={[side * 9.04, -4.85, 1.8]} castShadow>
+            <boxGeometry args={[0.16, 0.2, 35]} />
+            <meshStandardMaterial color="#3b2110" roughness={0.9} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  )
+}
+
+function SunnyDeckSurface() {
+  const deckShape = useMemo(() => createSunnyDeckShape(0), [])
+  const trimShape = useMemo(() => {
+    const outer = createSunnyDeckShape(0)
+    const inner = createSunnyDeckShape(0.48)
+    const hole = new THREE.Path()
+    inner.getPoints(80).reverse().forEach((point, index) => {
+      if (index === 0) hole.moveTo(point.x, point.y)
+      else hole.lineTo(point.x, point.y)
+    })
+    hole.closePath()
+    outer.holes.push(hole)
+    return outer
+  }, [])
+
+  return (
+    <group>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.22, 0]} receiveShadow>
+        <shapeGeometry args={[deckShape, 80]} />
+        <DeckMaterial repeat={[3, 8]} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.27, 0]} receiveShadow>
+        <extrudeGeometry args={[trimShape, { depth: 0.13, bevelEnabled: false }]} />
+        <meshStandardMaterial color="#6a3518" roughness={0.86} />
+      </mesh>
+    </group>
+  )
+}
+
+function SunnyRaisedDeck({ section }) {
+  const shellShape = useMemo(() => createRaisedDeckShape(section, 0), [section])
+  const topShape = useMemo(() => createRaisedDeckShape(section, 0.16), [section])
+
+  return (
+    <group>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.18, 0]} castShadow receiveShadow>
+        <extrudeGeometry
+          args={[
+            shellShape,
+            {
+              depth: 2.42,
+              steps: 1,
+              bevelEnabled: true,
+              bevelSize: 0.14,
+              bevelThickness: 0.12,
+              bevelSegments: 2,
+            },
+          ]}
+        />
+        <WoodMaterial repeat={[2.5, 2]} roughness={0.86} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 2.67, 0]} receiveShadow>
+        <shapeGeometry args={[topShape, 56]} />
+        <DeckMaterial repeat={[2, 2.5]} />
+      </mesh>
+    </group>
+  )
+}
+
+function SunnyBowArmor() {
+  return (
+    <group>
+      {[-1, 1].map((side) => (
+        <group key={`bow-armor-${side}`} position={[side * 4.25, -1.15, -25.4]} rotation={[0, side * -0.2, side * -0.08]}>
+          <mesh castShadow>
+            <cylinderGeometry args={[3.55, 4.15, 0.48, 5, 1, false, 0, Math.PI]} />
+            <meshStandardMaterial color="#a92e2b" roughness={0.64} side={THREE.DoubleSide} />
+          </mesh>
+          <mesh position={[0, 0, side * 0.27]} castShadow>
+            <torusGeometry args={[2.72, 0.16, 9, 36]} />
+            <meshStandardMaterial color="#f4e8c8" roughness={0.58} />
+          </mesh>
+          {[[-1.55, 1.15], [0, -1.55], [1.55, 1.15]].map(([x, y], index) => (
+            <mesh key={index} position={[x, y, side * 0.31]} castShadow>
+              <sphereGeometry args={[0.25, 12, 10]} />
+              <meshStandardMaterial color="#e4b743" roughness={0.38} metalness={0.35} />
+            </mesh>
+          ))}
+        </group>
+      ))}
+
+      {/* central red breastplate behind the lion */}
+      <mesh position={[0, -1.0, -27.0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <cylinderGeometry args={[4.3, 5.2, 0.52, 12]} />
+        <meshStandardMaterial color="#a92e2b" roughness={0.62} />
+      </mesh>
+      <mesh position={[0, -1.0, -27.3]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <torusGeometry args={[3.55, 0.2, 10, 42]} />
+        <meshStandardMaterial color="#f5ead0" roughness={0.6} />
+      </mesh>
+    </group>
+  )
+}
+
+function SunnySideGalleries() {
+  const galleryZ = [-14, -6, 2, 10, 18]
+
+  return (
+    <group>
+      {[-1, 1].map((side) => (
+        <group key={`sunny-gallery-${side}`}>
+          {/* white/red gallery ribbon makes the side profile unmistakably Sunny */}
+          <mesh position={[side * 9.02, 1.45, 3]} castShadow>
+            <boxGeometry args={[0.42, 2.35, 39]} />
+            <meshStandardMaterial color="#f4ead8" roughness={0.72} />
+          </mesh>
+          <mesh position={[side * 9.27, 2.35, 3]} castShadow>
+            <boxGeometry args={[0.2, 0.42, 39.5]} />
+            <meshStandardMaterial color="#b9352e" roughness={0.62} />
+          </mesh>
+          <mesh position={[side * 9.28, 0.45, 3]} castShadow>
+            <boxGeometry args={[0.18, 0.28, 39]} />
+            <meshStandardMaterial color="#d5a93a" roughness={0.48} metalness={0.2} />
+          </mesh>
+
+          {galleryZ.map((z) => (
+            <group key={`${side}-${z}`} position={[side * 9.36, 1.35, z]}>
+              <mesh rotation={[0, Math.PI / 2, 0]}>
+                <ringGeometry args={[0.5, 0.72, 28]} />
+                <meshStandardMaterial color="#b9352e" roughness={0.58} side={THREE.DoubleSide} />
+              </mesh>
+              <mesh rotation={[0, Math.PI / 2, 0]}>
+                <circleGeometry args={[0.43, 28]} />
+                <meshStandardMaterial color="#173c4c" roughness={0.2} emissive="#1d6f87" emissiveIntensity={0.12} side={THREE.DoubleSide} />
+              </mesh>
+              {Array.from({ length: 8 }, (_, index) => {
+                const angle = (index / 8) * Math.PI * 2
+                return (
+                  <mesh key={index} position={[side * 0.04, Math.sin(angle) * 0.61, Math.cos(angle) * 0.61]}>
+                    <sphereGeometry args={[0.07, 7, 6]} />
+                    <meshStandardMaterial color="#e2b849" roughness={0.42} metalness={0.3} />
+                  </mesh>
+                )
+              })}
+            </group>
+          ))}
+
+          {/* blue Chicken Voyage fins add the Sunny's playful side silhouette */}
+          <mesh position={[side * 10.65, -2.35, 7.5]} rotation={[0, 0, side * -0.12]} castShadow>
+            <sphereGeometry args={[3.0, 22, 12, 0, Math.PI * 2, 0, Math.PI / 2]} />
+            <meshStandardMaterial color="#2879c8" roughness={0.55} side={THREE.DoubleSide} />
+          </mesh>
+          <mesh position={[side * 10.45, -2.3, 7.5]} rotation={[0, 0, side * -0.12]} castShadow>
+            <sphereGeometry args={[2.34, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2]} />
+            <meshStandardMaterial color="#e8f3f6" roughness={0.62} side={THREE.DoubleSide} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  )
+}
+
+function SunnySternArchitecture() {
+  return (
+    <group>
+      {/* stacked rounded galleries replace the old flat transom */}
+      {[0, 1].map((level) => (
+        <group key={level} position={[0, 1.35 + level * 2.15, 24.0 + level * 0.8]}>
+          <mesh castShadow receiveShadow>
+            <cylinderGeometry args={[7.7 - level * 0.8, 8.2 - level * 0.7, 2.0, 30]} />
+            <meshStandardMaterial color={level ? '#f1dfb7' : '#a93630'} roughness={0.7} side={THREE.DoubleSide} />
+          </mesh>
+          <mesh position={[0, 1.03, 0]} castShadow>
+            <torusGeometry args={[7.75 - level * 0.75, 0.18, 10, 40]} />
+            <meshStandardMaterial color={level ? '#b83a31' : '#f3ead4'} roughness={0.6} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* circular rear cabin anchors the dome instead of leaving it floating */}
+      <mesh position={[0, 5.8, 24.0]} castShadow>
+        <cylinderGeometry args={[4.15, 4.45, 3.4, 28]} />
+        <meshStandardMaterial color="#efe0bc" roughness={0.76} />
+      </mesh>
+      <mesh position={[0, 5.8, 19.66]} rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[2.5, 3.5, 34]} />
+        <meshStandardMaterial color="#a9342f" roughness={0.62} side={THREE.DoubleSide} />
+      </mesh>
+      {[-2.25, 0, 2.25].map((x) => (
+        <mesh key={x} position={[x, 5.75, 19.57]}>
+          <circleGeometry args={[0.82, 24]} />
+          <meshStandardMaterial color="#72b2c8" roughness={0.18} transparent opacity={0.72} emissive="#70afc4" emissiveIntensity={0.08} />
+        </mesh>
+      ))}
+
+      {/* chunky anime dome — tiered so it reads clearly from the player camera */}
+      {[
+        { y: 7.82, bottom: 3.75, top: 3.22, height: 0.72 },
+        { y: 8.43, bottom: 3.22, top: 2.48, height: 0.62 },
+        { y: 8.96, bottom: 2.48, top: 1.58, height: 0.54 },
+        { y: 9.42, bottom: 1.58, top: 0.34, height: 0.46 },
+      ].map((tier, index) => (
+        <group key={tier.y}>
+          <mesh position={[0, tier.y, 24.0]} castShadow>
+            <cylinderGeometry args={[tier.top, tier.bottom, tier.height, 30]} />
+            <meshStandardMaterial color="#f0d56b" roughness={0.68} />
+          </mesh>
+          {index < 3 && (
+            <mesh position={[0, tier.y + tier.height * 0.5, 24.0]} rotation={[Math.PI / 2, 0, 0]}>
+              <torusGeometry args={[tier.top, 0.1, 8, 34]} />
+              <meshStandardMaterial color="#b6352e" roughness={0.58} />
+            </mesh>
+          )}
+        </group>
+      ))}
+      <mesh position={[0, 9.82, 24.0]} castShadow>
+        <sphereGeometry args={[0.42, 14, 12]} />
+        <meshStandardMaterial color="#b6352e" roughness={0.52} />
+      </mesh>
+    </group>
+  )
+}
+
 function SunnyHullDetails() {
   const portHoles = [-18, -9, 0, 9, 18]
   const ribs = [-22, -16, -10, -4, 2, 8, 14, 20]
@@ -3001,53 +3366,14 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
           HULL
           The main wooden body of the Thousand Sunny
       ════════════════════════════════════════════════════════════ */}
-      {/* Main hull body */}
-      <mesh position={[0, -3.0, 0]} castShadow receiveShadow>
-        <boxGeometry args={[18, 5.2, 52, 4, 2, 6]} />
-        <WoodMaterial repeat={[5, 2]} />
-      </mesh>
-      {/* Hull left side darker planks */}
-      <mesh position={[-9.3, -3.0, 0]} castShadow>
-        <boxGeometry args={[0.55, 5.0, 52]} />
-        <WoodMaterial repeat={[8, 1]} roughness={0.95} />
-      </mesh>
-      {/* Hull right side darker planks */}
-      <mesh position={[9.3, -3.0, 0]} castShadow>
-        <boxGeometry args={[0.55, 5.0, 52]} />
-        <WoodMaterial repeat={[8, 1]} roughness={0.95} />
-      </mesh>
-      {/* Keel/bottom */}
-      <mesh position={[0, -5.6, 0]} receiveShadow>
-        <boxGeometry args={[18, 0.45, 52]} />
-        <WoodMaterial repeat={[4, 8]} roughness={0.95} />
-      </mesh>
-      {/* Green stripe on hull — Sunny's iconic band */}
-      <mesh position={[0, -0.8, 0]}>
-        <boxGeometry args={[18.2, 0.5, 52.2]} />
-        <meshStandardMaterial color="#2e7d32" roughness={0.85} />
-      </mesh>
-      {/* White trim above green */}
-      <mesh position={[0, -0.45, 0]}>
-        <boxGeometry args={[18.2, 0.18, 52.2]} />
-        <meshStandardMaterial color="#fafafa" roughness={0.7} />
-      </mesh>
-      <SunnyHullDetails />
+      <SunnyGalleonHull />
+      <SunnySideGalleries />
 
       {/* ════════════════════════════════════════════════════════════
           MAIN DECK
           Wood floor with visible planks
       ════════════════════════════════════════════════════════════ */}
-      <mesh position={[0, 0.18, -1]} receiveShadow>
-        <boxGeometry args={[17.2, 0.38, 42, 10, 1, 14]} />
-        <DeckMaterial repeat={[3, 7]} />
-      </mesh>
-      {/* Plank groove lines */}
-      {Array.from({ length: 16 }, (_, i) => (
-        <mesh key={i} position={[0, 0.38, i * 2.7 - 20]} receiveShadow>
-          <boxGeometry args={[17.2, 0.04, 0.05]} />
-          <meshStandardMaterial color="#2a1505" roughness={1} />
-        </mesh>
-      ))}
+      <SunnyDeckSurface />
 
       {/* ════════════════════════════════════════════════════════════
           GRASS LAWN — Thousand Sunny's iconic mid-deck grass
@@ -3103,15 +3429,7 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       {/* ════════════════════════════════════════════════════════════
           QUARTERDECK — raised rear deck with wheel
       ════════════════════════════════════════════════════════════ */}
-      <mesh position={[0, 1.3, 19]} castShadow receiveShadow>
-        <boxGeometry args={[17.2, 2.6, 12]} />
-        <WoodMaterial repeat={[2, 1.5]} />
-      </mesh>
-      {/* Quarterdeck floor surface */}
-      <mesh position={[0, 2.63, 19]} receiveShadow>
-        <boxGeometry args={[16.8, 0.22, 11.5]} />
-        <DeckMaterial repeat={[2, 2]} />
-      </mesh>
+      <SunnyRaisedDeck section="stern" />
       {/* Steps from main deck to quarterdeck */}
       {[0, 1, 2].map((i) => (
         <mesh key={i} position={[0, 0.22 + i * 0.4, 13.2 - i * 0.75]} receiveShadow castShadow>
@@ -3128,15 +3446,7 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       {/* ════════════════════════════════════════════════════════════
           FORECASTLE — raised front deck
       ════════════════════════════════════════════════════════════ */}
-      <mesh position={[0, 1.3, -19]} castShadow receiveShadow>
-        <boxGeometry args={[17.2, 2.6, 12]} />
-        <WoodMaterial repeat={[2, 1.5]} />
-      </mesh>
-      {/* Forecastle floor surface */}
-      <mesh position={[0, 2.63, -19]} receiveShadow>
-        <boxGeometry args={[16.8, 0.22, 11.5]} />
-        <DeckMaterial repeat={[2, 2]} />
-      </mesh>
+      <SunnyRaisedDeck section="bow" />
       {/* Forecastle steps */}
       {[0, 1, 2].map((i) => (
         <mesh key={i} position={[0, 0.22 + i * 0.4, -13.2 + i * 0.75]} receiveShadow castShadow>
@@ -3260,44 +3570,19 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       {/* ════════════════════════════════════════════════════════════
           BOW — Lion Figurehead
       ════════════════════════════════════════════════════════════ */}
-      {/* Bow body */}
-      <mesh position={[0, -1.5, -27]} castShadow>
-        <boxGeometry args={[14, 4, 5]} />
-        <WoodMaterial repeat={[2, 1]} roughness={0.85} />
-      </mesh>
+      <SunnyBowArmor />
       {/* Bowsprit — horizontal pole pointing forward */}
       <mesh position={[0, 1.5, -32]} rotation={[-0.25, 0, 0]} castShadow>
         <cylinderGeometry args={[0.22, 0.3, 10, 10]} />
         <WoodMaterial repeat={[1, 2]} roughness={0.82} />
       </mesh>
       {/* Lion figurehead */}
-      <LionFigurehead position={[0, 1.8, -29]} />
+      <LionFigurehead position={[0, 1.65, -30.2]} />
 
       {/* ════════════════════════════════════════════════════════════
           STERN — rear of ship
       ════════════════════════════════════════════════════════════ */}
-      <mesh position={[0, -1, 27]} castShadow>
-        <boxGeometry args={[18, 4, 4]} />
-        <WoodMaterial repeat={[3, 1]} roughness={0.85} />
-      </mesh>
-
-        {/* NEW: The Library & Survey Room Architecture */}
-      <KitchenDiningHall position={[0, 2.65, 24.5]} />
-
-
-
-      {/* Stern decorative transom */}
-      <mesh position={[0, 1.5, 26.8]}>
-        <boxGeometry args={[17.5, 3, 0.4]} />
-        <meshStandardMaterial color="#5C3A21" roughness={0.8} />
-      </mesh>
-      {/* Stern windows */}
-      {[-4, 0, 4].map((x, i) => (
-        <mesh key={i} position={[x, 1.5, 27.1]}>
-          <boxGeometry args={[2.5, 2, 0.1]} />
-          <meshStandardMaterial color="#88bbcc" roughness={0.1} metalness={0.0} transparent opacity={0.5} />
-        </mesh>
-      ))}
+      <SunnySternArchitecture />
       {/* Rudder */}
       <mesh position={[0, -3.8, 27.5]} castShadow>
         <boxGeometry args={[1.2, 4.5, 0.3]} />
@@ -3392,7 +3677,7 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       {/* ════════════════════════════════════════════════════════════
           STERN BALCONY — observation deck at the rear
       ════════════════════════════════════════════════════════════ */}
-      <SternBalcony position={[0, 3.8, 28.5]} />
+      <SternBalcony position={[0, 4.6, 27.2]} />
 
       {/* ════════════════════════════════════════════════════════════
           PADDLE WHEELS — Chicken Voyage emergency propulsion

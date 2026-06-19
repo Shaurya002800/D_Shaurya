@@ -400,15 +400,19 @@ export default function WorldScene({
   style={{ position: 'absolute', inset: 0, zIndex: 1 }}
 >
   {/* 1. OrbitControls is ALWAYS mounted, but disabled until you press 'O' */}
-  <OrbitControls makeDefault enabled={freeCam} />
+  <OrbitControls makeDefault enabled={freeCam} target={[0, 0, 0]} />
 
   {/* 2. Your Camera Controllers */}
-  <AboutCameraController active={aboutActive} />
-  <SkillsCameraTransition
-    active={skillsActive}
-    direction={skillsDirection}
-    cameraClaimedByOtherSection={aboutActive || workActive}
-  />
+  {!freeCam && (
+    <>
+      <AboutCameraController active={aboutActive} />
+      <SkillsCameraTransition
+        active={skillsActive}
+        direction={skillsDirection}
+        cameraClaimedByOtherSection={aboutActive || workActive}
+      />
+    </>
+  )}
   {/* 3. The rest of your scene... */}
   <fog attach="fog" args={['#e4f0f6', 60, 260]} />
   <Lighting />
@@ -434,6 +438,7 @@ export default function WorldScene({
           onSkillsClimbingChange={onSkillsClimbingChange}
           skillsDirection={skillsDirection}
           workActive={workActive}
+          freeCam={freeCam}
         />
       </RigidBody>
     </Physics>
