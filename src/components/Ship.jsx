@@ -482,19 +482,70 @@ function CrowsNestFlag() {
 }
 
 function CrowsNestBaseOnly({ position = [0, 31.5, -3] }) {
+  const railingPoints = [
+    [-2.18, 0.42, 0.25],
+    [-2.02, 0.42, -1.08],
+    [-1.18, 0.42, -2.02],
+    [0, 0.42, -2.32],
+    [1.18, 0.42, -2.02],
+    [2.02, 0.42, -1.08],
+    [2.18, 0.42, 0.25],
+  ]
+
   return (
     <group position={position}>
       <mesh position={[0, -0.04, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[2.25, 2.48, 0.28, 32]} />
+        <cylinderGeometry args={[2.35, 2.55, 0.3, 24]} />
         <meshStandardMaterial color="#5C3A21" roughness={0.88} />
       </mesh>
       <mesh position={[0, 0.12, 0]} castShadow>
-        <torusGeometry args={[2.36, 0.075, 8, 36]} />
+        <torusGeometry args={[2.44, 0.075, 8, 28]} />
         <meshStandardMaterial color="#c8a050" roughness={0.78} />
       </mesh>
       <mesh position={[0, -0.23, 0]} castShadow>
-        <torusGeometry args={[2.02, 0.08, 8, 32]} />
+        <torusGeometry args={[2.12, 0.08, 8, 24]} />
         <meshStandardMaterial color="#2a1708" roughness={0.9} />
+      </mesh>
+
+      {/* Low rear/side boundary. The camera-facing front stays open. */}
+      {railingPoints.map(([x, y, z], index) => (
+        <group key={`skills-rail-post-${index}`} position={[x, y, z]}>
+          <mesh castShadow>
+            <cylinderGeometry args={[0.055, 0.07, 0.88, 8]} />
+            <meshStandardMaterial color={index % 2 ? '#f2ead8' : '#8b1f16'} roughness={0.82} />
+          </mesh>
+          <mesh position={[0, 0.47, 0]}>
+            <sphereGeometry args={[0.095, 10, 8]} />
+            <meshStandardMaterial color="#c8a050" roughness={0.55} metalness={0.18} />
+          </mesh>
+        </group>
+      ))}
+      {railingPoints.slice(0, -1).map((point, index) => {
+        const next = railingPoints[index + 1]
+        return (
+          <group key={`skills-rail-line-${index}`}>
+            <RigLine
+              from={[point[0], 0.78, point[2]]}
+              to={[next[0], 0.78, next[2]]}
+              thickness={0.035}
+            />
+            <RigLine
+              from={[point[0], 0.42, point[2]]}
+              to={[next[0], 0.42, next[2]]}
+              thickness={0.025}
+            />
+          </group>
+        )
+      })}
+
+      {/* Front step visually anchors the open entrance and bottom navigation. */}
+      <mesh position={[0, -0.04, 2.46]} castShadow receiveShadow>
+        <boxGeometry args={[1.8, 0.22, 0.62]} />
+        <meshStandardMaterial color="#6b3b18" roughness={0.88} />
+      </mesh>
+      <mesh position={[0, 0.09, 2.44]}>
+        <boxGeometry args={[1.66, 0.06, 0.5]} />
+        <meshStandardMaterial color="#c8a050" roughness={0.6} metalness={0.12} />
       </mesh>
     </group>
   )

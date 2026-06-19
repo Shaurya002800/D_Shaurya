@@ -74,11 +74,11 @@ const SKILL_DATA = {
     foamColor:   '#bff6d2',
 
     skills: [
-      { name: 'JavaScript', iconUrl: ICONS('javascript'), color: '#F7DF1E' },
-      { name: 'TypeScript', iconUrl: ICONS('typescript'), color: '#3178C6' },
-      { name: 'Python',     iconUrl: ICONS('python'),     color: '#3776AB' },
-      { name: 'C++',        iconUrl: ICONS('cplusplus'),  color: '#00599C' },
-      { name: 'Java',       iconUrl: ICONS('openjdk'),    color: '#ED8B00' },
+      { name: 'JavaScript', iconUrl: ICONS('javascript'), color: '#F7DF1E', fallback: 'JS' },
+      { name: 'TypeScript', iconUrl: ICONS('typescript'), color: '#3178C6', fallback: 'TS' },
+      { name: 'Python',     iconUrl: ICONS('python'),     color: '#3776AB', fallback: 'Py' },
+      { name: 'C++',        iconUrl: ICONS('cplusplus'),  color: '#00599C', fallback: 'C++' },
+      { name: 'Java',       iconUrl: ICONS('openjdk'),    color: '#ED8B00', fallback: 'J' },
     ],
     quote: '"I\'ll become the world\'s greatest swordsman!"',
   },
@@ -99,11 +99,11 @@ const SKILL_DATA = {
     foamColor:   '#ffe7a3',
 
     skills: [
-      { name: 'React.js',     iconUrl: ICONS('react'),       color: '#61DAFB' },
-      { name: 'Tailwind CSS', iconUrl: ICONS('tailwindcss'), color: '#38BDF8' },
-      { name: 'Streamlit',    iconUrl: ICONS('streamlit'),   color: '#FF4B4B' },
-      { name: 'Figma',        iconUrl: ICONS('figma'),       color: '#F24E1E' },
-      { name: 'Photoshop',    iconUrl: ICONS('adobephotoshop'), color: '#31A8FF' },
+      { name: 'React.js',     iconUrl: ICONS('react'),       color: '#61DAFB', fallback: 'R' },
+      { name: 'Tailwind CSS', iconUrl: ICONS('tailwindcss'), color: '#38BDF8', fallback: 'TW' },
+      { name: 'Streamlit',    iconUrl: ICONS('streamlit'),   color: '#FF4B4B', fallback: 'S' },
+      { name: 'Figma',        iconUrl: ICONS('figma'),       color: '#F24E1E', fallback: 'F' },
+      { name: 'Photoshop',    iconUrl: ICONS('adobephotoshop'), color: '#31A8FF', fallback: 'PS' },
     ],
     quote: '"Anything worth doing is worth doing well."',
   },
@@ -124,15 +124,15 @@ const SKILL_DATA = {
     foamColor:   '#ffb08f',
 
     skills: [
-      { name: 'LangChain',  iconUrl: ICONS('langchain'),   color: '#1C7B4B' },
-      { name: 'FAISS',      iconUrl: ICONS('meta'),        color: '#7B68EE' },
-      { name: 'XGBoost',    iconUrl: ICONS('scikitlearn'), color: '#337AB7' },
-      { name: 'Groq',       iconUrl: ICONS('groq'),        color: '#F97316' },
-      { name: 'RAG',        iconUrl: ICONS('openai'),      color: '#8B5CF6' },
-      { name: 'TensorFlow', iconUrl: ICONS('tensorflow'),  color: '#FF6F00' },
-      { name: 'Solidity',   iconUrl: ICONS('solidity'),    color: '#9b9b9b' },
-      { name: 'Web3.py',    iconUrl: ICONS('python'),      color: '#F16822' },
-      { name: 'Polygon',    iconUrl: ICONS('polygon'),     color: '#8247E5' },
+      { name: 'LangChain',  iconUrl: ICONS('langchain'),   color: '#1C7B4B', fallback: 'LC' },
+      { name: 'FAISS',      iconUrl: ICONS('meta'),        color: '#7B68EE', fallback: 'FA' },
+      { name: 'XGBoost',    iconUrl: ICONS('scikitlearn'), color: '#337AB7', fallback: 'XG' },
+      { name: 'Groq',       iconUrl: ICONS('groq'),        color: '#F97316', fallback: 'G' },
+      { name: 'RAG',        iconUrl: ICONS('openai'),      color: '#8B5CF6', fallback: 'RAG' },
+      { name: 'TensorFlow', iconUrl: ICONS('tensorflow'),  color: '#FF6F00', fallback: 'TF' },
+      { name: 'Solidity',   iconUrl: ICONS('solidity'),    color: '#9b9b9b', fallback: 'S' },
+      { name: 'Web3.py',    iconUrl: ICONS('python'),      color: '#F16822', fallback: 'W3' },
+      { name: 'Polygon',    iconUrl: ICONS('polygon'),     color: '#8247E5', fallback: 'POLY' },
     ],
     quote: '"A true pirate doesn\'t fear the unknown."',
   },
@@ -153,11 +153,11 @@ const SKILL_DATA = {
     foamColor:   '#ffd1f2',
 
     skills: [
-      { name: 'Git',      iconUrl: ICONS('git'),               color: '#F05032' },
-      { name: 'GitHub',   iconUrl: ICONS('github'),            color: '#ffffff' },
-      { name: 'VS Code',  iconUrl: ICONS('visualstudiocode'),  color: '#007ACC' },
-      { name: 'Cursor',   iconUrl: ICONS('cursor'),            color: '#cccccc' },
-      { name: 'REST API', iconUrl: ICONS('swagger'),           color: '#85EA2D' },
+      { name: 'Git',      iconUrl: ICONS('git'),               color: '#F05032', fallback: 'G' },
+      { name: 'GitHub',   iconUrl: ICONS('github'),            color: '#ffffff', fallback: 'GH' },
+      { name: 'VS Code',  iconUrl: ICONS('visualstudiocode'),  color: '#007ACC', fallback: 'VS' },
+      { name: 'Cursor',   iconUrl: ICONS('cursor'),            color: '#cccccc', fallback: 'C' },
+      { name: 'REST API', iconUrl: ICONS('swagger'),           color: '#85EA2D', fallback: 'API' },
     ],
     quote: '"Those who stand at the top determine what\'s wrong and right."',
   },
@@ -180,8 +180,8 @@ function RealWorldTint({ data, visible, transitioning }) {
       position: 'absolute',
       inset: 0,
       zIndex: 0,
-      opacity: visible ? 0.86 : 0,
-      transition: transitioning ? 'opacity 0.6s ease' : 'none',
+      opacity: visible ? 0.76 : 0,
+      transition: transitioning ? 'opacity 0.55s ease' : 'opacity 1.15s ease',
       pointerEvents: 'none',
       background: `
         radial-gradient(circle at 50% 35%, ${data.accentColor}55 0%, transparent 30%),
@@ -215,23 +215,31 @@ function HorizonDepthHaze({ data, visible, transitioning }) {
   )
 }
 
-function FloatingCharacter({ data, visible, transitioning, children }) {
+function FloatingCharacter({
+  data,
+  characterVisible,
+  boardVisible,
+  transitioning,
+  children,
+}) {
   return (
     <div style={{
       position:   'absolute',
       top:        'clamp(70px, 8vh, 118px)',
       left:       '50%',
-      transform:  `translateX(-50%) perspective(1200px) rotateX(1.5deg) scale(${visible ? 1 : 0.96})`,
+      transform:  `translateX(-50%) perspective(1200px) rotateX(1.5deg) translateY(${characterVisible ? '0' : '20px'}) scale(${characterVisible ? 1 : 0.965})`,
       transformOrigin: '50% 45%',
       width:      'clamp(720px, 62vw, 1180px)',
       maxHeight:  'calc(100vh - 210px)',
-      opacity:    visible ? 1 : 0,
-      transition: transitioning ? 'opacity 0.5s ease, transform 0.55s ease' : 'none',
+      opacity:    characterVisible ? 1 : 0,
+      transition: transitioning
+        ? 'opacity 0.48s ease, transform 0.52s ease'
+        : 'opacity 0.8s ease, transform 0.9s cubic-bezier(0.22,1,0.36,1)',
       zIndex:     3,
-      animation:  visible ? 'oceanMirage 8s ease-in-out infinite' : 'none',
+      animation:  characterVisible ? 'oceanMirage 8s ease-in-out infinite' : 'none',
       pointerEvents: 'none',
-      WebkitMaskImage: 'linear-gradient(180deg, #000 0%, #000 76%, rgba(0,0,0,0.82) 89%, transparent 100%)',
-      maskImage:       'linear-gradient(180deg, #000 0%, #000 76%, rgba(0,0,0,0.82) 89%, transparent 100%)',
+      WebkitMaskImage: 'linear-gradient(180deg, #000 0%, #000 82%, rgba(0,0,0,0.92) 94%, rgba(0,0,0,0.6) 98%, transparent 100%)',
+      maskImage:       'linear-gradient(180deg, #000 0%, #000 82%, rgba(0,0,0,0.92) 94%, rgba(0,0,0,0.6) 98%, transparent 100%)',
     }}>
       <div style={{ position: 'relative', width: '100%' }}>
         <img
@@ -241,8 +249,9 @@ function FloatingCharacter({ data, visible, transitioning, children }) {
             width: '100%',
             height: 'auto',
             display: 'block',
-            opacity: 0.54,
+            opacity: characterVisible ? 0.54 : 0,
             filter: `saturate(1.18) contrast(1.04) drop-shadow(0 0 30px ${data.glowColor})`,
+            transition: 'opacity 0.8s ease',
           }}
         />
         <div style={{
@@ -255,7 +264,47 @@ function FloatingCharacter({ data, visible, transitioning, children }) {
           background: `radial-gradient(circle at 50% 30%, rgba(255,255,255,0.06), transparent 64%), linear-gradient(135deg, ${data.accentColor}0a, rgba(255,255,255,0.018))`,
           boxShadow: `inset 0 0 18px rgba(255,255,255,0.07), 0 0 28px ${data.glowColor}`,
           pointerEvents: 'none',
+          opacity: boardVisible ? 1 : 0,
+          transform: boardVisible ? 'scale(1)' : 'scale(0.94)',
+          transformOrigin: '50% 55%',
+          transition: transitioning
+            ? 'opacity 0.35s ease, transform 0.4s ease'
+            : 'opacity 0.65s ease, transform 0.75s cubic-bezier(0.22,1,0.36,1)',
         }} />
+        <div style={{
+          position: 'absolute',
+          left: data.boardRect.left,
+          top: data.boardRect.top,
+          width: data.boardRect.width,
+          height: data.boardRect.height,
+          borderRadius: '14px',
+          border: '1.5px solid rgba(255,255,255,0.42)',
+          background: 'rgba(255,255,255,0.02)',
+          boxShadow: `inset 0 0 0 1px rgba(255,255,255,0.06), 0 0 24px ${data.glowColor}`,
+          pointerEvents: 'none',
+          opacity: boardVisible ? 1 : 0,
+          transition: transitioning
+            ? 'opacity 0.35s ease'
+            : 'opacity 0.65s ease',
+        }}>
+          {['tl', 'tr', 'bl', 'br'].map((corner) => (
+            <span
+              key={corner}
+              style={{
+                position: 'absolute',
+                width: '12px',
+                height: '12px',
+                borderRadius: '50%',
+                background: 'rgba(255,236,190,0.75)',
+                boxShadow: `0 0 10px ${data.accentColor}99`,
+                top: corner.includes('t') ? '-6px' : 'auto',
+                bottom: corner.includes('b') ? '-6px' : 'auto',
+                left: corner.includes('l') ? '-6px' : 'auto',
+                right: corner.includes('r') ? '-6px' : 'auto',
+              }}
+            />
+          ))}
+        </div>
         <div style={{
           position: 'absolute',
           left:   data.boardRect.left,
@@ -263,6 +312,10 @@ function FloatingCharacter({ data, visible, transitioning, children }) {
           width:  data.boardRect.width,
           height: data.boardRect.height,
           pointerEvents: 'auto',
+          opacity: boardVisible ? 1 : 0,
+          transform: boardVisible ? 'scale(1)' : 'scale(0.96)',
+          transformOrigin: '50% 55%',
+          transition: 'opacity 0.55s ease, transform 0.65s cubic-bezier(0.22,1,0.36,1)',
         }}>
           {children}
         </div>
@@ -278,13 +331,14 @@ function FloatingCharacter({ data, visible, transitioning, children }) {
 function WantedCard({ skill, index, visible, accentColor, delay = 0 }) {
   const [hovered, setHovered] = useState(false)
   const [entered, setEntered] = useState(false)
+  const [iconError, setIconError] = useState(false)
 
   useEffect(() => {
     if (!visible) {
       const t = setTimeout(() => setEntered(false), 0)
       return () => clearTimeout(t)
     }
-    const t = setTimeout(() => setEntered(true), delay + index * 70)
+    const t = setTimeout(() => setEntered(true), delay + index * 105)
     return () => clearTimeout(t)
   }, [visible, delay, index])
 
@@ -308,7 +362,7 @@ function WantedCard({ skill, index, visible, accentColor, delay = 0 }) {
           ? hovered ? 'scale(1.08) translateY(-3px)' : 'scale(1) translateY(0)'
           : 'scale(0.7) translateY(16px)',
         opacity:        entered ? 1 : 0,
-        transition:     'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',
+        transition:     'all 0.46s cubic-bezier(0.22,1,0.36,1)',
         boxShadow:      hovered
           ? `0 4px 12px rgba(0,0,0,0.45), 0 0 8px ${accentColor}44`
           : '0 2px 7px rgba(0,0,0,0.35)',
@@ -360,19 +414,37 @@ function WantedCard({ skill, index, visible, accentColor, delay = 0 }) {
         transform:      hovered ? 'scale(1.1)' : 'scale(1)',
         padding:        '4px',
       }}>
-        <div style={{
-          width:  '100%',
-          height: '100%',
-          backgroundColor: skill.color,
-          WebkitMaskImage: `url(${skill.iconUrl})`,
-          maskImage:       `url(${skill.iconUrl})`,
-          WebkitMaskSize:  'contain',
-          maskSize:        'contain',
-          WebkitMaskRepeat:'no-repeat',
-          maskRepeat:      'no-repeat',
-          WebkitMaskPosition: 'center',
-          maskPosition:       'center',
-        }} />
+        {skill.iconUrl && !iconError ? (
+          <img
+            src={skill.iconUrl}
+            alt=""
+            onError={() => setIconError(true)}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              display: 'block',
+              filter: skill.name === 'GitHub' ? 'invert(1)' : `drop-shadow(0 0 6px ${skill.color}55)`,
+            }}
+          />
+        ) : (
+          <div style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            fontFamily: '"Pirata One", cursive',
+            fontSize: skill.fallback?.length > 2 ? '0.8rem' : '1rem',
+            lineHeight: 1,
+            color: skill.color,
+            textShadow: `0 0 8px ${skill.color}55`,
+            letterSpacing: '0.04em',
+          }}>
+            {skill.fallback}
+          </div>
+        )}
       </div>
 
       {/* Skill name */}
@@ -396,15 +468,20 @@ function WantedCard({ skill, index, visible, accentColor, delay = 0 }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function SkillPanel({ data, visible }) {
+  const [titleIn, setTitleIn] = useState(false)
   const [cardsIn, setCardsIn] = useState(false)
 
   useEffect(() => {
     if (visible) {
-      const t = setTimeout(() => setCardsIn(true), 250)
-      return () => clearTimeout(t)
+      const titleTimer = setTimeout(() => setTitleIn(true), 100)
+      const cardsTimer = setTimeout(() => setCardsIn(true), 470)
+      return () => {
+        clearTimeout(titleTimer)
+        clearTimeout(cardsTimer)
+      }
     }
-    const t = setTimeout(() => setCardsIn(false), 0)
-    return () => clearTimeout(t)
+    setTitleIn(false)
+    setCardsIn(false)
   }, [visible])
 
   return (
@@ -419,12 +496,15 @@ function SkillPanel({ data, visible }) {
       boxSizing:      'border-box',
       transform:      visible ? 'scale(1)' : 'scale(0.96)',
       opacity:        visible ? 1 : 0,
-      transition:     'opacity 0.35s ease, transform 0.45s cubic-bezier(0.22,1,0.36,1)',
+      transition:     'opacity 0.5s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1)',
     }}>
       {/* Title */}
       <div style={{
         textAlign:     'center',
         marginBottom:  'clamp(8px, 1.4vh, 16px)',
+        opacity:       titleIn ? 1 : 0,
+        transform:     titleIn ? 'translateY(0)' : 'translateY(10px)',
+        transition:    'opacity 0.55s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1)',
       }}>
         <div style={{
           fontFamily:    '"Pirata One", cursive',
@@ -435,6 +515,16 @@ function SkillPanel({ data, visible }) {
           marginBottom:  '3px',
         }}>
           {data.title}
+        </div>
+        <div style={{
+          fontFamily: '"IM Fell English", Georgia, serif',
+          fontSize: 'clamp(8px, 0.72vw, 11px)',
+          color: 'rgba(255,255,255,0.5)',
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
+          marginBottom: '5px',
+        }}>
+          {data.subtitle}
         </div>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
@@ -476,7 +566,8 @@ function SkillPanel({ data, visible }) {
         letterSpacing:'0.03em',
         lineHeight:   1.4,
         opacity:      cardsIn ? 1 : 0,
-        transition:   'opacity 0.5s ease 0.5s',
+        transform:    cardsIn ? 'translateY(0)' : 'translateY(8px)',
+        transition:   'opacity 0.55s ease 0.7s, transform 0.55s ease 0.7s',
         maxWidth:     '90%',
       }}>
         {data.quote}
@@ -740,8 +831,13 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
   const [currentDir,    setCurrentDir]    = useState(DIRECTIONS.NORTH)
   const [transitioning, setTransitioning] = useState(false)
   const [overlayIn,     setOverlayIn]     = useState(false)
+  const [characterIn,   setCharacterIn]   = useState(false)
+  const [boardIn,       setBoardIn]       = useState(false)
   const [contentIn,     setContentIn]     = useState(false)
+  const [controlsIn,    setControlsIn]    = useState(false)
+  const [sceneIn,       setSceneIn]       = useState(false)
   const transitionTimer = useRef(null)
+  const settleTimer = useRef(null)
 
   const data = SKILL_DATA[currentDir]
 
@@ -754,6 +850,7 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
 
     setTransitioning(true)
     setContentIn(false)
+    setBoardIn(false)
 
     const currIdx = DIR_ORDER.indexOf(currentDir)
     let nextDir
@@ -768,27 +865,51 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
     }
 
     if (transitionTimer.current) clearTimeout(transitionTimer.current)
+    if (settleTimer.current) clearTimeout(settleTimer.current)
 
     transitionTimer.current = setTimeout(() => {
       setCurrentDir(nextDir)
-      setTimeout(() => {
+      setBoardIn(true)
+      settleTimer.current = setTimeout(() => {
         setContentIn(true)
         setTransitioning(false)
-      }, 120)
+      }, 260)
     }, 300)
   }, [currentDir, transitioning])
 
   useEffect(() => {
+    const timers = []
+
     if (active) {
-      const t1 = setTimeout(() => setOverlayIn(true), 400)
-      const t2 = setTimeout(() => setContentIn(true), 900)
-      return () => { clearTimeout(t1); clearTimeout(t2) }
+      setOverlayIn(false)
+      setCharacterIn(false)
+      setBoardIn(false)
+      setContentIn(false)
+      setControlsIn(false)
+      setSceneIn(false)
+
+      timers.push(setTimeout(() => setOverlayIn(true), 280))
+      timers.push(setTimeout(() => setCharacterIn(true), 980))
+      timers.push(setTimeout(() => setBoardIn(true), 1480))
+      timers.push(setTimeout(() => setSceneIn(true), 1560))
+      timers.push(setTimeout(() => setContentIn(true), 1860))
+      timers.push(setTimeout(() => setControlsIn(true), 2360))
     } else {
-      const t1 = setTimeout(() => setContentIn(false), 0)
-      const t2 = setTimeout(() => setOverlayIn(false), 400)
-      return () => { clearTimeout(t1); clearTimeout(t2) }
+      setControlsIn(false)
+      setContentIn(false)
+      setBoardIn(false)
+      setCharacterIn(false)
+      setSceneIn(false)
+      timers.push(setTimeout(() => setOverlayIn(false), 280))
     }
+
+    return () => timers.forEach(clearTimeout)
   }, [active])
+
+  useEffect(() => () => {
+    if (transitionTimer.current) clearTimeout(transitionTimer.current)
+    if (settleTimer.current) clearTimeout(settleTimer.current)
+  }, [])
 
   useEffect(() => {
     const fn = (e) => { if (e.key === 'Escape' && active) onClose() }
@@ -815,17 +936,22 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
       overflow: 'hidden',
       background: 'transparent',
     }}>
-      <RealWorldTint data={data} visible={overlayIn} transitioning={transitioning} />
+      <RealWorldTint data={data} visible={sceneIn} transitioning={transitioning} />
 
-      <FloatingCharacter data={data} visible={contentIn} transitioning={transitioning}>
+      <FloatingCharacter
+        data={data}
+        characterVisible={characterIn}
+        boardVisible={boardIn}
+        transitioning={transitioning}
+      >
         <SkillPanel data={data} visible={contentIn} />
       </FloatingCharacter>
-      <HorizonDepthHaze data={data} visible={contentIn} transitioning={transitioning} />
+      <HorizonDepthHaze data={data} visible={sceneIn} transitioning={transitioning} />
 
-      <CharacterBadge data={data} visible={contentIn} />
+      <CharacterBadge data={data} visible={boardIn} />
 
-      <DirectionNavigator current={currentDir} onRotate={handleRotate} data={data} visible={contentIn} />
-      <SkillsCloseBtn onClose={onClose} visible={contentIn} accentColor={data.accentColor} />
+      <DirectionNavigator current={currentDir} onRotate={handleRotate} data={data} visible={controlsIn} />
+      <SkillsCloseBtn onClose={onClose} visible={controlsIn} accentColor={data.accentColor} />
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Pirata+One&family=IM+Fell+English:ital@0;1&display=swap');
