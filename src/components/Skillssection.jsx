@@ -1,46 +1,10 @@
-/**
- * ═══════════════════════════════════════════════════════════════════════════
- * SKILLS SECTION — Grand Line Portfolio (Crow's Nest Ocean View)
- * ═══════════════════════════════════════════════════════════════════════════
- *
- * FLOW:
- *   1. User clicks "Skills" nav wheel OR Luffy climbs the ladder (E key)
- *   2. Camera GSAP transitions from deck → crow's nest, looking OUT at the ocean
- *   3. Full-screen ocean/sky overlay appears, vibe-tinted per direction
- *   4. A One Piece character appears floating in the sky, holding a
- *      transparent glass board (the PNG already contains the board)
- *   5. Skill "WANTED" cards render INSIDE the transparent rectangle of the
- *      board art, positioned via per-direction boardRect coordinates
- *   6. Arrow buttons / bottom compass rotate between N / E / S / W
- *
- * 4 DIRECTIONS:
- *   NORTH — Zoro    — Programming Languages — dark green storm sky
- *   EAST  — Sanji   — Frontend & Design      — golden sunset sky
- *   WEST  — Shanks  — AI / ML & Blockchain   — blood red sky
- *   SOUTH — Boa     — Dev Tools & Integration— pink / magenta sky
- *
- * IMAGES EXPECTED IN /public/characters/:
- *   zoro.png, sanji.png, shanks.png, boa.png
- *
- * ═══════════════════════════════════════════════════════════════════════════
- */
-
-import {
-  useRef,
-  useEffect,
-  useState,
-  useCallback,
-} from 'react'
-
-// ─────────────────────────────────────────────────────────────────────────────
-// DIRECTIONS
-// ─────────────────────────────────────────────────────────────────────────────
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 const DIRECTIONS = {
   NORTH: 'north',
-  EAST:  'east',
-  WEST:  'west',
+  EAST: 'east',
   SOUTH: 'south',
+  WEST: 'west',
 }
 
 const DIR_ORDER = [
@@ -50,930 +14,1251 @@ const DIR_ORDER = [
   DIRECTIONS.WEST,
 ]
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SKILL DATA
-// ─────────────────────────────────────────────────────────────────────────────
-
 const ICONS = (name) => `https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/${name}.svg`
 
 const SKILL_DATA = {
   [DIRECTIONS.NORTH]: {
     character: 'ZORO',
-    title:     'PROGRAMMING LANGUAGES',
-    subtitle:  "The Swordsman's Arsenal",
+    title: 'PROGRAMMING LANGUAGES',
+    subtitle: "The Swordsman's Arsenal",
+    bearing: 'NORTH BLUE',
+    symbol: '三',
     characterImg: '/characters/zoro.png',
-
-    // % position of the transparent board area WITHIN the character image
     boardRect: { left: '9.5%', top: '28%', width: '80.5%', height: '58%' },
-
-    skyGradient: 'linear-gradient(180deg, #050f0a 0%, #0e2718 22%, #163d26 45%, #1f5536 68%, #0d2418 100%)',
-    glowColor:   'rgba(34,180,80,0.28)',
-    titleColor:  '#9dffc4',
-    accentColor: '#3ddc84',
-    seaColor:    '#0f5d4c',
-    foamColor:   '#bff6d2',
-
+    accentColor: '#54e58a',
+    accentSoft: 'rgba(84,229,138,0.22)',
+    titleColor: '#b8ffd0',
+    atmosphere: 'rgba(23,92,59,0.24)',
+    quote: '"I’ll become the world’s greatest swordsman."',
+    effect: 'slashes',
     skills: [
-      { name: 'JavaScript', iconUrl: ICONS('javascript'), color: '#F7DF1E', fallback: 'JS' },
-      { name: 'TypeScript', iconUrl: ICONS('typescript'), color: '#3178C6', fallback: 'TS' },
-      { name: 'Python',     iconUrl: ICONS('python'),     color: '#3776AB', fallback: 'Py' },
-      { name: 'C++',        iconUrl: ICONS('cplusplus'),  color: '#00599C', fallback: 'C++' },
-      { name: 'Java',       iconUrl: ICONS('openjdk'),    color: '#ED8B00', fallback: 'J' },
+      { name: 'JavaScript', iconUrl: ICONS('javascript'), color: '#F7DF1E', fallback: 'JS', level: 92, bounty: '92M', note: 'Interactive frontends, game logic, and expressive web experiences.' },
+      { name: 'TypeScript', iconUrl: ICONS('typescript'), color: '#3178C6', fallback: 'TS', level: 86, bounty: '86M', note: 'Reliable application architecture with safer, scalable code.' },
+      { name: 'Python', iconUrl: ICONS('python'), color: '#3776AB', fallback: 'Py', level: 90, bounty: '90M', note: 'AI systems, automation, data workflows, and rapid prototypes.' },
+      { name: 'C++', iconUrl: ICONS('cplusplus'), color: '#00599C', fallback: 'C++', level: 72, bounty: '72M', note: 'Performance-minded programming and core problem solving.' },
+      { name: 'Java', iconUrl: ICONS('openjdk'), color: '#ED8B00', fallback: 'J', level: 78, bounty: '78M', note: 'Object-oriented systems, APIs, and production fundamentals.' },
     ],
-    quote: '"I\'ll become the world\'s greatest swordsman!"',
   },
-
   [DIRECTIONS.EAST]: {
     character: 'SANJI',
-    title:     'FRONTEND & DESIGN',
-    subtitle:  "The Chef's Craft",
+    title: 'FRONTEND & DESIGN',
+    subtitle: "The Chef's Craft",
+    bearing: 'EAST BLUE',
+    symbol: '火',
     characterImg: '/characters/sanji.png',
-
     boardRect: { left: '10%', top: '28%', width: '80%', height: '57%' },
-
-    skyGradient: 'linear-gradient(180deg, #1a0f00 0%, #4a2800 22%, #9a5400 45%, #d98e1a 68%, #f6d27a 100%)',
-    glowColor:   'rgba(255,180,30,0.32)',
-    titleColor:  '#ffd97a',
-    accentColor: '#f0b830',
-    seaColor:    '#7f5c1a',
-    foamColor:   '#ffe7a3',
-
+    accentColor: '#ffbf47',
+    accentSoft: 'rgba(255,191,71,0.22)',
+    titleColor: '#ffe1a2',
+    atmosphere: 'rgba(141,77,18,0.22)',
+    quote: '"A first-class cook never wastes the ingredients."',
+    effect: 'embers',
     skills: [
-      { name: 'React.js',     iconUrl: ICONS('react'),       color: '#61DAFB', fallback: 'R' },
-      { name: 'Tailwind CSS', iconUrl: ICONS('tailwindcss'), color: '#38BDF8', fallback: 'TW' },
-      { name: 'Streamlit',    iconUrl: ICONS('streamlit'),   color: '#FF4B4B', fallback: 'S' },
-      { name: 'Figma',        iconUrl: ICONS('figma'),       color: '#F24E1E', fallback: 'F' },
-      { name: 'Photoshop',    iconUrl: ICONS('adobephotoshop'), color: '#31A8FF', fallback: 'PS' },
+      { name: 'React.js', iconUrl: ICONS('react'), color: '#61DAFB', fallback: 'R', level: 92, bounty: '92M', note: 'Component systems, stateful interfaces, and polished interactions.' },
+      { name: 'Tailwind CSS', iconUrl: ICONS('tailwindcss'), color: '#38BDF8', fallback: 'TW', level: 88, bounty: '88M', note: 'Fast, consistent visual systems with responsive precision.' },
+      { name: 'Streamlit', iconUrl: ICONS('streamlit'), color: '#FF4B4B', fallback: 'S', level: 82, bounty: '82M', note: 'Useful data and AI products shipped from idea to interface quickly.' },
+      { name: 'Figma', iconUrl: ICONS('figma'), color: '#F24E1E', fallback: 'F', level: 78, bounty: '78M', note: 'Interface exploration, prototypes, visual hierarchy, and handoff.' },
+      { name: 'Photoshop', iconUrl: ICONS('adobephotoshop'), color: '#31A8FF', fallback: 'PS', level: 70, bounty: '70M', note: 'Asset preparation, image treatment, and atmospheric compositions.' },
     ],
-    quote: '"Anything worth doing is worth doing well."',
   },
-
-  [DIRECTIONS.WEST]: {
-    character: 'SHANKS',
-    title:     'AI / ML & BLOCKCHAIN',
-    subtitle:  "The Emperor's Power",
-    characterImg: '/characters/shanks.png',
-
-    boardRect: { left: '16%', top: '30%', width: '74%', height: '59%' },
-
-    skyGradient: 'linear-gradient(180deg, #100000 0%, #3d0a0a 22%, #7d1414 45%, #c52424 68%, #ef5050 100%)',
-    glowColor:   'rgba(255,50,50,0.28)',
-    titleColor:  '#ffb0b0',
-    accentColor: '#e05050',
-    seaColor:    '#661414',
-    foamColor:   '#ffb08f',
-
-    skills: [
-      { name: 'LangChain',  iconUrl: ICONS('langchain'),   color: '#1C7B4B', fallback: 'LC' },
-      { name: 'FAISS',      iconUrl: ICONS('meta'),        color: '#7B68EE', fallback: 'FA' },
-      { name: 'XGBoost',    iconUrl: ICONS('scikitlearn'), color: '#337AB7', fallback: 'XG' },
-      { name: 'Groq',       iconUrl: ICONS('groq'),        color: '#F97316', fallback: 'G' },
-      { name: 'RAG',        iconUrl: ICONS('openai'),      color: '#8B5CF6', fallback: 'RAG' },
-      { name: 'TensorFlow', iconUrl: ICONS('tensorflow'),  color: '#FF6F00', fallback: 'TF' },
-      { name: 'Solidity',   iconUrl: ICONS('solidity'),    color: '#9b9b9b', fallback: 'S' },
-      { name: 'Web3.py',    iconUrl: ICONS('python'),      color: '#F16822', fallback: 'W3' },
-      { name: 'Polygon',    iconUrl: ICONS('polygon'),     color: '#8247E5', fallback: 'POLY' },
-    ],
-    quote: '"A true pirate doesn\'t fear the unknown."',
-  },
-
   [DIRECTIONS.SOUTH]: {
     character: 'BOA HANCOCK',
-    title:     'DEVELOPER TOOLS & INTEGRATION',
-    subtitle:  "The Empress's Domain",
+    title: 'DEV TOOLS & INTEGRATION',
+    subtitle: "The Empress's Domain",
+    bearing: 'CALM BELT',
+    symbol: '心',
     characterImg: '/characters/boa.png',
-
     boardRect: { left: '15.5%', top: '27%', width: '74%', height: '58%' },
-
-    skyGradient: 'linear-gradient(180deg, #110014 0%, #3d0a32 22%, #8a1268 45%, #d12aa8 68%, #ff8fe0 100%)',
-    glowColor:   'rgba(255,100,220,0.28)',
-    titleColor:  '#ffc2ee',
-    accentColor: '#e050c0',
-    seaColor:    '#8b1b72',
-    foamColor:   '#ffd1f2',
-
+    accentColor: '#ef77c8',
+    accentSoft: 'rgba(239,119,200,0.22)',
+    titleColor: '#ffd0ef',
+    atmosphere: 'rgba(118,25,91,0.20)',
+    quote: '"Beauty is power, but precision makes it useful."',
+    effect: 'petals',
     skills: [
-      { name: 'Git',      iconUrl: ICONS('git'),               color: '#F05032', fallback: 'G' },
-      { name: 'GitHub',   iconUrl: ICONS('github'),            color: '#ffffff', fallback: 'GH' },
-      { name: 'VS Code',  iconUrl: ICONS('visualstudiocode'),  color: '#007ACC', fallback: 'VS' },
-      { name: 'Cursor',   iconUrl: ICONS('cursor'),            color: '#cccccc', fallback: 'C' },
-      { name: 'REST API', iconUrl: ICONS('swagger'),           color: '#85EA2D', fallback: 'API' },
+      { name: 'Git', iconUrl: ICONS('git'), color: '#F05032', fallback: 'G', level: 88, bounty: '88M', note: 'Clean histories, safe collaboration, and deliberate delivery.' },
+      { name: 'GitHub', iconUrl: ICONS('github'), color: '#1f2328', fallback: 'GH', level: 90, bounty: '90M', note: 'Repository workflows, reviews, automation, and project stewardship.' },
+      { name: 'VS Code', iconUrl: ICONS('visualstudiocode'), color: '#007ACC', fallback: 'VS', level: 92, bounty: '92M', note: 'A tuned development cockpit for focused, efficient building.' },
+      { name: 'Cursor', iconUrl: ICONS('cursor'), color: '#333333', fallback: 'C', level: 84, bounty: '84M', note: 'AI-assisted iteration while keeping engineering judgment in control.' },
+      { name: 'REST API', iconUrl: ICONS('swagger'), color: '#65b93c', fallback: 'API', level: 86, bounty: '86M', note: 'Clear contracts connecting products, services, and real-world data.' },
     ],
-    quote: '"Those who stand at the top determine what\'s wrong and right."',
+  },
+  [DIRECTIONS.WEST]: {
+    character: 'SHANKS',
+    title: 'AI / ML & BLOCKCHAIN',
+    subtitle: "The Emperor's Power",
+    bearing: 'NEW WORLD',
+    symbol: '覇',
+    characterImg: '/characters/shanks.png',
+    boardRect: { left: '16%', top: '30%', width: '74%', height: '59%' },
+    accentColor: '#ef6161',
+    accentSoft: 'rgba(239,97,97,0.22)',
+    titleColor: '#ffc3c3',
+    atmosphere: 'rgba(116,22,22,0.22)',
+    quote: '"The future is worth betting an arm on."',
+    effect: 'haki',
+    skills: [
+      { name: 'LangChain', iconUrl: ICONS('langchain'), color: '#1C7B4B', fallback: 'LC', level: 88, bounty: '88M', note: 'Composable LLM workflows, tools, memory, and grounded applications.' },
+      { name: 'FAISS', iconUrl: ICONS('meta'), color: '#6655ee', fallback: 'FA', level: 82, bounty: '82M', note: 'Fast semantic retrieval over meaningful knowledge collections.' },
+      { name: 'XGBoost', iconUrl: ICONS('scikitlearn'), color: '#337AB7', fallback: 'XG', level: 80, bounty: '80M', note: 'Strong tabular machine-learning baselines and practical prediction.' },
+      { name: 'Groq', iconUrl: ICONS('groq'), color: '#F97316', fallback: 'G', level: 84, bounty: '84M', note: 'Low-latency inference for responsive AI product experiences.' },
+      { name: 'RAG', iconUrl: ICONS('openai'), color: '#7356d8', fallback: 'RAG', level: 90, bounty: '90M', note: 'Evidence-grounded answers backed by retrieval and evaluation.' },
+      { name: 'TensorFlow', iconUrl: ICONS('tensorflow'), color: '#FF6F00', fallback: 'TF', level: 76, bounty: '76M', note: 'Model experimentation and dependable deep-learning foundations.' },
+      { name: 'Solidity', iconUrl: ICONS('solidity'), color: '#666666', fallback: 'S', level: 70, bounty: '70M', note: 'Smart-contract fundamentals and decentralized application logic.' },
+      { name: 'Web3.py', iconUrl: ICONS('python'), color: '#F16822', fallback: 'W3', level: 74, bounty: '74M', note: 'Python integrations for chains, contracts, and transaction workflows.' },
+      { name: 'Polygon', iconUrl: ICONS('polygon'), color: '#8247E5', fallback: 'POLY', level: 72, bounty: '72M', note: 'Scalable EVM application patterns and ecosystem integrations.' },
+    ],
   },
 }
 
 const DIR_META = [
-  { dir: DIRECTIONS.NORTH, compass: '↑', shortName: 'Languages' },
-  { dir: DIRECTIONS.EAST,  compass: '→', shortName: 'Frontend'  },
-  { dir: DIRECTIONS.SOUTH, compass: '↓', shortName: 'Dev Tools' },
-  { dir: DIRECTIONS.WEST,  compass: '←', shortName: 'AI / ML'   },
+  { dir: DIRECTIONS.NORTH, compass: 'N', shortName: 'Languages' },
+  { dir: DIRECTIONS.EAST, compass: 'E', shortName: 'Frontend' },
+  { dir: DIRECTIONS.SOUTH, compass: 'S', shortName: 'Dev Tools' },
+  { dir: DIRECTIONS.WEST, compass: 'W', shortName: 'AI / ML' },
 ]
 
-// ─────────────────────────────────────────────────────────────────────────────
-// CHARACTER — floating in the sky, holding the transparent skill board
-// ─────────────────────────────────────────────────────────────────────────────
-
-function RealWorldTint({ data, visible, transitioning }) {
+function Atmosphere({ data, visible, turning }) {
   return (
-    <div style={{
-      position: 'absolute',
-      inset: 0,
-      zIndex: 0,
-      opacity: visible ? 0.76 : 0,
-      transition: transitioning ? 'opacity 0.55s ease' : 'opacity 1.15s ease',
-      pointerEvents: 'none',
-      background: `
-        radial-gradient(circle at 50% 35%, ${data.accentColor}55 0%, transparent 30%),
-        linear-gradient(180deg, ${data.seaColor}82 0%, ${data.accentColor}44 48%, ${data.seaColor}88 100%),
-        linear-gradient(90deg, rgba(0,0,0,0.30), transparent 28%, transparent 72%, rgba(0,0,0,0.30))
-      `,
-      mixBlendMode: 'color',
-    }} />
-  )
-}
-
-function HorizonDepthHaze({ data, visible, transitioning }) {
-  return (
-    <div style={{
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      top: '46%',
-      height: '28%',
-      zIndex: 2,
-      opacity: visible ? 0.28 : 0,
-      transition: transitioning ? 'opacity 0.6s ease' : 'none',
-      pointerEvents: 'none',
-      background: `
-        linear-gradient(180deg, transparent 0%, rgba(220,238,244,0.22) 35%, rgba(185,220,226,0.42) 62%, transparent 100%),
-        radial-gradient(ellipse at 50% 48%, ${data.accentColor}20 0%, transparent 58%)
-      `,
-      filter: 'blur(10px)',
-      mixBlendMode: 'screen',
-    }} />
-  )
-}
-
-function FloatingCharacter({
-  data,
-  characterVisible,
-  boardVisible,
-  transitioning,
-  children,
-}) {
-  return (
-    <div style={{
-      position:   'absolute',
-      top:        'clamp(70px, 8vh, 118px)',
-      left:       '50%',
-      transform:  `translateX(-50%) perspective(1200px) rotateX(1.5deg) translateY(${characterVisible ? '0' : '20px'}) scale(${characterVisible ? 1 : 0.965})`,
-      transformOrigin: '50% 45%',
-      width:      'clamp(720px, 62vw, 1180px)',
-      maxHeight:  'calc(100vh - 210px)',
-      opacity:    characterVisible ? 1 : 0,
-      transition: transitioning
-        ? 'opacity 0.48s ease, transform 0.52s ease'
-        : 'opacity 0.8s ease, transform 0.9s cubic-bezier(0.22,1,0.36,1)',
-      zIndex:     3,
-      animation:  characterVisible ? 'oceanMirage 8s ease-in-out infinite' : 'none',
-      pointerEvents: 'none',
-      WebkitMaskImage: 'linear-gradient(180deg, #000 0%, #000 82%, rgba(0,0,0,0.92) 94%, rgba(0,0,0,0.6) 98%, transparent 100%)',
-      maskImage:       'linear-gradient(180deg, #000 0%, #000 82%, rgba(0,0,0,0.92) 94%, rgba(0,0,0,0.6) 98%, transparent 100%)',
-    }}>
-      <div style={{ position: 'relative', width: '100%' }}>
-        <img
-          src={data.characterImg}
-          alt={data.character}
-          style={{
-            width: '100%',
-            height: 'auto',
-            display: 'block',
-            opacity: characterVisible ? 0.54 : 0,
-            filter: `saturate(1.18) contrast(1.04) drop-shadow(0 0 30px ${data.glowColor})`,
-            transition: 'opacity 0.8s ease',
-          }}
-        />
-        <div style={{
-          position: 'absolute',
-          left: data.boardRect.left,
-          top: data.boardRect.top,
-          width: data.boardRect.width,
-          height: data.boardRect.height,
-          borderRadius: '14px',
-          background: `radial-gradient(circle at 50% 30%, rgba(255,255,255,0.06), transparent 64%), linear-gradient(135deg, ${data.accentColor}0a, rgba(255,255,255,0.018))`,
-          boxShadow: `inset 0 0 18px rgba(255,255,255,0.07), 0 0 28px ${data.glowColor}`,
-          pointerEvents: 'none',
-          opacity: boardVisible ? 1 : 0,
-          transform: boardVisible ? 'scale(1)' : 'scale(0.94)',
-          transformOrigin: '50% 55%',
-          transition: transitioning
-            ? 'opacity 0.35s ease, transform 0.4s ease'
-            : 'opacity 0.65s ease, transform 0.75s cubic-bezier(0.22,1,0.36,1)',
-        }} />
-        <div style={{
-          position: 'absolute',
-          left: data.boardRect.left,
-          top: data.boardRect.top,
-          width: data.boardRect.width,
-          height: data.boardRect.height,
-          borderRadius: '14px',
-          border: '1.5px solid rgba(255,255,255,0.42)',
-          background: 'rgba(255,255,255,0.02)',
-          boxShadow: `inset 0 0 0 1px rgba(255,255,255,0.06), 0 0 24px ${data.glowColor}`,
-          pointerEvents: 'none',
-          opacity: boardVisible ? 1 : 0,
-          transition: transitioning
-            ? 'opacity 0.35s ease'
-            : 'opacity 0.65s ease',
-        }}>
-          {['tl', 'tr', 'bl', 'br'].map((corner) => (
-            <span
-              key={corner}
-              style={{
-                position: 'absolute',
-                width: '12px',
-                height: '12px',
-                borderRadius: '50%',
-                background: 'rgba(255,236,190,0.75)',
-                boxShadow: `0 0 10px ${data.accentColor}99`,
-                top: corner.includes('t') ? '-6px' : 'auto',
-                bottom: corner.includes('b') ? '-6px' : 'auto',
-                left: corner.includes('l') ? '-6px' : 'auto',
-                right: corner.includes('r') ? '-6px' : 'auto',
-              }}
-            />
-          ))}
-        </div>
-        <div style={{
-          position: 'absolute',
-          left:   data.boardRect.left,
-          top:    data.boardRect.top,
-          width:  data.boardRect.width,
-          height: data.boardRect.height,
-          pointerEvents: 'auto',
-          opacity: boardVisible ? 1 : 0,
-          transform: boardVisible ? 'scale(1)' : 'scale(0.96)',
-          transformOrigin: '50% 55%',
-          transition: 'opacity 0.55s ease, transform 0.65s cubic-bezier(0.22,1,0.36,1)',
-        }}>
-          {children}
-        </div>
+    <>
+      <div
+        className="skills-atmosphere"
+        style={{
+          opacity: visible ? 1 : 0,
+          background: `
+            radial-gradient(ellipse at 50% 35%, ${data.accentSoft} 0%, transparent 38%),
+            linear-gradient(90deg, rgba(2,8,12,.72), transparent 18%, transparent 82%, rgba(2,8,12,.72)),
+            linear-gradient(180deg, rgba(2,8,12,.22), transparent 50%, rgba(2,8,12,.68))
+          `,
+          transition: turning ? 'opacity .28s ease' : 'opacity 1.2s ease',
+        }}
+      />
+      <div
+        className={`skills-weather skills-weather--${data.effect}`}
+        style={{ opacity: visible ? 1 : 0 }}
+      >
+        {Array.from({ length: 12 }, (_, index) => (
+          <i key={index} style={{ '--i': index }} />
+        ))}
       </div>
-    </div>
+    </>
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// WANTED CARD — individual skill card with real brand logo
-// ─────────────────────────────────────────────────────────────────────────────
-
-function WantedCard({ skill, index, visible, accentColor, delay = 0 }) {
-  const [hovered, setHovered] = useState(false)
-  const [entered, setEntered] = useState(false)
+function WantedCard({ skill, index, visible, accentColor, selected, onSelect }) {
   const [iconError, setIconError] = useState(false)
 
-  useEffect(() => {
-    if (!visible) {
-      const t = setTimeout(() => setEntered(false), 0)
-      return () => clearTimeout(t)
-    }
-    const t = setTimeout(() => setEntered(true), delay + index * 105)
-    return () => clearTimeout(t)
-  }, [visible, delay, index])
-
   return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        display:        'flex',
-        flexDirection:  'column',
-        alignItems:     'center',
-        width: 'clamp(62px, 5.2vw, 92px)',
-        background:     hovered
-          ? 'linear-gradient(160deg, #f5e6cc 0%, #e8d4aa 100%)'
-          : 'linear-gradient(160deg, #f0ddb8 0%, #e0c890 100%)',
-        border:         `1.5px solid ${hovered ? '#8B6914' : 'rgba(139,105,20,0.6)'}`,
-        borderRadius:   '3px 3px 5px 5px',
-        padding:        'clamp(6px, 0.75vw, 10px) clamp(4px, 0.55vw, 7px)',
-        cursor:         'pointer',
-        transform:      entered
-          ? hovered ? 'scale(1.08) translateY(-3px)' : 'scale(1) translateY(0)'
-          : 'scale(0.7) translateY(16px)',
-        opacity:        entered ? 1 : 0,
-        transition:     'all 0.46s cubic-bezier(0.22,1,0.36,1)',
-        boxShadow:      hovered
-          ? `0 4px 12px rgba(0,0,0,0.45), 0 0 8px ${accentColor}44`
-          : '0 2px 7px rgba(0,0,0,0.35)',
-        position:       'relative',
-        overflow:       'hidden',
-      }}
+    <button
+      className={`wanted-card ${visible ? 'wanted-card--visible' : ''} ${selected ? 'wanted-card--selected' : ''}`}
+      style={{ '--delay': `${index * 85}ms`, '--accent': accentColor }}
+      onClick={() => onSelect(skill)}
+      aria-pressed={selected}
+      aria-label={`Inspect ${skill.name}`}
     >
-      {/* Aged paper texture */}
-      <div style={{
-        position:   'absolute',
-        inset:      0,
-        background: `
-          repeating-linear-gradient(0deg, transparent, transparent 4px, rgba(150,110,40,0.04) 4px, rgba(150,110,40,0.04) 5px),
-          repeating-linear-gradient(90deg, transparent, transparent 10px, rgba(150,110,40,0.02) 10px, rgba(150,110,40,0.02) 11px)
-        `,
-        pointerEvents: 'none',
-      }} />
-
-      {/* WANTED text */}
-      <div style={{
-        fontFamily:    '"Pirata One", cursive',
-        fontSize:      'clamp(8px, 0.78vw, 12px)',
-        fontWeight:    700,
-        color:         '#1a0d00',
-        letterSpacing: '0.1em',
-        marginBottom:  'clamp(2px, 0.4vh, 6px)',
-        textAlign:     'center',
-        lineHeight:    1,
-        borderBottom:  '1px solid rgba(80,50,10,0.25)',
-        paddingBottom: 'clamp(2px, 0.3vh, 4px)',
-        width:         '100%',
-      }}>
-        WANTED
-      </div>
-
-      {/* Logo */}
-      <div style={{
-        width:          'clamp(34px, 3.4vw, 58px)',
-        height:         'clamp(34px, 3.4vw, 58px)',
-        borderRadius:   '4px',
-        display:        'flex',
-        alignItems:     'center',
-        justifyContent: 'center',
-        marginBottom:   'clamp(3px, 0.4vh, 6px)',
-        border:         '1px solid rgba(80,50,10,0.18)',
-        background:     'rgba(20,15,5,0.06)',
-        boxShadow:      'inset 0 1px 3px rgba(0,0,0,0.15)',
-        transition:     'transform 0.2s ease',
-        transform:      hovered ? 'scale(1.1)' : 'scale(1)',
-        padding:        '4px',
-      }}>
+      <span className="wanted-card__heading">WANTED</span>
+      <span className="wanted-card__portrait">
         {skill.iconUrl && !iconError ? (
           <img
             src={skill.iconUrl}
             alt=""
             onError={() => setIconError(true)}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-              display: 'block',
-              filter: skill.name === 'GitHub' ? 'invert(1)' : `drop-shadow(0 0 6px ${skill.color}55)`,
-            }}
+            style={{ filter: `drop-shadow(0 0 5px ${skill.color}55)` }}
           />
         ) : (
-          <div style={{
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            textAlign: 'center',
-            fontFamily: '"Pirata One", cursive',
-            fontSize: skill.fallback?.length > 2 ? '0.8rem' : '1rem',
-            lineHeight: 1,
-            color: skill.color,
-            textShadow: `0 0 8px ${skill.color}55`,
-            letterSpacing: '0.04em',
-          }}>
-            {skill.fallback}
-          </div>
+          <span style={{ color: skill.color }}>{skill.fallback}</span>
         )}
-      </div>
+      </span>
+      <strong>{skill.name}</strong>
+      <small>{skill.bounty} BERRIES</small>
+      <span className="wanted-card__shine" />
+    </button>
+  )
+}
 
-      {/* Skill name */}
-      <div style={{
-        fontFamily:    '"IM Fell English", Georgia, serif',
-        fontSize:      'clamp(8px, 0.78vw, 12px)',
-        color:         '#1a0d00',
-        textAlign:     'center',
-        lineHeight:    1.2,
-        letterSpacing: '0.02em',
-        opacity:       0.88,
-      }}>
-        {skill.name}
+function SkillIntel({ skill, data, onClose }) {
+  if (!skill) return null
+
+  return (
+    <div className="skill-intel" style={{ '--accent': data.accentColor }}>
+      <button className="skill-intel__close" onClick={onClose} aria-label="Close skill details">×</button>
+      <div className="skill-intel__eyebrow">CREW NOTE · {data.bearing}</div>
+      <div className="skill-intel__name">{skill.name}</div>
+      <p>{skill.note}</p>
+      <div className="skill-intel__mastery">
+        <span>Battle readiness</span>
+        <strong>{skill.level}%</strong>
+      </div>
+      <div className="skill-intel__track">
+        <span style={{ width: `${skill.level}%` }} />
       </div>
     </div>
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SKILL PANEL — title + card grid + quote, rendered inside the board rect
-// ─────────────────────────────────────────────────────────────────────────────
-
-function SkillPanel({ data, visible }) {
-  const [titleIn, setTitleIn] = useState(false)
-  const [cardsIn, setCardsIn] = useState(false)
-
-  useEffect(() => {
-    if (visible) {
-      const titleTimer = setTimeout(() => setTitleIn(true), 100)
-      const cardsTimer = setTimeout(() => setCardsIn(true), 470)
-      return () => {
-        clearTimeout(titleTimer)
-        clearTimeout(cardsTimer)
-      }
-    }
-    setTitleIn(false)
-    setCardsIn(false)
-  }, [visible])
-
+function SkillPanel({ data, visible, selectedSkill, onSelectSkill }) {
   return (
-    <div style={{
-      width:          '100%',
-      height:         '100%',
-      display:        'flex',
-      flexDirection:  'column',
-      alignItems:     'center',
-      justifyContent: 'center',
-      padding:        'clamp(8px, 1.2vw, 18px)',
-      boxSizing:      'border-box',
-      transform:      visible ? 'scale(1)' : 'scale(0.96)',
-      opacity:        visible ? 1 : 0,
-      transition:     'opacity 0.5s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1)',
-    }}>
-      {/* Title */}
-      <div style={{
-        textAlign:     'center',
-        marginBottom:  'clamp(8px, 1.4vh, 16px)',
-        opacity:       titleIn ? 1 : 0,
-        transform:     titleIn ? 'translateY(0)' : 'translateY(10px)',
-        transition:    'opacity 0.55s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1)',
-      }}>
-        <div style={{
-          fontFamily:    '"Pirata One", cursive',
-          fontSize: 'clamp(16px, 1.65vw, 28px)',
-          color:         data.titleColor,
-          letterSpacing: '0.16em',
-          textShadow:    `0 0 16px ${data.accentColor}88`,
-          marginBottom:  '3px',
-        }}>
-          {data.title}
-        </div>
-        <div style={{
-          fontFamily: '"IM Fell English", Georgia, serif',
-          fontSize: 'clamp(8px, 0.72vw, 11px)',
-          color: 'rgba(255,255,255,0.5)',
-          letterSpacing: '0.12em',
-          textTransform: 'uppercase',
-          marginBottom: '5px',
-        }}>
-          {data.subtitle}
-        </div>
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-        }}>
-          <div style={{ height:'1px', width:'28px', background:`linear-gradient(to right, transparent, ${data.accentColor}55)` }}/>
-          <span style={{ color: `${data.accentColor}66`, fontSize:'9px' }}>✦</span>
-          <div style={{ height:'1px', width:'28px', background:`linear-gradient(to left, transparent, ${data.accentColor}55)` }}/>
-        </div>
-      </div>
+    <div className="skill-panel">
+      <header className={`skill-panel__header ${visible ? 'is-visible' : ''}`}>
+        <span>{data.subtitle}</span>
+        <h2>{data.title}</h2>
+        <div className="skill-panel__rule"><i /><b>{data.symbol}</b><i /></div>
+      </header>
 
-      {/* Skill cards */}
-      <div style={{
-        display:        'flex',
-        flexWrap:       'wrap',
-        gap:            'clamp(10px, 1vw, 18px)',
-        justifyContent: 'center',
-        alignItems:     'flex-start',
-        maxWidth:       '92%',
-      }}>
-        {data.skills.map((skill, i) => (
+      <div className={`skill-panel__cards ${selectedSkill ? 'has-selection' : ''}`}>
+        {data.skills.map((skill, index) => (
           <WantedCard
             key={skill.name}
             skill={skill}
-            index={i}
-            visible={cardsIn}
+            index={index}
+            visible={visible}
             accentColor={data.accentColor}
+            selected={selectedSkill?.name === skill.name}
+            onSelect={onSelectSkill}
           />
         ))}
       </div>
 
-      {/* Quote */}
-      <div style={{
-        marginTop:    'clamp(8px, 1.5vh, 18px)',
-        textAlign:    'center',
-        fontFamily:   '"IM Fell English", Georgia, serif',
-        fontSize:     'clamp(9px, 0.82vw, 13px)',
-        fontStyle:    'italic',
-        color:        `${data.accentColor}aa`,
-        letterSpacing:'0.03em',
-        lineHeight:   1.4,
-        opacity:      cardsIn ? 1 : 0,
-        transform:    cardsIn ? 'translateY(0)' : 'translateY(8px)',
-        transition:   'opacity 0.55s ease 0.7s, transform 0.55s ease 0.7s',
-        maxWidth:     '90%',
-      }}>
+      <div className={`skill-panel__quote ${visible && !selectedSkill ? 'is-visible' : ''}`}>
         {data.quote}
       </div>
+
+      <SkillIntel
+        skill={selectedSkill}
+        data={data}
+        onClose={() => onSelectSkill(null)}
+      />
     </div>
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// CHARACTER NAME BADGE
-// ─────────────────────────────────────────────────────────────────────────────
-
-function CharacterBadge({ data, visible }) {
+function CharacterStage({ data, characterVisible, boardVisible, contentVisible, turning, selectedSkill, onSelectSkill }) {
   return (
-    <div style={{
-      position:   'fixed',
-      top:        'clamp(22px, 3.5vh, 42px)',
-      left:       '50%',
-      transform:  `translateX(-50%) ${visible ? 'translateY(0)' : 'translateY(-20px)'}`,
-      zIndex:     248,
-      display:    'flex',
-      alignItems: 'center',
-      gap:        '10px',
-      opacity:    visible ? 1 : 0,
-      transition: 'all 0.45s ease',
-      whiteSpace: 'nowrap',
-    }}>
-      <div style={{ height:'1px', width:'30px', background:`linear-gradient(to right, transparent, ${data.accentColor}66)` }}/>
-      <span style={{
-        fontFamily:    '"Pirata One", cursive',
-        fontSize:      'clamp(11px, 1.3vw, 16px)',
-        color:         data.titleColor,
-        letterSpacing: '0.2em',
-        textShadow:    `0 0 16px ${data.accentColor}88`,
-      }}>
-        {data.character}
-      </span>
-      <div style={{ height:'1px', width:'30px', background:`linear-gradient(to left, transparent, ${data.accentColor}66)` }}/>
+    <div
+      className={`character-stage ${characterVisible ? 'is-visible' : ''} ${turning ? 'is-turning' : ''}`}
+      style={{ '--glow': data.accentSoft }}
+    >
+      <div className="character-stage__art">
+        <img src={data.characterImg} alt={data.character} />
+        <div
+          className={`character-stage__glass ${boardVisible ? 'is-visible' : ''}`}
+          style={{
+            left: data.boardRect.left,
+            top: data.boardRect.top,
+            width: data.boardRect.width,
+            height: data.boardRect.height,
+            '--accent': data.accentColor,
+          }}
+        >
+          <span className="glass-corner glass-corner--tl" />
+          <span className="glass-corner glass-corner--tr" />
+          <span className="glass-corner glass-corner--bl" />
+          <span className="glass-corner glass-corner--br" />
+          <SkillPanel
+            data={data}
+            visible={contentVisible}
+            selectedSkill={selectedSkill}
+            onSelectSkill={onSelectSkill}
+          />
+        </div>
+      </div>
     </div>
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// DIRECTION NAVIGATOR
-// ─────────────────────────────────────────────────────────────────────────────
+function BearingHeader({ data, visible }) {
+  return (
+    <div className={`bearing-header ${visible ? 'is-visible' : ''}`} style={{ '--accent': data.accentColor }}>
+      <span className="bearing-header__line" />
+      <div>
+        <small>{data.bearing}</small>
+        <strong>{data.character}</strong>
+      </div>
+      <span className="bearing-header__line" />
+    </div>
+  )
+}
 
-function DirectionNavigator({ current, onRotate, data, visible }) {
-  const [hovLeft,  setHovLeft]  = useState(false)
-  const [hovRight, setHovRight] = useState(false)
-
+function CompassNavigation({ current, onNavigate, data, visible }) {
   const currentIndex = DIR_ORDER.indexOf(current)
-  const prevIndex    = (currentIndex - 1 + DIR_ORDER.length) % DIR_ORDER.length
-  const nextIndex    = (currentIndex + 1) % DIR_ORDER.length
-
-  const prevDir = DIR_META.find(d => d.dir === DIR_ORDER[prevIndex])
-  const nextDir = DIR_META.find(d => d.dir === DIR_ORDER[nextIndex])
-
-  const btnStyle = (hovered) => ({
-    width:          'clamp(44px, 5vw, 62px)',
-    height:         'clamp(44px, 5vw, 62px)',
-    borderRadius:   '50%',
-    background:     hovered ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.35)',
-    border:         `1.5px solid ${hovered ? data.accentColor : 'rgba(255,255,255,0.2)'}`,
-    color:          hovered ? data.accentColor : 'rgba(255,255,255,0.7)',
-    fontSize:       'clamp(18px, 2.2vw, 28px)',
-    cursor:         'pointer',
-    display:        'flex',
-    alignItems:     'center',
-    justifyContent: 'center',
-    backdropFilter: 'blur(8px)',
-    transition:     'all 0.22s ease',
-    transform:      hovered ? 'scale(1.1)' : 'scale(1)',
-    boxShadow:      hovered ? `0 0 20px ${data.glowColor}, 0 4px 14px rgba(0,0,0,0.4)` : '0 4px 12px rgba(0,0,0,0.4)',
-    opacity:        visible ? 1 : 0,
-  })
+  const rotation = currentIndex * -90
 
   return (
-    <>
-      <div style={{
-        position: 'fixed', left: 'clamp(16px, 3vw, 40px)', top: '50%',
-        transform: 'translateY(-50%)', zIndex: 250,
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
-      }}>
-        <button
-          onClick={() => onRotate('prev')}
-          onMouseEnter={() => setHovLeft(true)}
-          onMouseLeave={() => setHovLeft(false)}
-          style={btnStyle(hovLeft)}
-          aria-label="Previous direction"
-        >‹</button>
-        <span style={{
-          fontFamily: '"IM Fell English", serif', fontSize: 'clamp(8px, 0.9vw, 11px)',
-          color: 'rgba(255,255,255,0.4)', letterSpacing: '0.08em', whiteSpace: 'nowrap',
-          opacity: visible ? 1 : 0,
-        }}>{prevDir?.shortName}</span>
+    <nav className={`crow-compass ${visible ? 'is-visible' : ''}`} aria-label="Skill categories">
+      <div className="crow-compass__rail" />
+      <div className="crow-compass__body">
+        <div
+          className="crow-compass__rose"
+          style={{ transform: `rotate(${rotation}deg)`, '--accent': data.accentColor }}
+        >
+          <span>N</span><span>E</span><span>S</span><span>W</span>
+          <i />
+        </div>
+        <div className="crow-compass__buttons">
+          {DIR_META.map((meta) => (
+            <button
+              key={meta.dir}
+              className={meta.dir === current ? 'is-active' : ''}
+              onClick={() => onNavigate(meta.dir)}
+              style={{ '--accent': data.accentColor }}
+            >
+              <small>{meta.compass}</small>
+              <span>{meta.shortName}</span>
+            </button>
+          ))}
+        </div>
       </div>
-
-      <div style={{
-        position: 'fixed', right: 'clamp(16px, 3vw, 40px)', top: '50%',
-        transform: 'translateY(-50%)', zIndex: 250,
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
-      }}>
-        <button
-          onClick={() => onRotate('next')}
-          onMouseEnter={() => setHovRight(true)}
-          onMouseLeave={() => setHovRight(false)}
-          style={btnStyle(hovRight)}
-          aria-label="Next direction"
-        >›</button>
-        <span style={{
-          fontFamily: '"IM Fell English", serif', fontSize: 'clamp(8px, 0.9vw, 11px)',
-          color: 'rgba(255,255,255,0.4)', letterSpacing: '0.08em', whiteSpace: 'nowrap',
-          opacity: visible ? 1 : 0,
-        }}>{nextDir?.shortName}</span>
-      </div>
-
-      {/* Bottom compass indicator */}
-      <div style={{
-        position: 'fixed', bottom: 'clamp(20px, 4vh, 40px)', left: '50%',
-        transform: 'translateX(-50%)', zIndex: 250,
-        display: 'flex', alignItems: 'center', gap: 'clamp(6px, 1vw, 14px)',
-        opacity: visible ? 1 : 0, transition: 'opacity 0.4s ease',
-      }}>
-        {DIR_META.map((meta) => (
-          <button
-            key={meta.dir}
-            onClick={() => {
-              const targetIdx = DIR_ORDER.indexOf(meta.dir)
-              const currIdx   = DIR_ORDER.indexOf(current)
-              if (targetIdx !== currIdx)
-                onRotate(targetIdx > currIdx ? 'next' : 'prev', meta.dir)
-            }}
-            style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px',
-              background: meta.dir === current ? 'rgba(255,255,255,0.1)' : 'transparent',
-              border: `1px solid ${meta.dir === current ? data.accentColor : 'rgba(255,255,255,0.2)'}`,
-              borderRadius: '6px', padding: '6px 12px', cursor: 'pointer',
-              transition: 'all 0.2s ease', backdropFilter: 'blur(6px)',
-            }}
-          >
-            <span style={{
-              fontFamily: '"Pirata One", cursive', fontSize: 'clamp(10px, 1.1vw, 14px)',
-              color: meta.dir === current ? data.accentColor : 'rgba(255,255,255,0.55)',
-              letterSpacing: '0.08em',
-            }}>{meta.shortName}</span>
-            <span style={{
-              fontSize: '8px',
-              color: meta.dir === current ? data.accentColor : 'rgba(255,255,255,0.3)',
-            }}>{meta.compass}</span>
-          </button>
-        ))}
-      </div>
-    </>
+      <div className="crow-compass__hint">A / D · TURN THE LOOKOUT</div>
+    </nav>
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// CLOSE BUTTON
-// ─────────────────────────────────────────────────────────────────────────────
-
-function SkillsCloseBtn({ onClose, visible, accentColor }) {
-  const [hov, setHov] = useState(false)
+function TurnControl({ side, label, onClick, visible, accentColor }) {
   return (
     <button
+      className={`turn-control turn-control--${side} ${visible ? 'is-visible' : ''}`}
+      style={{ '--accent': accentColor }}
+      onClick={onClick}
+      aria-label={label}
+    >
+      <span>{side === 'left' ? '‹' : '›'}</span>
+      <small>{label}</small>
+    </button>
+  )
+}
+
+function SkillsCloseButton({ visible, onClose, accentColor }) {
+  return (
+    <button
+      className={`skills-close ${visible ? 'is-visible' : ''}`}
+      style={{ '--accent': accentColor }}
       onClick={onClose}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        position: 'fixed', top: 'clamp(14px, 2vh, 24px)', right: 'clamp(14px, 2vw, 24px)',
-        zIndex: 260, width: 'clamp(34px, 3.5vw, 46px)', height: 'clamp(34px, 3.5vw, 46px)',
-        borderRadius: '50%',
-        background: hov ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.4)',
-        border: `1.5px solid ${hov ? accentColor : 'rgba(255,255,255,0.18)'}`,
-        color: hov ? accentColor : 'rgba(255,255,255,0.65)',
-        fontSize: 'clamp(13px, 1.5vw, 18px)', cursor: 'pointer',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        backdropFilter: 'blur(8px)', transition: 'all 0.22s ease',
-        transform: visible ? (hov ? 'scale(1.1)' : 'scale(1)') : 'scale(0)',
-        opacity: visible ? 1 : 0,
-        transitionDelay: visible ? '0.5s' : '0s',
-        boxShadow: hov ? `0 0 18px ${accentColor}55` : 'none',
-      }}
-      aria-label="Close skills"
-    >✕</button>
+      aria-label="Return to deck"
+    >
+      <span>×</span>
+      <small>DECK</small>
+    </button>
   )
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// GHOST LABEL — "SKILLS" watermark during entry
-// ─────────────────────────────────────────────────────────────────────────────
-
-function SkillsGhostLabel({ active }) {
-  const [op, setOp] = useState(0)
-  useEffect(() => {
-    if (!active) {
-      const t = setTimeout(() => setOp(0), 0)
-      return () => clearTimeout(t)
-    }
-    const t1 = setTimeout(() => setOp(1),   50)
-    const t2 = setTimeout(() => setOp(0), 1500)
-    return () => { clearTimeout(t1); clearTimeout(t2) }
-  }, [active])
-
-  if (op === 0) return null
-  return (
-    <div style={{
-      position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-      zIndex: 195, pointerEvents: 'none', fontFamily: '"Pirata One", cursive',
-      fontSize: 'clamp(50px, 10vw, 110px)', letterSpacing: '0.22em',
-      color: `rgba(255,255,255,${op * 0.07})`, transition: 'color 0.5s ease',
-      userSelect: 'none', whiteSpace: 'nowrap',
-    }}>SKILLS</div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// LETTERBOX BARS
-// ─────────────────────────────────────────────────────────────────────────────
-
-function SkillsLetterBox({ active }) {
-  const [mounted, setMounted] = useState(false)
-  const [leaving, setLeaving] = useState(false)
-  useEffect(() => {
-    const timers = []
-    if (active) {
-      timers.push(setTimeout(() => {
-        setMounted(true)
-        setLeaving(false)
-      }, 0))
-    } else if (mounted) {
-      timers.push(setTimeout(() => setLeaving(true), 0))
-      timers.push(setTimeout(() => setMounted(false), 700))
-    }
-    return () => timers.forEach(clearTimeout)
-  }, [active, mounted])
-  if (!mounted) return null
-  const showing = active && !leaving
-  return (
-    <>
-      <div style={{
-        position:'fixed', top:0, left:0, right:0, height:'clamp(26px, 4vh, 50px)',
-        background:'#000', zIndex:190, pointerEvents:'none',
-        transition:'transform 0.65s cubic-bezier(0.22,1,0.36,1)',
-        transform: showing ? 'translateY(0)' : 'translateY(-100%)',
-      }}/>
-      <div style={{
-        position:'fixed', bottom:0, left:0, right:0, height:'clamp(26px, 4vh, 50px)',
-        background:'#000', zIndex:190, pointerEvents:'none',
-        transition:'transform 0.65s cubic-bezier(0.22,1,0.36,1)',
-        transform: showing ? 'translateY(0)' : 'translateY(100%)',
-      }}/>
-    </>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// MAIN OVERLAY
-// ─────────────────────────────────────────────────────────────────────────────
 
 function SkillsOverlay({ active, onClose, onDirectionChange }) {
-  const [currentDir,    setCurrentDir]    = useState(DIRECTIONS.NORTH)
-  const [transitioning, setTransitioning] = useState(false)
-  const [overlayIn,     setOverlayIn]     = useState(false)
-  const [characterIn,   setCharacterIn]   = useState(false)
-  const [boardIn,       setBoardIn]       = useState(false)
-  const [contentIn,     setContentIn]     = useState(false)
-  const [controlsIn,    setControlsIn]    = useState(false)
-  const [sceneIn,       setSceneIn]       = useState(false)
-  const transitionTimer = useRef(null)
-  const settleTimer = useRef(null)
-
+  const [currentDir, setCurrentDir] = useState(DIRECTIONS.NORTH)
+  const [overlayIn, setOverlayIn] = useState(false)
+  const [characterIn, setCharacterIn] = useState(false)
+  const [boardIn, setBoardIn] = useState(false)
+  const [contentIn, setContentIn] = useState(false)
+  const [controlsIn, setControlsIn] = useState(false)
+  const [turning, setTurning] = useState(false)
+  const [selectedSkill, setSelectedSkill] = useState(null)
+  const timersRef = useRef([])
   const data = SKILL_DATA[currentDir]
 
-  useEffect(() => {
-    if (active) onDirectionChange?.(currentDir)
-  }, [active, currentDir, onDirectionChange])
+  const clearTimers = useCallback(() => {
+    timersRef.current.forEach(clearTimeout)
+    timersRef.current = []
+  }, [])
 
-  const handleRotate = useCallback((direction, targetDir = null) => {
-    if (transitioning) return
+  const navigateTo = useCallback((targetDir) => {
+    if (turning || targetDir === currentDir) return
 
-    setTransitioning(true)
+    setTurning(true)
     setContentIn(false)
     setBoardIn(false)
+    setSelectedSkill(null)
 
-    const currIdx = DIR_ORDER.indexOf(currentDir)
-    let nextDir
-
-    if (targetDir) {
-      nextDir = targetDir
-    } else {
-      const nextIdx = direction === 'next'
-        ? (currIdx + 1) % DIR_ORDER.length
-        : (currIdx - 1 + DIR_ORDER.length) % DIR_ORDER.length
-      nextDir = DIR_ORDER[nextIdx]
-    }
-
-    if (transitionTimer.current) clearTimeout(transitionTimer.current)
-    if (settleTimer.current) clearTimeout(settleTimer.current)
-
-    transitionTimer.current = setTimeout(() => {
-      setCurrentDir(nextDir)
+    timersRef.current.push(setTimeout(() => {
+      setCurrentDir(targetDir)
+      onDirectionChange?.(targetDir)
       setBoardIn(true)
-      settleTimer.current = setTimeout(() => {
+      timersRef.current.push(setTimeout(() => {
         setContentIn(true)
-        setTransitioning(false)
-      }, 260)
-    }, 300)
-  }, [currentDir, transitioning])
+        setTurning(false)
+      }, 360))
+    }, 360))
+  }, [currentDir, onDirectionChange, turning])
+
+  const rotate = useCallback((amount) => {
+    const index = DIR_ORDER.indexOf(currentDir)
+    navigateTo(DIR_ORDER[(index + amount + DIR_ORDER.length) % DIR_ORDER.length])
+  }, [currentDir, navigateTo])
 
   useEffect(() => {
-    const timers = []
+    clearTimers()
 
     if (active) {
+      setSelectedSkill(null)
       setOverlayIn(false)
       setCharacterIn(false)
       setBoardIn(false)
       setContentIn(false)
       setControlsIn(false)
-      setSceneIn(false)
+      onDirectionChange?.(currentDir)
 
-      timers.push(setTimeout(() => setOverlayIn(true), 280))
-      timers.push(setTimeout(() => setCharacterIn(true), 980))
-      timers.push(setTimeout(() => setBoardIn(true), 1480))
-      timers.push(setTimeout(() => setSceneIn(true), 1560))
-      timers.push(setTimeout(() => setContentIn(true), 1860))
-      timers.push(setTimeout(() => setControlsIn(true), 2360))
+      timersRef.current = [
+        setTimeout(() => setOverlayIn(true), 180),
+        setTimeout(() => setCharacterIn(true), 720),
+        setTimeout(() => setBoardIn(true), 1180),
+        setTimeout(() => setContentIn(true), 1520),
+        setTimeout(() => setControlsIn(true), 1900),
+      ]
     } else {
       setControlsIn(false)
       setContentIn(false)
       setBoardIn(false)
       setCharacterIn(false)
-      setSceneIn(false)
-      timers.push(setTimeout(() => setOverlayIn(false), 280))
+      setSelectedSkill(null)
+      timersRef.current = [setTimeout(() => setOverlayIn(false), 260)]
     }
 
-    return () => timers.forEach(clearTimeout)
-  }, [active])
-
-  useEffect(() => () => {
-    if (transitionTimer.current) clearTimeout(transitionTimer.current)
-    if (settleTimer.current) clearTimeout(settleTimer.current)
-  }, [])
+    return clearTimers
+  }, [active, clearTimers, onDirectionChange])
 
   useEffect(() => {
-    const fn = (e) => { if (e.key === 'Escape' && active) onClose() }
-    window.addEventListener('keydown', fn)
-    return () => window.removeEventListener('keydown', fn)
-  }, [active, onClose])
-
-  useEffect(() => {
-    const fn = (e) => {
+    const handleKeyDown = (event) => {
       if (!active) return
-      if (e.key === 'ArrowLeft')  handleRotate('prev')
-      if (e.key === 'ArrowRight') handleRotate('next')
+      if (event.key === 'Escape') {
+        if (selectedSkill) setSelectedSkill(null)
+        else onClose()
+      }
+      if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'a') rotate(-1)
+      if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'd') rotate(1)
     }
-    window.addEventListener('keydown', fn)
-    return () => window.removeEventListener('keydown', fn)
-  }, [active, handleRotate])
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [active, onClose, rotate, selectedSkill])
 
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      zIndex: 220,
-      pointerEvents: overlayIn ? 'all' : 'none',
-      overflow: 'hidden',
-      background: 'transparent',
-    }}>
-      <RealWorldTint data={data} visible={sceneIn} transitioning={transitioning} />
+    <section
+      className={`skills-overlay ${overlayIn ? 'is-visible' : ''}`}
+      aria-hidden={!active}
+      style={{ '--accent': data.accentColor, '--atmosphere': data.atmosphere }}
+    >
+      <Atmosphere data={data} visible={characterIn} turning={turning} />
+      <div className="skills-overlay__horizon" />
+      <div className="skills-overlay__vignette" />
 
-      <FloatingCharacter
+      <BearingHeader data={data} visible={boardIn} />
+
+      <CharacterStage
         data={data}
         characterVisible={characterIn}
         boardVisible={boardIn}
-        transitioning={transitioning}
-      >
-        <SkillPanel data={data} visible={contentIn} />
-      </FloatingCharacter>
-      <HorizonDepthHaze data={data} visible={sceneIn} transitioning={transitioning} />
+        contentVisible={contentIn}
+        turning={turning}
+        selectedSkill={selectedSkill}
+        onSelectSkill={setSelectedSkill}
+      />
 
-      <CharacterBadge data={data} visible={boardIn} />
+      <TurnControl
+        side="left"
+        label="Previous bearing"
+        onClick={() => rotate(-1)}
+        visible={controlsIn}
+        accentColor={data.accentColor}
+      />
+      <TurnControl
+        side="right"
+        label="Next bearing"
+        onClick={() => rotate(1)}
+        visible={controlsIn}
+        accentColor={data.accentColor}
+      />
 
-      <DirectionNavigator current={currentDir} onRotate={handleRotate} data={data} visible={controlsIn} />
-      <SkillsCloseBtn onClose={onClose} visible={controlsIn} accentColor={data.accentColor} />
+      <CompassNavigation
+        current={currentDir}
+        onNavigate={navigateTo}
+        data={data}
+        visible={controlsIn}
+      />
+      <SkillsCloseButton visible={controlsIn} onClose={onClose} accentColor={data.accentColor} />
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Pirata+One&family=IM+Fell+English:ital@0;1&display=swap');
 
-        @keyframes oceanMirage {
-          0%,100% { transform: translateX(-50%) perspective(1200px) rotateX(1.5deg) translateY(0px) scale(1); filter: saturate(1); }
-          50%      { transform: translateX(-50%) perspective(1200px) rotateX(1.5deg) translateY(-4px) scale(1.004); filter: saturate(1.035); }
+        .skills-overlay {
+          --paper: #ead8ac;
+          position: fixed;
+          inset: 0;
+          z-index: 220;
+          overflow: hidden;
+          opacity: 0;
+          pointer-events: none;
+          color: #fff;
+          transition: opacity .65s ease;
+          font-family: "IM Fell English", Georgia, serif;
+        }
+
+        .skills-overlay.is-visible {
+          opacity: 1;
+          pointer-events: auto;
+        }
+
+        .skills-atmosphere,
+        .skills-overlay__vignette,
+        .skills-overlay__horizon,
+        .skills-weather {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+        }
+
+        .skills-atmosphere {
+          z-index: 0;
+        }
+
+        .skills-overlay__horizon {
+          z-index: 1;
+          top: 47%;
+          bottom: auto;
+          height: 28%;
+          opacity: .42;
+          background:
+            linear-gradient(180deg, transparent, rgba(207,235,240,.14) 38%, rgba(193,225,232,.26) 55%, transparent),
+            radial-gradient(ellipse at 50% 45%, var(--atmosphere), transparent 65%);
+          filter: blur(12px);
+        }
+
+        .skills-overlay__vignette {
+          z-index: 8;
+          box-shadow: inset 0 0 130px 35px rgba(1,6,10,.62);
+        }
+
+        .skills-weather {
+          z-index: 2;
+          overflow: hidden;
+          transition: opacity .8s ease;
+        }
+
+        .skills-weather i {
+          position: absolute;
+          display: block;
+          pointer-events: none;
+        }
+
+        .skills-weather--slashes i {
+          top: calc(10% + (var(--i) * 7%));
+          left: calc(-15% + (var(--i) * 9%));
+          width: 160px;
+          height: 1px;
+          opacity: .16;
+          background: linear-gradient(90deg, transparent, #b9ffd1, transparent);
+          transform: rotate(-18deg);
+          animation: wind-cut 5.5s ease-in-out infinite;
+          animation-delay: calc(var(--i) * -.42s);
+        }
+
+        .skills-weather--embers i {
+          left: calc(5% + (var(--i) * 8%));
+          bottom: -20px;
+          width: 4px;
+          height: 4px;
+          border-radius: 50%;
+          background: #ffd178;
+          box-shadow: 0 0 10px #ff8a2c;
+          animation: ember-rise 7s linear infinite;
+          animation-delay: calc(var(--i) * -.58s);
+        }
+
+        .skills-weather--haki i {
+          top: calc(12% + (var(--i) * 7%));
+          left: calc(8% + (var(--i) * 8%));
+          width: 110px;
+          height: 2px;
+          opacity: 0;
+          background: linear-gradient(90deg, transparent, #ffb7b7, transparent);
+          transform: rotate(calc(-24deg + (var(--i) * 5deg)));
+          animation: haki-flash 4.6s ease-out infinite;
+          animation-delay: calc(var(--i) * -.37s);
+        }
+
+        .skills-weather--petals i {
+          top: -20px;
+          left: calc(3% + (var(--i) * 8.5%));
+          width: 9px;
+          height: 6px;
+          border-radius: 70% 20% 70% 20%;
+          background: rgba(255,182,225,.58);
+          animation: petal-fall 8s linear infinite;
+          animation-delay: calc(var(--i) * -.67s);
+        }
+
+        .bearing-header {
+          position: fixed;
+          top: clamp(26px, 4vh, 48px);
+          left: 50%;
+          z-index: 30;
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          opacity: 0;
+          transform: translate(-50%, -12px);
+          transition: opacity .55s ease, transform .65s cubic-bezier(.22,1,.36,1);
+          text-align: center;
+          white-space: nowrap;
+        }
+
+        .bearing-header.is-visible {
+          opacity: 1;
+          transform: translate(-50%, 0);
+        }
+
+        .bearing-header__line {
+          width: clamp(34px, 5vw, 78px);
+          height: 1px;
+          background: linear-gradient(90deg, transparent, var(--accent));
+        }
+
+        .bearing-header__line:last-child {
+          transform: scaleX(-1);
+        }
+
+        .bearing-header small,
+        .bearing-header strong {
+          display: block;
+        }
+
+        .bearing-header small {
+          margin-bottom: 2px;
+          color: rgba(255,255,255,.46);
+          font-size: 9px;
+          letter-spacing: .28em;
+        }
+
+        .bearing-header strong {
+          color: var(--accent);
+          font: 400 clamp(15px, 1.4vw, 21px)/1 "Pirata One", cursive;
+          letter-spacing: .24em;
+          text-shadow: 0 0 18px var(--accent);
+        }
+
+        .character-stage {
+          position: absolute;
+          top: clamp(72px, 8vh, 112px);
+          left: 50%;
+          z-index: 12;
+          width: clamp(760px, 68vw, 1220px);
+          max-height: calc(100vh - 205px);
+          opacity: 0;
+          transform: translateX(-50%) translateY(22px) scale(.97);
+          transform-origin: 50% 45%;
+          transition: opacity .75s ease, transform 1s cubic-bezier(.22,1,.36,1), filter .35s ease;
+          pointer-events: none;
+        }
+
+        .character-stage.is-visible {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0) scale(1);
+        }
+
+        .character-stage.is-turning {
+          opacity: .28;
+          filter: blur(5px);
+          transform: translateX(-50%) translateY(4px) scale(.985);
+        }
+
+        .character-stage__art {
+          position: relative;
+          width: 100%;
+          animation: lookout-breathe 9s ease-in-out infinite;
+        }
+
+        .character-stage__art > img {
+          display: block;
+          width: 100%;
+          height: auto;
+          opacity: .76;
+          filter: saturate(.92) contrast(1.06) drop-shadow(0 20px 34px rgba(0,0,0,.36));
+          mask-image: linear-gradient(180deg, #000 0%, #000 88%, rgba(0,0,0,.72) 96%, transparent 100%);
+        }
+
+        .character-stage__glass {
+          position: absolute;
+          box-sizing: border-box;
+          opacity: 0;
+          transform: perspective(900px) rotateX(5deg) scale(.94);
+          transform-origin: 50% 60%;
+          border: 1px solid rgba(235,249,248,.36);
+          border-radius: 14px;
+          background:
+            linear-gradient(125deg, rgba(255,255,255,.055), transparent 32%),
+            radial-gradient(circle at 50% 10%, rgba(255,255,255,.06), transparent 58%),
+            rgba(2,13,18,.12);
+          box-shadow:
+            inset 0 0 0 1px rgba(255,255,255,.045),
+            inset 0 -45px 70px rgba(0,0,0,.16),
+            0 0 32px color-mix(in srgb, var(--accent) 28%, transparent);
+          backdrop-filter: blur(2px);
+          transition: opacity .55s ease, transform .75s cubic-bezier(.22,1,.36,1);
+          pointer-events: auto;
+        }
+
+        .character-stage__glass.is-visible {
+          opacity: 1;
+          transform: perspective(900px) rotateX(0) scale(1);
+        }
+
+        .glass-corner {
+          position: absolute;
+          width: 18px;
+          height: 18px;
+          border-color: var(--accent);
+          opacity: .76;
+          filter: drop-shadow(0 0 5px var(--accent));
+          pointer-events: none;
+        }
+
+        .glass-corner--tl { left: -2px; top: -2px; border-left: 2px solid; border-top: 2px solid; border-radius: 12px 0 0; }
+        .glass-corner--tr { right: -2px; top: -2px; border-right: 2px solid; border-top: 2px solid; border-radius: 0 12px 0 0; }
+        .glass-corner--bl { left: -2px; bottom: -2px; border-left: 2px solid; border-bottom: 2px solid; border-radius: 0 0 0 12px; }
+        .glass-corner--br { right: -2px; bottom: -2px; border-right: 2px solid; border-bottom: 2px solid; border-radius: 0 0 12px; }
+
+        .skill-panel {
+          position: relative;
+          display: flex;
+          width: 100%;
+          height: 100%;
+          box-sizing: border-box;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: clamp(10px, 1.2vw, 18px);
+        }
+
+        .skill-panel__header {
+          margin-bottom: clamp(8px, 1.2vh, 14px);
+          opacity: 0;
+          text-align: center;
+          transform: translateY(8px);
+          transition: opacity .5s ease, transform .6s ease;
+        }
+
+        .skill-panel__header.is-visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        .skill-panel__header span {
+          display: block;
+          margin-bottom: 2px;
+          color: rgba(255,255,255,.54);
+          font-size: clamp(8px, .68vw, 11px);
+          letter-spacing: .17em;
+          text-transform: uppercase;
+        }
+
+        .skill-panel__header h2 {
+          margin: 0;
+          color: var(--accent);
+          font: 400 clamp(17px, 1.65vw, 28px)/1.15 "Pirata One", cursive;
+          letter-spacing: .15em;
+          text-shadow: 0 0 18px color-mix(in srgb, var(--accent) 58%, transparent);
+        }
+
+        .skill-panel__rule {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          margin-top: 5px;
+        }
+
+        .skill-panel__rule i {
+          width: 28px;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, var(--accent));
+          opacity: .4;
+        }
+
+        .skill-panel__rule i:last-child { transform: scaleX(-1); }
+        .skill-panel__rule b { color: var(--accent); font-size: 9px; font-weight: 400; opacity: .7; }
+
+        .skill-panel__cards {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: flex-start;
+          justify-content: center;
+          gap: clamp(7px, .85vw, 14px);
+          width: 94%;
+          transition: transform .4s ease;
+        }
+
+        .skill-panel__cards.has-selection {
+          transform: translateY(-9px) scale(.88);
+          transform-origin: top center;
+        }
+
+        .wanted-card {
+          --card-width: clamp(62px, 5.05vw, 90px);
+          position: relative;
+          display: flex;
+          width: var(--card-width);
+          min-height: calc(var(--card-width) * 1.34);
+          box-sizing: border-box;
+          flex-direction: column;
+          align-items: center;
+          padding: 6px 5px 7px;
+          overflow: hidden;
+          border: 1px solid rgba(105,74,24,.76);
+          border-radius: 3px 3px 7px 7px;
+          opacity: 0;
+          background:
+            repeating-linear-gradient(0deg, transparent, transparent 5px, rgba(108,72,20,.035) 5px, rgba(108,72,20,.035) 6px),
+            linear-gradient(155deg, #f4e4bd, #ddc589);
+          box-shadow: 0 3px 10px rgba(0,0,0,.34);
+          color: #211305;
+          cursor: pointer;
+          transform: translateY(18px) rotate(-2deg) scale(.76);
+          transition:
+            opacity .5s ease var(--delay),
+            transform .5s cubic-bezier(.22,1,.36,1) var(--delay),
+            box-shadow .2s ease,
+            border-color .2s ease;
+        }
+
+        .wanted-card:nth-child(even) { transform: translateY(18px) rotate(1.5deg) scale(.76); }
+
+        .wanted-card--visible {
+          opacity: 1;
+          transform: translateY(0) rotate(0) scale(1) !important;
+        }
+
+        .wanted-card:hover,
+        .wanted-card--selected {
+          z-index: 3;
+          border-color: var(--accent);
+          box-shadow: 0 7px 18px rgba(0,0,0,.48), 0 0 13px color-mix(in srgb, var(--accent) 42%, transparent);
+          transform: translateY(-7px) rotate(0) scale(1.06) !important;
+        }
+
+        .wanted-card__heading {
+          width: 100%;
+          margin-bottom: 4px;
+          padding-bottom: 3px;
+          border-bottom: 1px solid rgba(90,55,12,.24);
+          font: 400 clamp(8px, .72vw, 12px)/1 "Pirata One", cursive;
+          letter-spacing: .14em;
+        }
+
+        .wanted-card__portrait {
+          display: flex;
+          width: clamp(32px, 3.1vw, 52px);
+          height: clamp(32px, 3.1vw, 52px);
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 4px;
+          border: 1px solid rgba(73,45,11,.18);
+          border-radius: 4px;
+          background: rgba(36,22,6,.06);
+          font: 400 clamp(12px, 1vw, 18px)/1 "Pirata One", cursive;
+        }
+
+        .wanted-card__portrait img {
+          width: 78%;
+          height: 78%;
+          object-fit: contain;
+        }
+
+        .wanted-card strong {
+          max-width: 100%;
+          font-size: clamp(8px, .72vw, 12px);
+          font-weight: 600;
+          line-height: 1.05;
+          text-align: center;
+        }
+
+        .wanted-card small {
+          margin-top: 3px;
+          color: rgba(62,35,5,.58);
+          font-size: clamp(5px, .46vw, 7px);
+          letter-spacing: .08em;
+        }
+
+        .wanted-card__shine {
+          position: absolute;
+          inset: -60% auto -60% -45%;
+          width: 26%;
+          opacity: 0;
+          background: rgba(255,255,255,.42);
+          transform: rotate(18deg);
+          transition: left .45s ease, opacity .2s ease;
+        }
+
+        .wanted-card:hover .wanted-card__shine {
+          left: 125%;
+          opacity: 1;
+        }
+
+        .skill-panel__quote {
+          margin-top: clamp(6px, 1vh, 12px);
+          opacity: 0;
+          color: var(--accent);
+          font-size: clamp(8px, .72vw, 12px);
+          font-style: italic;
+          letter-spacing: .03em;
+          text-align: center;
+          transform: translateY(7px);
+          transition: opacity .5s ease .65s, transform .5s ease .65s;
+        }
+
+        .skill-panel__quote.is-visible {
+          opacity: .7;
+          transform: translateY(0);
+        }
+
+        .skill-intel {
+          position: absolute;
+          right: 7%;
+          bottom: 4%;
+          left: 7%;
+          z-index: 8;
+          box-sizing: border-box;
+          padding: 10px 34px 10px 14px;
+          border: 1px solid color-mix(in srgb, var(--accent) 58%, transparent);
+          border-radius: 8px;
+          background: linear-gradient(100deg, rgba(3,12,16,.94), rgba(8,22,25,.88));
+          box-shadow: 0 10px 26px rgba(0,0,0,.42), inset 3px 0 0 var(--accent);
+          animation: intel-in .4s cubic-bezier(.22,1,.36,1);
+          backdrop-filter: blur(12px);
+        }
+
+        .skill-intel__close {
+          position: absolute;
+          top: 5px;
+          right: 8px;
+          border: 0;
+          background: transparent;
+          color: rgba(255,255,255,.55);
+          cursor: pointer;
+          font-size: 18px;
+        }
+
+        .skill-intel__eyebrow {
+          color: var(--accent);
+          font-size: 7px;
+          letter-spacing: .2em;
+        }
+
+        .skill-intel__name {
+          margin: 1px 0 2px;
+          font: 400 clamp(12px, 1.05vw, 17px)/1 "Pirata One", cursive;
+          letter-spacing: .08em;
+        }
+
+        .skill-intel p {
+          margin: 0 0 6px;
+          color: rgba(255,255,255,.62);
+          font-size: clamp(7px, .6vw, 10px);
+          line-height: 1.25;
+        }
+
+        .skill-intel__mastery {
+          display: flex;
+          justify-content: space-between;
+          color: rgba(255,255,255,.48);
+          font-size: 7px;
+          letter-spacing: .08em;
+          text-transform: uppercase;
+        }
+
+        .skill-intel__mastery strong { color: var(--accent); font-weight: 400; }
+        .skill-intel__track { height: 2px; margin-top: 3px; overflow: hidden; background: rgba(255,255,255,.1); }
+        .skill-intel__track span { display: block; height: 100%; background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: mastery-in .65s ease; }
+
+        .crow-compass {
+          position: fixed;
+          bottom: 0;
+          left: 50%;
+          z-index: 35;
+          width: min(620px, 74vw);
+          height: 124px;
+          opacity: 0;
+          transform: translate(-50%, 40px);
+          transition: opacity .55s ease, transform .75s cubic-bezier(.22,1,.36,1);
+          pointer-events: none;
+        }
+
+        .crow-compass.is-visible {
+          opacity: 1;
+          transform: translate(-50%, 0);
+          pointer-events: auto;
+        }
+
+        .crow-compass__rail {
+          position: absolute;
+          right: 2%;
+          bottom: -60px;
+          left: 2%;
+          height: 128px;
+          border: 8px solid rgba(91,57,22,.92);
+          border-bottom: 0;
+          border-radius: 50% 50% 0 0;
+          box-shadow: inset 0 4px 0 rgba(213,171,83,.72), 0 -5px 20px rgba(0,0,0,.32);
+        }
+
+        .crow-compass__body {
+          position: relative;
+          display: flex;
+          align-items: flex-end;
+          justify-content: center;
+          height: 100%;
+        }
+
+        .crow-compass__rose {
+          position: absolute;
+          bottom: -18px;
+          left: 50%;
+          width: 112px;
+          height: 112px;
+          margin-left: -56px;
+          border: 3px solid rgba(205,161,75,.82);
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(24,17,9,.94) 0 28%, rgba(73,45,19,.92) 29% 54%, rgba(18,13,8,.96) 55%);
+          box-shadow: 0 0 0 5px rgba(53,31,13,.92), 0 0 26px rgba(0,0,0,.55);
+          transition: transform .75s cubic-bezier(.22,1,.36,1);
+        }
+
+        .crow-compass__rose span {
+          position: absolute;
+          color: rgba(247,222,165,.62);
+          font: 400 10px/1 "Pirata One", cursive;
+        }
+
+        .crow-compass__rose span:nth-child(1) { top: 8px; left: 50%; transform: translateX(-50%); }
+        .crow-compass__rose span:nth-child(2) { top: 50%; right: 9px; transform: translateY(-50%); }
+        .crow-compass__rose span:nth-child(3) { bottom: 8px; left: 50%; transform: translateX(-50%); }
+        .crow-compass__rose span:nth-child(4) { top: 50%; left: 9px; transform: translateY(-50%); }
+
+        .crow-compass__rose i {
+          position: absolute;
+          top: 17px;
+          left: 50%;
+          width: 0;
+          height: 0;
+          border-right: 9px solid transparent;
+          border-bottom: 39px solid var(--accent);
+          border-left: 9px solid transparent;
+          filter: drop-shadow(0 0 6px var(--accent));
+          transform: translateX(-50%);
+        }
+
+        .crow-compass__buttons {
+          position: absolute;
+          right: 0;
+          bottom: 7px;
+          left: 0;
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 0;
+        }
+
+        .crow-compass__buttons button {
+          display: flex;
+          min-width: 86px;
+          flex-direction: column;
+          align-items: center;
+          padding: 7px 8px 6px;
+          border: 1px solid rgba(220,188,123,.3);
+          border-radius: 5px;
+          background: rgba(24,15,8,.74);
+          color: rgba(255,244,216,.5);
+          cursor: pointer;
+          backdrop-filter: blur(8px);
+          transition: border-color .2s ease, color .2s ease, transform .2s ease, background .2s ease;
+        }
+
+        .crow-compass__buttons button:hover,
+        .crow-compass__buttons button.is-active {
+          border-color: var(--accent);
+          background: rgba(14,20,18,.88);
+          color: var(--accent);
+          transform: translateY(-3px);
+        }
+
+        .crow-compass__buttons small { font-size: 8px; letter-spacing: .16em; }
+        .crow-compass__buttons span { font: 400 13px/1.2 "Pirata One", cursive; letter-spacing: .05em; }
+
+        .crow-compass__hint {
+          position: absolute;
+          bottom: 8px;
+          left: 50%;
+          z-index: 2;
+          width: 120px;
+          color: rgba(255,244,216,.36);
+          font-size: 7px;
+          letter-spacing: .12em;
+          text-align: center;
+          transform: translateX(-50%);
+        }
+
+        .turn-control {
+          position: fixed;
+          top: 50%;
+          z-index: 36;
+          display: flex;
+          align-items: center;
+          gap: 9px;
+          padding: 0;
+          border: 0;
+          opacity: 0;
+          background: transparent;
+          color: rgba(255,255,255,.48);
+          cursor: pointer;
+          transform: translateY(-50%);
+          transition: opacity .4s ease, color .2s ease;
+        }
+
+        .turn-control.is-visible { opacity: 1; }
+        .turn-control--left { left: clamp(14px, 3vw, 42px); }
+        .turn-control--right { right: clamp(14px, 3vw, 42px); flex-direction: row-reverse; }
+
+        .turn-control span {
+          display: grid;
+          width: clamp(42px, 4.5vw, 60px);
+          height: clamp(42px, 4.5vw, 60px);
+          place-items: center;
+          border: 1px solid rgba(255,255,255,.18);
+          border-radius: 50%;
+          background: rgba(3,10,13,.46);
+          font-size: 27px;
+          backdrop-filter: blur(8px);
+          transition: border-color .2s ease, color .2s ease, transform .2s ease;
+        }
+
+        .turn-control small {
+          max-width: 50px;
+          font-size: 7px;
+          letter-spacing: .08em;
+          text-transform: uppercase;
+        }
+
+        .turn-control:hover { color: var(--accent); }
+        .turn-control:hover span { border-color: var(--accent); transform: scale(1.08); }
+
+        .skills-close {
+          position: fixed;
+          top: clamp(16px, 2.5vh, 28px);
+          right: clamp(16px, 2vw, 28px);
+          z-index: 40;
+          display: flex;
+          width: 48px;
+          height: 48px;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(255,255,255,.18);
+          border-radius: 50%;
+          opacity: 0;
+          background: rgba(3,10,13,.52);
+          color: rgba(255,255,255,.62);
+          cursor: pointer;
+          transform: scale(.7);
+          backdrop-filter: blur(8px);
+          transition: opacity .4s ease, transform .45s ease, border-color .2s ease, color .2s ease;
+        }
+
+        .skills-close.is-visible { opacity: 1; transform: scale(1); }
+        .skills-close:hover { border-color: var(--accent); color: var(--accent); transform: scale(1.07); }
+        .skills-close span { font-size: 18px; line-height: .8; }
+        .skills-close small { margin-top: 4px; font-size: 6px; letter-spacing: .12em; }
+
+        @keyframes lookout-breathe {
+          0%, 100% { transform: translateY(0) scale(1); }
+          50% { transform: translateY(-3px) scale(1.002); }
+        }
+
+        @keyframes wind-cut {
+          0%, 78%, 100% { opacity: 0; transform: translate(-20px, 15px) rotate(-18deg) scaleX(.45); }
+          84% { opacity: .22; }
+          94% { opacity: 0; transform: translate(170px, -20px) rotate(-18deg) scaleX(1.2); }
+        }
+
+        @keyframes ember-rise {
+          from { opacity: 0; transform: translate(0, 0) scale(.6); }
+          20% { opacity: .6; }
+          to { opacity: 0; transform: translate(45px, -80vh) scale(1.25); }
+        }
+
+        @keyframes haki-flash {
+          0%, 84%, 100% { opacity: 0; transform: scaleX(.2) rotate(-12deg); }
+          87% { opacity: .45; }
+          93% { opacity: 0; transform: scaleX(1.5) rotate(-12deg); }
+        }
+
+        @keyframes petal-fall {
+          from { opacity: 0; transform: translate(0, -20px) rotate(0deg); }
+          10% { opacity: .55; }
+          to { opacity: 0; transform: translate(90px, 100vh) rotate(540deg); }
+        }
+
+        @keyframes intel-in {
+          from { opacity: 0; transform: translateY(12px) scale(.97); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes mastery-in {
+          from { width: 0; }
+        }
+
+        @media (max-width: 900px) {
+          .character-stage { width: max(760px, 96vw); top: 12vh; }
+          .turn-control small { display: none; }
+          .crow-compass { width: 78vw; }
+        }
+
+        @media (max-width: 640px) {
+          .character-stage { width: 780px; left: 50%; top: 15vh; }
+          .bearing-header { top: 20px; }
+          .bearing-header__line { width: 22px; }
+          .turn-control { top: 43%; }
+          .turn-control span { width: 38px; height: 38px; }
+          .crow-compass { width: 94vw; }
+          .crow-compass__buttons button { min-width: 72px; padding: 6px; }
+          .skills-close { width: 42px; height: 42px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .skills-overlay *,
+          .skills-overlay *::before,
+          .skills-overlay *::after {
+            animation-duration: .01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: .01ms !important;
+          }
         }
       `}</style>
-    </div>
+    </section>
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MAIN EXPORT
-// ─────────────────────────────────────────────────────────────────────────────
+function SkillsLetterBox({ active }) {
+  return (
+    <>
+      <div className={`skills-letterbox skills-letterbox--top ${active ? 'is-visible' : ''}`} />
+      <div className={`skills-letterbox skills-letterbox--bottom ${active ? 'is-visible' : ''}`} />
+      <style>{`
+        .skills-letterbox {
+          position: fixed;
+          right: 0;
+          left: 0;
+          z-index: 210;
+          height: clamp(22px, 3.2vh, 42px);
+          background: #020708;
+          pointer-events: none;
+          transition: transform .7s cubic-bezier(.22,1,.36,1);
+        }
+        .skills-letterbox--top { top: 0; transform: translateY(-100%); }
+        .skills-letterbox--bottom { bottom: 0; transform: translateY(100%); }
+        .skills-letterbox.is-visible { transform: translateY(0); }
+      `}</style>
+    </>
+  )
+}
 
 export default function SkillsSection({ active, onClose, onDirectionChange }) {
   return (
     <>
       <SkillsLetterBox active={active} />
-      <SkillsGhostLabel active={active} />
       <SkillsOverlay
         active={active}
         onClose={onClose}
