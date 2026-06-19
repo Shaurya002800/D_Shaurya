@@ -21,6 +21,7 @@ function App() {
   const [activeSection,   setActiveSection]   = useState('explore')
   const [aboutActive,     setAboutActive]     = useState(false)
   const [skillsActive,    setSkillsActive]    = useState(false)
+  const [skillsClimbing,  setSkillsClimbing]  = useState(false)
   const [workActive,      setWorkActive]      = useState(false)
   const [selectedProject, setSelectedProject] = useState(null)
   const [skillsDirection, setSkillsDirection] = useState('north')
@@ -28,7 +29,7 @@ function App() {
   const [charState,       setCharState]       = useState('idle')
   const [speed,           setSpeed]           = useState(0)
   const debugRef   = useRef(null)
-  const sectionActive = aboutActive || skillsActive || workActive
+  const sectionActive = aboutActive || skillsActive || skillsClimbing || workActive
 
   // ── Close handlers ────────────────────────────────────────────────
   const handleAboutClose = useCallback(() => {
@@ -93,6 +94,7 @@ function App() {
         onNavigate={handleNavigate}
         aboutActive={aboutActive}
         skillsActive={skillsActive}
+        onSkillsClimbingChange={setSkillsClimbing}
         skillsDirection={skillsDirection}
         workActive={workActive}
         onProjectSelect={setSelectedProject}

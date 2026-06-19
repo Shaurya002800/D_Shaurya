@@ -360,6 +360,7 @@ export default function WorldScene({
   onProjectSelect,
   aboutActive = false,
   skillsActive = false,
+  onSkillsClimbingChange,
   skillsDirection = 'north',
   workActive = false,
 }) {
@@ -430,6 +431,7 @@ export default function WorldScene({
           debugRef={debugRef}
           aboutActive={aboutActive}
           skillsActive={skillsActive}
+          onSkillsClimbingChange={onSkillsClimbingChange}
           skillsDirection={skillsDirection}
           workActive={workActive}
         />

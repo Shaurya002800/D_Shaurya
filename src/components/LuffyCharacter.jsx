@@ -81,13 +81,15 @@ const SHADOW = {
 // CHARACTER STATES — finite state machine
 // ─────────────────────────────────────────────────────────────────────────────
 const STATE = {
-  IDLE:    'idle',
-  WALK:    'walk',
-  RUN:     'run',
-  EXAMINE: 'examine',
-  WAVE:    'wave',
-  CLIMB:   'climb',
-  JUMP:    'jump',
+  IDLE:        'idle',
+  WALK:        'walk',
+  RUN:         'run',
+  EXAMINE:     'examine',
+  WAVE:        'wave',
+  CLIMB_START: 'climbStart',
+  CLIMB:       'climb',
+  CLIMB_TOP:   'climbTop',
+  JUMP:        'jump',
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -99,7 +101,9 @@ const ANIM_FILES = {
   [STATE.RUN]:     '/animations/Running.fbx',
   [STATE.EXAMINE]: '/animations/Standing Idle 03 Examine.fbx',
   [STATE.WAVE]:    '/animations/Wave Hip Hop Dance.fbx',
+  [STATE.CLIMB_START]: '/animations/Start Climbing Ladder.fbx',
   [STATE.CLIMB]:   '/animations/Climbing Ladder.fbx',
+  [STATE.CLIMB_TOP]: '/animations/Climbing To Top.fbx',
   [STATE.JUMP]:    '/animations/Jumping Down.fbx',
 }
 
@@ -131,6 +135,17 @@ function lerpAngle(current, target, t) {
 
 const PLAYER_RADIUS = 0.52
 const LADDER_DECK_SPOT = new THREE.Vector3(2.35, 0.15, -3.05)
+const CLIMB = {
+  alignDuration: 0.55,
+  mountDuration: 0.78,
+  ascendDuration: 2.95,
+  pullUpDuration: 1.0,
+  base: new THREE.Vector3(1.98, 0.15, -2.75),
+  firstRung: new THREE.Vector3(2.0, 1.65, -2.58),
+  topRung: new THREE.Vector3(2.42, 30.85, -1.38),
+  landing: new THREE.Vector3(1.65, 32.1, -2.05),
+  facing: 0,
+}
 
 const DECK_BOX_OBSTACLES = [
   { minX: -8.0, maxX: -3.35, minZ: 16.25, maxZ: 21.35 }, // mikan garden
@@ -797,6 +812,7 @@ function Luffy3D({
   debugRef,
   aboutActive = false,
   skillsActive = false,
+  onSkillsClimbingChange,
   skillsDirection = 'north',
   workActive = false,
 }) {
@@ -806,6 +822,15 @@ function Luffy3D({
   const stateRef     = useRef(STATE.IDLE)
   const zoneRef      = useRef(null)
   const projectZoneRef = useRef(null)
+  const climbRef = useRef({
+    active: false,
+    phase: 'idle',
+    elapsed: 0,
+    startPosition: new THREE.Vector3(),
+    startRotation: 0,
+  })
+  const climbCameraPosition = useRef(new THREE.Vector3())
+  const climbCameraTarget = useRef(new THREE.Vector3())
 
   const camCtrl   = useRef(new CameraController())
   const velCtrl   = useRef(new VelocityController())
@@ -818,6 +843,42 @@ function Luffy3D({
   const keys = useKeyboard()
   const { camera, scene } = useThree()
   const { scene: glbScene } = useGLTF('/models/monkey_d_luffy.glb')
+
+  const setClimbAnimation = useCallback((stateName, loop = true, timeScale = 1) => {
+    const action = animSM.current.actions[stateName]
+    if (!action) return false
+
+    action.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce)
+    action.clampWhenFinished = !loop
+    action.setEffectiveTimeScale(timeScale)
+    animSM.current.transition(stateName, FADE.toClimb, true)
+    return true
+  }, [])
+
+  const beginClimb = useCallback(() => {
+    if (!groupRef.current || climbRef.current.active) return
+
+    climbRef.current.active = true
+    climbRef.current.phase = 'align'
+    climbRef.current.elapsed = 0
+    climbRef.current.startPosition.copy(groupRef.current.position)
+    climbRef.current.startRotation = groupRef.current.rotation.y
+    velCtrl.current.vel.set(0, 0, 0)
+    animSM.current.locked = true
+    animSM.current.transition(STATE.WALK, FADE.toWalk, true)
+    onZoneChange?.(null)
+    onSkillsClimbingChange?.(true)
+  }, [onSkillsClimbingChange, onZoneChange])
+
+  const finishClimb = useCallback(() => {
+    climbRef.current.active = false
+    climbRef.current.phase = 'idle'
+    climbRef.current.elapsed = 0
+    animSM.current.locked = false
+    animSM.current.transition(STATE.IDLE, FADE.toIdle, true)
+    onSkillsClimbingChange?.(false)
+    onNavigate?.('skills')
+  }, [onNavigate, onSkillsClimbingChange])
 
   useEffect(() => {
     if (!glbScene || !groupRef.current) return
@@ -922,6 +983,102 @@ function Luffy3D({
     const safeDt = Math.min(dt, 0.05)
     mixerRef.current.update(safeDt)
 
+    if (climbRef.current.active) {
+      const climb = climbRef.current
+      const group = groupRef.current
+      climb.elapsed += safeDt
+
+      const ease = (value) => {
+        const t = clamp(value, 0, 1)
+        return t * t * (3 - 2 * t)
+      }
+
+      if (climb.phase === 'align') {
+        const progress = ease(climb.elapsed / CLIMB.alignDuration)
+        group.position.lerpVectors(climb.startPosition, CLIMB.base, progress)
+        group.rotation.y = lerpAngle(climb.startRotation, CLIMB.facing, progress)
+
+        if (climb.elapsed >= CLIMB.alignDuration) {
+          climb.phase = 'mount'
+          climb.elapsed = 0
+          group.position.copy(CLIMB.base)
+          group.rotation.y = CLIMB.facing
+          if (!setClimbAnimation(STATE.CLIMB_START, false, 1.2)) {
+            setClimbAnimation(STATE.CLIMB, true, 1.0)
+          }
+        }
+      } else if (climb.phase === 'mount') {
+        const progress = ease(climb.elapsed / CLIMB.mountDuration)
+        group.position.lerpVectors(CLIMB.base, CLIMB.firstRung, progress)
+
+        if (climb.elapsed >= CLIMB.mountDuration) {
+          climb.phase = 'ascend'
+          climb.elapsed = 0
+          group.position.copy(CLIMB.firstRung)
+          setClimbAnimation(STATE.CLIMB, true, 1.35)
+        }
+      } else if (climb.phase === 'ascend') {
+        const progress = clamp(climb.elapsed / CLIMB.ascendDuration, 0, 1)
+        group.position.lerpVectors(CLIMB.firstRung, CLIMB.topRung, progress)
+        group.position.y += Math.sin(progress * Math.PI * 18) * 0.035
+
+        if (climb.elapsed >= CLIMB.ascendDuration) {
+          climb.phase = 'pullUp'
+          climb.elapsed = 0
+          group.position.copy(CLIMB.topRung)
+          if (!setClimbAnimation(STATE.CLIMB_TOP, false, 1.15)) {
+            setClimbAnimation(STATE.CLIMB, true, 1.0)
+          }
+        }
+      } else if (climb.phase === 'pullUp') {
+        const progress = ease(climb.elapsed / CLIMB.pullUpDuration)
+        group.position.lerpVectors(CLIMB.topRung, CLIMB.landing, progress)
+        group.rotation.y = lerpAngle(CLIMB.facing, Math.PI, progress)
+
+        if (climb.elapsed >= CLIMB.pullUpDuration) {
+          group.position.copy(CLIMB.landing)
+          group.rotation.y = Math.PI
+          finishClimb()
+        }
+      }
+
+      const climbProgress = clamp(
+        (group.position.y - CLIMB.base.y) / (CLIMB.topRung.y - CLIMB.base.y),
+        0,
+        1,
+      )
+      const desiredCamera = climbCameraPosition.current.set(
+        7.2 - climbProgress * 0.8,
+        Math.min(33.8, group.position.y + 3.2),
+        -7.5 + climbProgress * 2.0,
+      )
+      const desiredTarget = climbCameraTarget.current.set(
+        group.position.x,
+        group.position.y + 1.0,
+        group.position.z,
+      )
+      const cameraEase = 1 - Math.exp(-safeDt * 3.8)
+      camera.position.lerp(desiredCamera, cameraEase)
+      camCtrl.current.lookTarget.lerp(desiredTarget, cameraEase)
+      camera.lookAt(camCtrl.current.lookTarget)
+      camera.fov = THREE.MathUtils.lerp(camera.fov, 54, cameraEase)
+      camera.updateProjectionMatrix()
+
+      if (stateRef.current !== animSM.current.current) {
+        stateRef.current = animSM.current.current
+        onStateChange?.(stateRef.current)
+      }
+
+      if (debugRef) {
+        debugRef.current = {
+          speed: 0,
+          state: stateRef.current,
+          pos: group.position.clone(),
+        }
+      }
+      return
+    }
+
     if (aboutActive || skillsActive) {
       animSM.current.updateLocomotion({ moving: false, running: false })
       if (stateRef.current !== animSM.current.current) {
@@ -993,11 +1150,15 @@ function Luffy3D({
         keys.E = false
       }
 
-      animSM.current.playOnce(zone.state, 0.25, () => {
-        if (zone.section && onNavigate) {
-          onNavigate(zone.section)
-        }
-      })
+      if (zone.id === 'ladder') {
+        beginClimb()
+      } else {
+        animSM.current.playOnce(zone.state, 0.25, () => {
+          if (zone.section && onNavigate) {
+            onNavigate(zone.section)
+          }
+        })
+      }
     }
 
     if (stateRef.current !== animSM.current.current) {

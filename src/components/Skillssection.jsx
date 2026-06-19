@@ -308,7 +308,6 @@ function CompassNavigation({ current, onNavigate, data, visible }) {
           ))}
         </div>
       </div>
-      <div className="crow-compass__hint">A / D · TURN THE LOOKOUT</div>
     </nav>
   )
 }
@@ -948,7 +947,7 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
         .skill-intel p {
           margin: 0 0 6px;
           color: rgba(255,255,255,.62);
-          font-size: clamp(7px, .6vw, 10px);
+          font-size: clamp(8px, .68vw, 11px);
           line-height: 1.25;
         }
 
@@ -967,7 +966,7 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
 
         .crow-compass {
           position: fixed;
-          bottom: 0;
+          bottom: 22px;
           left: 50%;
           z-index: 35;
           width: min(620px, 74vw);
@@ -1077,19 +1076,6 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
 
         .crow-compass__buttons small { font-size: 8px; letter-spacing: .16em; }
         .crow-compass__buttons span { font: 400 13px/1.2 "Pirata One", cursive; letter-spacing: .05em; }
-
-        .crow-compass__hint {
-          position: absolute;
-          bottom: 8px;
-          left: 50%;
-          z-index: 2;
-          width: 120px;
-          color: rgba(255,244,216,.36);
-          font-size: 7px;
-          letter-spacing: .12em;
-          text-align: center;
-          transform: translateX(-50%);
-        }
 
         .turn-control {
           position: fixed;
