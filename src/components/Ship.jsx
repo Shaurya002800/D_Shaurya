@@ -6,6 +6,10 @@ import { RigidBody, CuboidCollider, CylinderCollider } from '@react-three/rapier
 import * as THREE from 'three'
 import { AnimatedSail } from './AboutSection.jsx'
 import { PROJECTS, PROJECT_GALLERY_SPOTS } from '../data/projects.js'
+import {
+  SHIP_DECK_BOX_OBSTACLES,
+  SHIP_PROP_LAYOUT,
+} from '../data/shipLayout.js'
 
 // ─────────────────────────────────────────────────────────────────────
 // PBR TEXTURE HELPER
@@ -162,10 +166,16 @@ function createRaisedDeckShape(section, inset = 0) {
   const maxZ = isBow ? -13 - inset : 27 - inset
   const wide = 8.45 - inset
   const narrow = (isBow ? 3.2 : 5.4) - inset * 0.5
+  const openingHalfWidth = 4.1 - inset * 0.25
+  const openingDepth = 2.25
 
   if (isBow) {
     shape.moveTo(0, -minZ)
     shape.bezierCurveTo(narrow * 0.72, -minZ + 0.8, wide, -minZ + 5.6, wide, -maxZ)
+    shape.lineTo(openingHalfWidth, -maxZ)
+    shape.lineTo(openingHalfWidth, -(maxZ - openingDepth))
+    shape.lineTo(-openingHalfWidth, -(maxZ - openingDepth))
+    shape.lineTo(-openingHalfWidth, -maxZ)
     shape.lineTo(-wide, -maxZ)
     shape.bezierCurveTo(-wide, -minZ + 5.6, -narrow * 0.72, -minZ + 0.8, 0, -minZ)
   } else {
@@ -174,6 +184,10 @@ function createRaisedDeckShape(section, inset = 0) {
     shape.bezierCurveTo(wide, -maxZ + 1.4, narrow * 0.75, -maxZ, 0, -maxZ)
     shape.bezierCurveTo(-narrow * 0.75, -maxZ, -wide, -maxZ + 1.4, -wide, -maxZ + 5.2)
     shape.lineTo(-wide, -minZ)
+    shape.lineTo(-openingHalfWidth, -minZ)
+    shape.lineTo(-openingHalfWidth, -(minZ + openingDepth))
+    shape.lineTo(openingHalfWidth, -(minZ + openingDepth))
+    shape.lineTo(openingHalfWidth, -minZ)
   }
   shape.closePath()
   return shape
@@ -3202,13 +3216,6 @@ function SunnyLawnDetails() {
         </mesh>
       ))}
 
-      {/* low rope fence protecting the lawn edge */}
-      {[[-7.05, -3, true], [7.05, -3, true], [0, -14.35, false], [0, 8.35, false]].map(([x, z, vertical], i) => (
-        <mesh key={`lawn-rope-${i}`} position={[x, 0.76, z]} rotation={vertical ? [Math.PI / 2, 0, 0] : [0, 0, Math.PI / 2]} castShadow>
-          <cylinderGeometry args={[0.055, 0.055, vertical ? 22.4 : 14.1, 8]} />
-          <RopeMaterial />
-        </mesh>
-      ))}
     </group>
   )
 }
@@ -3299,31 +3306,38 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       <CuboidCollider args={[0.18, 6, 16]} position={[ 8.65, -8, -1]} />
       <CuboidCollider args={[7.2, 6, 0.18]} position={[0, -8, 17.2]} />
       <CuboidCollider args={[2.4, 6, 0.18]} position={[0, -8, -22.2]} />
-      {/* ════════════════════════════════════════════════════════════
-          NEW COLLIDERS (TREES, SLIDE, HATCH, WHEEL)
-      ════════════════════════════════════════════════════════════ */}
-      {/* Mikan Tree Planter & Trunks */}
-      <CuboidCollider args={[2.25, 1.5, 2.25]} position={[-5.8, 3.5, 18.8]} />
-      
       {/* The Basement Hatch (Allows Luffy to step up onto the wood panel) */}
       <CuboidCollider args={[1.75, 0.1, 1.25]} position={[0, 0.46, 5]} />
-      
-      {/* Ship Wheel Column */}
-      <CuboidCollider args={[0.8, 1.0, 0.5]} position={[0, 3.5, 19.8]} />
-      {/* Quarterdeck floor */}
+
+      {/* Shared visual/navigation blockers. These exact footprints also drive
+          Luffy's custom movement resolver in LuffyCharacter.jsx. */}
+      {SHIP_DECK_BOX_OBSTACLES.map((obstacle) => (
+        <CuboidCollider
+          key={obstacle.id}
+          args={[
+            (obstacle.maxX - obstacle.minX) / 2,
+            obstacle.colliderHeight,
+            (obstacle.maxZ - obstacle.minZ) / 2,
+          ]}
+          position={[
+            (obstacle.minX + obstacle.maxX) / 2,
+            obstacle.colliderY,
+            (obstacle.minZ + obstacle.maxZ) / 2,
+          ]}
+        />
+      ))}
+
       {/* ════════════════════════════════════════════════════════════
           NAMI'S MIKAN ORCHARD PLANTER (FIXED PHYSICS)
       ════════════════════════════════════════════════════════════ */}
-      <MikanTree position={[-6.0, 2.74, 17.5]} scale={1.1} />
-      <MikanTree position={[-4.5, 2.74, 19.0]} scale={0.9} />
-      <MikanTree position={[-7.0, 2.74, 20.0]} scale={1.0} />
+      {SHIP_PROP_LAYOUT.orchard.trees.map((tree) => (
+        <MikanTree key={tree.position.join('-')} position={tree.position} scale={tree.scale} />
+      ))}
       
-      {/* THE FIX: Changed RigidBody to group */}
-      <group position={[-5.8, 2.8, 18.8]}>
+      <group position={SHIP_PROP_LAYOUT.orchard.planter}>
         {/* Wooden container */}
         <mesh castShadow receiveShadow>
           <boxGeometry args={[4.5, 0.3, 4.5]} />
-          {/* Note: Ensure WoodMaterial is defined, or use meshStandardMaterial */}
           <meshStandardMaterial color="#8b5a2b" roughness={0.9} />
         </mesh>
         {/* Dirt */}
@@ -3331,14 +3345,11 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
           <boxGeometry args={[4.3, 0.05, 4.3]} />
           <meshStandardMaterial color="#3e2723" roughness={1.0} />
         </mesh>
-        {/* Planter Box Physical Hitbox */}
-        <CuboidCollider args={[2.25, 0.2, 2.25]} position={[0, 0, 0]} />
       </group>
 
       {/* ════════════════════════════════════════════════════════════
           ICONIC EXTERIOR DETAILS
       ════════════════════════════════════════════════════════════ */}
-      <SoldierDockHatches />
       <CuboidCollider args={[8.5, 0.25, 6]} position={[0, 2.65, 19]} />
       {/* Forecastle floor */}
       <CuboidCollider args={[8.5, 0.25, 6]} position={[0, 2.65, -19]} />
@@ -3354,13 +3365,6 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       <CylinderCollider args={[17, 0.55]} position={[0, 16, -3]} />
       {/* Fore mast */}
       <CylinderCollider args={[9, 0.35]} position={[0, 9, -19]} />
-      {/* Step to quarterdeck */}
-      <CuboidCollider args={[8.5, 1.5, 0.4]} position={[0, 1.2, 13.0]} />
-      {/* Step to forecastle */}
-      <CuboidCollider args={[8.5, 1.5, 0.4]} position={[0, 1.2, -13.0]} />
-      {/* Barrel cluster blocker */}
-      <CuboidCollider args={[1.0, 1.0, 1.0]} position={[-6.5, 1.0, -10]} />
-      <CuboidCollider args={[1.0, 1.0, 1.0]} position={[6.5, 1.0, -10]} />
 
       {/* ════════════════════════════════════════════════════════════
           HULL
@@ -3431,26 +3435,28 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       ════════════════════════════════════════════════════════════ */}
       <SunnyRaisedDeck section="stern" />
       {/* Steps from main deck to quarterdeck */}
-      {[0, 1, 2].map((i) => (
-        <mesh key={i} position={[0, 0.22 + i * 0.4, 13.2 - i * 0.75]} receiveShadow castShadow>
-          <boxGeometry args={[8.5, 0.42, 0.85]} />
+      {Array.from({ length: 5 }, (_, i) => (
+        <mesh key={i} position={[0, 0.35 + i * 0.5, 10.8 + i * 0.62]} receiveShadow castShadow>
+          <boxGeometry args={[8.15, 0.48, 0.72]} />
           <DeckMaterial repeat={[2, 1]} />
         </mesh>
       ))}
-      {/* Quarterdeck front railing */}
-      <mesh position={[0, 3.9, 13.5]} castShadow>
-        <boxGeometry args={[17, 0.2, 0.3]} />
-        <meshStandardMaterial color="#c0392b" roughness={0.6} />
-      </mesh>
+      {/* Split railing leaves the visible central staircase open. */}
+      {[-6.35, 6.35].map((x) => (
+        <mesh key={x} position={[x, 3.9, 13.5]} castShadow>
+          <boxGeometry args={[4.25, 0.2, 0.3]} />
+          <meshStandardMaterial color="#c0392b" roughness={0.6} />
+        </mesh>
+      ))}
 
       {/* ════════════════════════════════════════════════════════════
           FORECASTLE — raised front deck
       ════════════════════════════════════════════════════════════ */}
       <SunnyRaisedDeck section="bow" />
       {/* Forecastle steps */}
-      {[0, 1, 2].map((i) => (
-        <mesh key={i} position={[0, 0.22 + i * 0.4, -13.2 + i * 0.75]} receiveShadow castShadow>
-          <boxGeometry args={[8.5, 0.42, 0.85]} />
+      {Array.from({ length: 5 }, (_, i) => (
+        <mesh key={i} position={[0, 0.35 + i * 0.5, -10.8 - i * 0.62]} receiveShadow castShadow>
+          <boxGeometry args={[8.15, 0.48, 0.72]} />
           <DeckMaterial repeat={[2, 1]} />
         </mesh>
       ))}
@@ -3460,8 +3466,6 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       ════════════════════════════════════════════════════════════ */}
       <ShipWheel position={[0, 3.62, 19.5]} />
       <LogPosePillar position={[0, 4.05, 18.2]} />
-      <FlowerGarden position={[-5.5, 2.85, 22]} />
-      <FlowerGarden position={[5.5,  2.85, 22]} />
       {/* Wheel post */}
       <mesh position={[0, 2.9, 19.8]} castShadow>
         <cylinderGeometry args={[0.1, 0.12, 1.5, 10]} />
@@ -3598,46 +3602,34 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       <BasementHatch position={[0, 0.46, 5]} />
 
       {/* ════════════════════════════════════════════════════════════
-          CANNONS — decorative pair on quarterdeck
-      ════════════════════════════════════════════════════════════ */}
-      <Cannon position={[-7, 2.85, 15]} rotation={[0, -Math.PI / 2, 0]} />
-      <Cannon position={[7, 2.85, 15]}  rotation={[0, Math.PI / 2, 0]} />
-      <Cannon position={[-7, 0.65, 3]}  rotation={[0, -Math.PI / 2, -0.15]} />
-      <Cannon position={[7, 0.65, 3]}   rotation={[0, Math.PI / 2, 0.15]} />
-
-      {/* ════════════════════════════════════════════════════════════
           ANCHORS — bow sides
       ════════════════════════════════════════════════════════════ */}
-      <Anchor position={[-7, 0.8, -22]} />
-      <Anchor position={[7, 0.8, -22]} />
+      {SHIP_PROP_LAYOUT.anchors.map((position) => (
+        <Anchor key={position.join('-')} position={position} />
+      ))}
 
       {/* ════════════════════════════════════════════════════════════
-          BARRELS — scattered on deck
+          SERVICE STATIONS — compact against the side lanes
       ════════════════════════════════════════════════════════════ */}
-      <Barrel position={[-6.2, 0.85, -10]} scale={1.0} />
-      <Barrel position={[-5.4, 0.85, -10]} scale={0.9} />
-      <Barrel position={[-6.2, 1.72, -10]} scale={0.85} />
-      <Barrel position={[6.2, 0.85, -10]}  scale={1.0} />
-      <Barrel position={[5.4, 0.85, -10]}  scale={0.9} />
-      <Barrel position={[-6.2, 0.85, 8]}   scale={0.95} />
-      <Barrel position={[6.2, 0.85, 8]}    scale={0.95} />
-
-      {/* ════════════════════════════════════════════════════════════
-          COILED ROPES — deck corners
-      ════════════════════════════════════════════════════════════ */}
-      <CoiledRope position={[-7, 0.5, 20]} />
-      <CoiledRope position={[7, 0.5, 20]} />
-      <CoiledRope position={[-7, 0.5, -18]} />
-      <CoiledRope position={[7, 0.5, -18]} />
+      {SHIP_PROP_LAYOUT.barrelClusters.map((cluster) => (
+        <group key={cluster.side}>
+          {cluster.barrels.map((barrel) => (
+            <Barrel
+              key={barrel.position.join('-')}
+              position={barrel.position}
+              scale={barrel.scale}
+            />
+          ))}
+          <CoiledRope position={cluster.rope} />
+        </group>
+      ))}
 
       {/* ════════════════════════════════════════════════════════════
           LANTERNS — atmospheric lighting
       ════════════════════════════════════════════════════════════ */}
-      <Lantern position={[-8, 3.5, 12]} />
-      <Lantern position={[8, 3.5, 12]} />
-      <Lantern position={[-8, 3.5, -12]} />
-      <Lantern position={[8, 3.5, -12]} />
-      <Lantern position={[0, 5.5, 20]} />
+      {SHIP_PROP_LAYOUT.railLanterns.map((position) => (
+        <Lantern key={position.join('-')} position={position} />
+      ))}
 
       {/* ════════════════════════════════════════════════════════════
           MASTHEAD LANTERN — top of mast area
@@ -3645,52 +3637,19 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       <Lantern position={[0, 27, -3]} />
 
       {/* ════════════════════════════════════════════════════════════
-          DECK CLEATS — rope tie-off points
-      ════════════════════════════════════════════════════════════ */}
-      {[[-6, 0.52, -5], [6, 0.52, -5], [-6, 0.52, 5], [6, 0.52, 5],
-        [-6, 0.52, -14], [6, 0.52, -14]].map(([x, y, z], i) => (
-        <mesh key={i} position={[x, y, z]} castShadow>
-          <boxGeometry args={[0.45, 0.18, 0.18]} />
-          <meshStandardMaterial color="#888" roughness={0.4} metalness={0.5} />
-        </mesh>
-      ))}
-
-      {/* ════════════════════════════════════════════════════════════
           BOLLARDS — rope post pairs on deck edge
       ════════════════════════════════════════════════════════════ */}
-      {[[-7.5, -12], [-7.5, 0], [-7.5, 12], [7.5, -12], [7.5, 0], [7.5, 12]].map(([x, z], i) => (
+      {SHIP_PROP_LAYOUT.bollards.map(([x, z], i) => (
         <mesh key={i} position={[x, 0.75, z]} castShadow>
           <cylinderGeometry args={[0.14, 0.18, 1.1, 10]} />
           <meshStandardMaterial color="#333" roughness={0.5} metalness={0.4} />
         </mesh>
       ))}
-      {/* ════════════════════════════════════════════════════════════
-          BOW PLATFORM — Sunny's extended front deck
-      ════════════════════════════════════════════════════════════ */}
-      <BowPlatform position={[0, 2.78, -26.5]} />
 
       {/* ════════════════════════════════════════════════════════════
           COUP DE VENT CANNON — giant front cannon
       ════════════════════════════════════════════════════════════ */}
       {/* The Sunny's main cannon is now represented inside the lion mouth. */}
-
-      {/* ════════════════════════════════════════════════════════════
-          STERN BALCONY — observation deck at the rear
-      ════════════════════════════════════════════════════════════ */}
-      <SternBalcony position={[0, 4.6, 27.2]} />
-
-      {/* ════════════════════════════════════════════════════════════
-          PADDLE WHEELS — Chicken Voyage emergency propulsion
-      ════════════════════════════════════════════════════════════ */}
-      <PaddleWheel position={[-9.8, -1.5, 8]}  side={-1} />
-      <PaddleWheel position={[9.8,  -1.5, 8]}  side={1}  />
-
-      {/* ════════════════════════════════════════════════════════════
-          TREASURE CHESTS — atmospheric detail
-      ════════════════════════════════════════════════════════════ */}
-      <TreasureChest position={[-6.5, 0.85, 15]} rotation={[0, 0.4, 0]} />
-      <TreasureChest position={[6.5,  0.85, 15]} rotation={[0, -0.3, 0]} />
-      <TreasureChest position={[6.2,  0.85, -5]} rotation={[0, 0.8, 0]} />
 
           {/* ══════════════════════════════════════════════════════
           GARDEN BASEMENT — work section held for now

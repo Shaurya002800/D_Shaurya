@@ -5,6 +5,12 @@ import * as THREE              from 'three'
 import { FBXLoader }           from 'three-stdlib'
 import { useKeyboard }         from '../hooks/useKeyboard'
 import { PROJECTS, PROJECT_GALLERY_SPOTS } from '../data/projects.js'
+import {
+  SHIP_DECK_BOUNDS,
+  SHIP_DECK_BOX_OBSTACLES,
+  SHIP_DECK_CIRCLE_OBSTACLES,
+  SHIP_STAIRS,
+} from '../data/shipLayout.js'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS — tune these to perfect the feel
@@ -12,8 +18,7 @@ import { PROJECTS, PROJECT_GALLERY_SPOTS } from '../data/projects.js'
 
 /** How far Luffy can walk in each direction from ship centre */
 const BOUNDS_DECK = {
-  minX: -7.0, maxX: 7.0,
-  minZ: -22.0, maxZ: 28.0,
+  ...SHIP_DECK_BOUNDS,
 }
 
 // ── FIX 1: BOUNDS_BASEMENT in WORLD coordinates ───────────────────────────
@@ -147,31 +152,8 @@ const CLIMB = {
   facing: 0,
 }
 
-const DECK_BOX_OBSTACLES = [
-  { minX: -8.0, maxX: -3.35, minZ: 16.25, maxZ: 21.35 }, // mikan garden
-  { minX: -1.2, maxX: 1.2, minZ: 18.0, maxZ: 20.85 }, // wheel and log pose
-  { minX: -6.75, maxX: 6.75, minZ: 22.1, maxZ: 28.0 }, // stern hall and balcony props
-  { minX: -6.8, maxX: 6.8, minZ: -27.9, maxZ: -23.25 }, // bow cannon and figurehead
-  { minX: -7.65, maxX: -6.15, minZ: 14.0, maxZ: 16.2 }, // side cannons
-  { minX: 6.15, maxX: 7.65, minZ: 14.0, maxZ: 16.2 },
-  { minX: -7.65, maxX: -6.15, minZ: 2.0, maxZ: 4.2 },
-  { minX: 6.15, maxX: 7.65, minZ: 2.0, maxZ: 4.2 },
-  { minX: -7.15, maxX: -5.0, minZ: -11.25, maxZ: -8.75 }, // barrel stacks
-  { minX: 5.0, maxX: 7.15, minZ: -11.25, maxZ: -8.75 },
-  { minX: -7.2, maxX: -5.55, minZ: 7.1, maxZ: 8.95 },
-  { minX: 5.55, maxX: 7.2, minZ: 7.1, maxZ: 8.95 },
-  { minX: -7.25, maxX: -5.75, minZ: 14.2, maxZ: 15.85 }, // treasure chests
-  { minX: 5.75, maxX: 7.25, minZ: 14.2, maxZ: 15.85 },
-  { minX: 5.45, maxX: 6.95, minZ: -5.8, maxZ: -4.15 },
-  { minX: -7.7, maxX: -6.15, minZ: -22.9, maxZ: -21.05 }, // anchors
-  { minX: 6.15, maxX: 7.7, minZ: -22.9, maxZ: -21.05 },
-]
-
-const DECK_CIRCLE_OBSTACLES = [
-  { x: 0, z: -3, radius: 1.15 }, // main mast
-  { x: 0, z: -19, radius: 0.82 }, // fore mast
-  { x: 0, z: -25, radius: 1.3 }, // coup de vent cannon base
-]
+const DECK_BOX_OBSTACLES = SHIP_DECK_BOX_OBSTACLES
+const DECK_CIRCLE_OBSTACLES = SHIP_DECK_CIRCLE_OBSTACLES
 
 const BASEMENT_BOX_OBSTACLES = PROJECT_GALLERY_SPOTS.map((spot) => {
   const z = spot.frame[2] + 2
@@ -633,14 +615,33 @@ class PositionController {
     p.x = resolved.x
     p.z = resolved.z
 
-    if (p.x >= -3.8 && p.x <= -1.5 && p.z >= 9.0 && p.z <= 15.0) {
-      const slopeProgress = (p.z - 9.0) / (15.0 - 9.0)
-      p.y = 0.15 + clamp(slopeProgress, 0, 1) * 2.5
+    const sternStairs = SHIP_STAIRS.stern
+    const bowStairs = SHIP_STAIRS.bow
+    const onSternStairs = (
+      p.x >= sternStairs.minX &&
+      p.x <= sternStairs.maxX &&
+      p.z >= sternStairs.startZ &&
+      p.z <= sternStairs.endZ
+    )
+    const onBowStairs = (
+      p.x >= bowStairs.minX &&
+      p.x <= bowStairs.maxX &&
+      p.z <= bowStairs.startZ &&
+      p.z >= bowStairs.endZ
+    )
+
+    if (onSternStairs) {
+      const progress = (p.z - sternStairs.startZ) / (sternStairs.endZ - sternStairs.startZ)
+      p.y = 0.15 + clamp(progress, 0, 1) * (sternStairs.topY - 0.15)
     }
-    else if (p.z > 13.0) {
+    else if (onBowStairs) {
+      const progress = (bowStairs.startZ - p.z) / (bowStairs.startZ - bowStairs.endZ)
+      p.y = 0.15 + clamp(progress, 0, 1) * (bowStairs.topY - 0.15)
+    }
+    else if (p.z > sternStairs.endZ) {
       p.y = 2.65
     }
-    else if (p.z < -13.0) {
+    else if (p.z < bowStairs.endZ) {
       p.y = 2.65
     }
     else if (p.x > -1.75 && p.x < 1.75 && p.z > 3.75 && p.z < 6.25) {
