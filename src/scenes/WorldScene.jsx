@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, Suspense, useMemo } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 // Added OrbitControls to the drei import
 import { Sky, Sparkles, OrbitControls } from '@react-three/drei'
-import { Physics, RigidBody, CuboidCollider } from '@react-three/rapier'
+import { Physics } from '@react-three/rapier'
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing'
 import * as THREE from 'three'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -14,6 +14,12 @@ import { AboutCameraController } from '../components/AboutSection'
 const CAM_EXPLORE = {
   position: new THREE.Vector3(0, 8.5, 16),
   target: new THREE.Vector3(0, 1.5, 0),
+}
+
+const SKILLS_RETURN_CAMERA = {
+  position: new THREE.Vector3(0.8, 4.8, 9),
+  target: new THREE.Vector3(4.6, 1.8, 1.2),
+  fov: 68,
 }
 
 const CROWS_NEST_CAMERA = {
@@ -42,39 +48,60 @@ export function SkillsCameraTransition({
   active,
   direction = 'north',
   cameraClaimedByOtherSection = false,
+  onCameraLockChange,
 }) {
   const isAnimating = useRef(false)
+  const cameraLocked = useRef(false)
   const currentTarget = useRef(new THREE.Vector3(0, 1.5, 0))
 
+  const setCameraLocked = (locked) => {
+    if (cameraLocked.current === locked) return
+    cameraLocked.current = locked
+    onCameraLockChange?.(locked)
+  }
+
+  useEffect(() => () => onCameraLockChange?.(false), [onCameraLockChange])
+
   useFrame((state, delta) => {
-    const speed = 2.5 * delta
+    const speed = 1 - Math.exp(-delta * 4.2)
     const view = CROWS_NEST_CAMERA.views[direction] ?? CROWS_NEST_CAMERA.views.north
 
-    // A newly opened section owns the camera immediately. Do not let the
-    // previous Skills exit animation overwrite its camera transition.
     if (!active && cameraClaimedByOtherSection) {
       isAnimating.current = false
       currentTarget.current.copy(CAM_EXPLORE.target)
+      setCameraLocked(false)
       return
     }
 
     if (active) {
       isAnimating.current = true
+      setCameraLocked(true)
       state.camera.position.lerp(view.position, speed)
       currentTarget.current.lerp(view.target, speed)
       state.camera.lookAt(currentTarget.current)
       state.camera.fov = THREE.MathUtils.lerp(state.camera.fov, CROWS_NEST_CAMERA.fov, speed)
       state.camera.updateProjectionMatrix()
     } else if (isAnimating.current) {
-      state.camera.position.lerp(CAM_EXPLORE.position, speed)
-      currentTarget.current.lerp(CAM_EXPLORE.target, speed)
+      setCameraLocked(true)
+      state.camera.position.lerp(SKILLS_RETURN_CAMERA.position, speed)
+      currentTarget.current.lerp(SKILLS_RETURN_CAMERA.target, speed)
       state.camera.lookAt(currentTarget.current)
-      state.camera.fov = THREE.MathUtils.lerp(state.camera.fov, 68, speed)
+      state.camera.fov = THREE.MathUtils.lerp(state.camera.fov, SKILLS_RETURN_CAMERA.fov, speed)
       state.camera.updateProjectionMatrix()
 
-      if (state.camera.position.distanceTo(CAM_EXPLORE.position) < 0.1) {
+      const cameraSettled = state.camera.position.distanceTo(SKILLS_RETURN_CAMERA.position) < 0.06
+      const targetSettled = currentTarget.current.distanceTo(SKILLS_RETURN_CAMERA.target) < 0.06
+      if (cameraSettled && targetSettled) {
+        state.camera.position.copy(SKILLS_RETURN_CAMERA.position)
+        currentTarget.current.copy(SKILLS_RETURN_CAMERA.target)
+        state.camera.lookAt(currentTarget.current)
+        state.camera.fov = SKILLS_RETURN_CAMERA.fov
+        state.camera.updateProjectionMatrix()
         isAnimating.current = false
+        setCameraLocked(false)
       }
+    } else {
+      setCameraLocked(false)
     }
   })
 
@@ -365,6 +392,7 @@ export default function WorldScene({
   workActive = false,
 }) {
   const [cloudsCleared, setCloudsCleared] = useState(false)
+  const [skillsCameraLocked, setSkillsCameraLocked] = useState(false)
   
   // ─── NEW: Global Free Camera State ───
   const [freeCam, setFreeCam] = useState(false)
@@ -410,6 +438,7 @@ export default function WorldScene({
         active={skillsActive}
         direction={skillsDirection}
         cameraClaimedByOtherSection={aboutActive || workActive}
+        onCameraLockChange={setSkillsCameraLocked}
       />
     </>
   )}
@@ -424,23 +453,21 @@ export default function WorldScene({
   <Suspense fallback={null}>
     <Physics gravity={[0, -9.81, 0]} debug={false}>
       <Ship onProjectSelect={onProjectSelect} aboutActive={aboutActive} skillsActive={skillsActive} />
-      <RigidBody type="kinematicPosition" colliders={false} lockRotations>
-        <CuboidCollider args={[0.35, 0.9, 0.35]} position={[0, 0.9, 0]} />
-        <LuffyCharacter3D
-          position={[0, 0.15, 5]}
-          onStateChange={onStateChange}
-          onZoneChange={onZoneChange}
-          onNavigate={onNavigate}
-          onProjectSelect={onProjectSelect}
-          debugRef={debugRef}
-          aboutActive={aboutActive}
-          skillsActive={skillsActive}
-          onSkillsClimbingChange={onSkillsClimbingChange}
-          skillsDirection={skillsDirection}
-          workActive={workActive}
-          freeCam={freeCam}
-        />
-      </RigidBody>
+      <LuffyCharacter3D
+        position={[0, 0.15, 5]}
+        onStateChange={onStateChange}
+        onZoneChange={onZoneChange}
+        onNavigate={onNavigate}
+        onProjectSelect={onProjectSelect}
+        debugRef={debugRef}
+        aboutActive={aboutActive}
+        skillsActive={skillsActive}
+        cameraLocked={skillsCameraLocked}
+        onSkillsClimbingChange={onSkillsClimbingChange}
+        skillsDirection={skillsDirection}
+        workActive={workActive}
+        freeCam={freeCam}
+      />
     </Physics>
   </Suspense>
 

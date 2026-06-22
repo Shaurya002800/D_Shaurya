@@ -325,16 +325,20 @@ function WheelSpoke({ angle }) {
 // ─────────────────────────────────────────────────────────────────────
 function ShipWheel({ position }) {
   return (
-    <group position={position} rotation={[0.28, 0, 0]}>
+    <group position={position} rotation={[0.12, 0, 0]} scale={1.22}>
       {/* Outer ring */}
       <mesh castShadow>
-        <torusGeometry args={[0.88, 0.075, 10, 24]} />
-        <meshStandardMaterial color="#2a1505" roughness={0.5} metalness={0.1} />
+        <torusGeometry args={[0.88, 0.085, 10, 28]} />
+        <meshStandardMaterial color="#6a3214" roughness={0.48} metalness={0.08} />
+      </mesh>
+      <mesh position={[0, 0, -0.035]}>
+        <torusGeometry args={[0.98, 0.025, 8, 32]} />
+        <meshStandardMaterial color="#d5a93a" roughness={0.32} metalness={0.62} />
       </mesh>
       {/* Inner hub ring */}
       <mesh castShadow>
         <torusGeometry args={[0.18, 0.065, 10, 20]} />
-        <meshStandardMaterial color="#2a1505" roughness={0.5} metalness={0.15} />
+        <meshStandardMaterial color="#d5a93a" roughness={0.36} metalness={0.55} />
       </mesh>
       {/* Hub center */}
       <mesh castShadow>
@@ -3080,59 +3084,54 @@ function SunnySideGalleries() {
 function SunnySternArchitecture() {
   return (
     <group>
-      {/* stacked rounded galleries replace the old flat transom */}
-      {[0, 1].map((level) => (
-        <group key={level} position={[0, 1.35 + level * 2.15, 24.0 + level * 0.8]}>
-          <mesh castShadow receiveShadow>
-            <cylinderGeometry args={[7.7 - level * 0.8, 8.2 - level * 0.7, 2.0, 30]} />
-            <meshStandardMaterial color={level ? '#f1dfb7' : '#a93630'} roughness={0.7} side={THREE.DoubleSide} />
+      <mesh position={[0, 3.85, 25.35]} castShadow receiveShadow>
+        <boxGeometry args={[10.6, 2.35, 3.25]} />
+        <meshStandardMaterial color="#f0dfbc" roughness={0.78} />
+      </mesh>
+
+      <mesh position={[0, 3.86, 23.68]} castShadow>
+        <boxGeometry args={[11.15, 2.55, 0.18]} />
+        <meshStandardMaterial color="#a9342f" roughness={0.65} />
+      </mesh>
+
+      {[-3.35, 0, 3.35].map((x) => (
+        <group key={x} position={[x, 4.05, 23.55]}>
+          <mesh>
+            <circleGeometry args={[0.78, 28]} />
+            <meshStandardMaterial
+              color="#153f51"
+              roughness={0.16}
+              transparent
+              opacity={0.82}
+              emissive="#1b7d9b"
+              emissiveIntensity={0.16}
+            />
           </mesh>
-          <mesh position={[0, 1.03, 0]} castShadow>
-            <torusGeometry args={[7.75 - level * 0.75, 0.18, 10, 40]} />
-            <meshStandardMaterial color={level ? '#b83a31' : '#f3ead4'} roughness={0.6} />
+          <mesh position={[0, 0, 0.025]}>
+            <ringGeometry args={[0.82, 0.98, 28]} />
+            <meshStandardMaterial color="#d5a93a" roughness={0.36} metalness={0.48} />
           </mesh>
         </group>
       ))}
 
-      {/* circular rear cabin anchors the dome instead of leaving it floating */}
-      <mesh position={[0, 5.8, 24.0]} castShadow>
-        <cylinderGeometry args={[4.15, 4.45, 3.4, 28]} />
-        <meshStandardMaterial color="#efe0bc" roughness={0.76} />
+      <mesh position={[0, 5.18, 25.35]} castShadow>
+        <boxGeometry args={[11.35, 0.22, 3.75]} />
+        <meshStandardMaterial color="#6d3418" roughness={0.8} />
       </mesh>
-      <mesh position={[0, 5.8, 19.66]} rotation={[Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[2.5, 3.5, 34]} />
-        <meshStandardMaterial color="#a9342f" roughness={0.62} side={THREE.DoubleSide} />
-      </mesh>
-      {[-2.25, 0, 2.25].map((x) => (
-        <mesh key={x} position={[x, 5.75, 19.57]}>
-          <circleGeometry args={[0.82, 24]} />
-          <meshStandardMaterial color="#72b2c8" roughness={0.18} transparent opacity={0.72} emissive="#70afc4" emissiveIntensity={0.08} />
-        </mesh>
-      ))}
 
-      {/* chunky anime dome — tiered so it reads clearly from the player camera */}
-      {[
-        { y: 7.82, bottom: 3.75, top: 3.22, height: 0.72 },
-        { y: 8.43, bottom: 3.22, top: 2.48, height: 0.62 },
-        { y: 8.96, bottom: 2.48, top: 1.58, height: 0.54 },
-        { y: 9.42, bottom: 1.58, top: 0.34, height: 0.46 },
-      ].map((tier, index) => (
-        <group key={tier.y}>
-          <mesh position={[0, tier.y, 24.0]} castShadow>
-            <cylinderGeometry args={[tier.top, tier.bottom, tier.height, 30]} />
-            <meshStandardMaterial color="#f0d56b" roughness={0.68} />
-          </mesh>
-          {index < 3 && (
-            <mesh position={[0, tier.y + tier.height * 0.5, 24.0]} rotation={[Math.PI / 2, 0, 0]}>
-              <torusGeometry args={[tier.top, 0.1, 8, 34]} />
-              <meshStandardMaterial color="#b6352e" roughness={0.58} />
-            </mesh>
-          )}
-        </group>
-      ))}
-      <mesh position={[0, 9.82, 24.0]} castShadow>
-        <sphereGeometry args={[0.42, 14, 12]} />
-        <meshStandardMaterial color="#b6352e" roughness={0.52} />
+      <mesh position={[0, 5.08, 25.35]} scale={[1, 0.54, 0.43]} castShadow>
+        <sphereGeometry args={[5.25, 28, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
+        <meshStandardMaterial color="#f0d56b" roughness={0.68} side={THREE.DoubleSide} />
+      </mesh>
+
+      <mesh position={[0, 5.18, 23.42]} castShadow>
+        <boxGeometry args={[10.75, 0.2, 0.34]} />
+        <meshStandardMaterial color="#b6352e" roughness={0.58} />
+      </mesh>
+
+      <mesh position={[0, 7.92, 25.35]} castShadow>
+        <sphereGeometry args={[0.38, 14, 12]} />
+        <meshStandardMaterial color="#b6352e" roughness={0.5} />
       </mesh>
     </group>
   )
@@ -3464,12 +3463,20 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
       {/* ════════════════════════════════════════════════════════════
           SHIP WHEEL
       ════════════════════════════════════════════════════════════ */}
-      <ShipWheel position={[0, 3.62, 19.5]} />
-      <LogPosePillar position={[0, 4.05, 18.2]} />
+      <ShipWheel position={[0, 4.05, 18.25]} />
+      <LogPosePillar position={[-2.2, 3.95, 18.25]} />
       {/* Wheel post */}
-      <mesh position={[0, 2.9, 19.8]} castShadow>
-        <cylinderGeometry args={[0.1, 0.12, 1.5, 10]} />
-        <meshStandardMaterial color="#2a1505" roughness={0.75} />
+      <mesh position={[0, 3.18, 18.48]} castShadow>
+        <boxGeometry args={[0.52, 1.45, 0.48]} />
+        <meshStandardMaterial color="#5f3117" roughness={0.78} />
+      </mesh>
+      <mesh position={[0, 2.72, 18.48]} castShadow>
+        <cylinderGeometry args={[0.52, 0.62, 0.22, 16]} />
+        <meshStandardMaterial color="#d5a93a" roughness={0.38} metalness={0.35} />
+      </mesh>
+      <mesh position={[0, 2.76, 18.15]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <ringGeometry args={[1.35, 1.62, 32]} />
+        <meshStandardMaterial color="#d5a93a" roughness={0.42} metalness={0.28} side={THREE.DoubleSide} />
       </mesh>
 
       {/* ════════════════════════════════════════════════════════════

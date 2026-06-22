@@ -137,7 +137,7 @@ function Atmosphere({ data, visible, turning }) {
         className={`skills-weather skills-weather--${data.effect}`}
         style={{ opacity: visible ? 1 : 0 }}
       >
-        {Array.from({ length: 12 }, (_, index) => (
+        {Array.from({ length: 20 }, (_, index) => (
           <i key={index} style={{ '--i': index }} />
         ))}
       </div>
@@ -250,10 +250,6 @@ function CharacterStage({ data, characterVisible, boardVisible, contentVisible, 
             '--accent': data.accentColor,
           }}
         >
-          <span className="glass-corner glass-corner--tl" />
-          <span className="glass-corner glass-corner--tr" />
-          <span className="glass-corner glass-corner--bl" />
-          <span className="glass-corner glass-corner--br" />
           <SkillPanel
             data={data}
             visible={contentVisible}
@@ -524,9 +520,18 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
         }
 
         .skills-weather {
-          z-index: 2;
+          z-index: 11;
           overflow: hidden;
+          mix-blend-mode: screen;
           transition: opacity .8s ease;
+        }
+
+        .skills-weather::before,
+        .skills-weather::after {
+          position: absolute;
+          inset: 0;
+          content: "";
+          pointer-events: none;
         }
 
         .skills-weather i {
@@ -536,50 +541,96 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
         }
 
         .skills-weather--slashes i {
-          top: calc(10% + (var(--i) * 7%));
-          left: calc(-15% + (var(--i) * 9%));
-          width: 160px;
-          height: 1px;
-          opacity: .16;
-          background: linear-gradient(90deg, transparent, #b9ffd1, transparent);
-          transform: rotate(-18deg);
-          animation: wind-cut 5.5s ease-in-out infinite;
-          animation-delay: calc(var(--i) * -.42s);
+          top: calc(-18% + (var(--i) * 6.8%));
+          left: calc(-24% + (var(--i) * 7.4%));
+          width: clamp(210px, 22vw, 430px);
+          height: 2px;
+          opacity: .24;
+          background: linear-gradient(90deg, transparent, rgba(191,255,213,.95), transparent);
+          box-shadow: 0 0 12px rgba(84,229,138,.48);
+          transform: rotate(-21deg);
+          animation: wind-cut 4.8s ease-in-out infinite;
+          animation-delay: calc(var(--i) * -.31s);
+        }
+
+        .skills-weather--slashes::before {
+          background:
+            radial-gradient(ellipse at 18% 62%, rgba(76,255,145,.22), transparent 28%),
+            radial-gradient(ellipse at 82% 30%, rgba(76,255,145,.16), transparent 24%);
+          animation: zoro-mist 5s ease-in-out infinite alternate;
         }
 
         .skills-weather--embers i {
-          left: calc(5% + (var(--i) * 8%));
-          bottom: -20px;
-          width: 4px;
-          height: 4px;
+          left: calc(-3% + (var(--i) * 5.4%));
+          bottom: -28px;
+          width: 6px;
+          height: 6px;
           border-radius: 50%;
-          background: #ffd178;
-          box-shadow: 0 0 10px #ff8a2c;
-          animation: ember-rise 7s linear infinite;
-          animation-delay: calc(var(--i) * -.58s);
+          background: #ffe2a0;
+          box-shadow: 0 0 15px 3px rgba(255,112,28,.72);
+          animation: ember-rise 6.2s linear infinite;
+          animation-delay: calc(var(--i) * -.43s);
+        }
+
+        .skills-weather--embers i:nth-child(3n) { width: 10px; height: 10px; }
+        .skills-weather--embers i:nth-child(3n + 1) { width: 4px; height: 4px; }
+
+        .skills-weather--embers::before {
+          inset: auto 0 0;
+          height: 48%;
+          background: radial-gradient(ellipse at 50% 100%, rgba(255,118,28,.28), transparent 68%);
+          animation: heat-pulse 2.8s ease-in-out infinite alternate;
         }
 
         .skills-weather--haki i {
-          top: calc(12% + (var(--i) * 7%));
-          left: calc(8% + (var(--i) * 8%));
-          width: 110px;
-          height: 2px;
+          top: calc(3% + (var(--i) * 5.1%));
+          left: calc(-8% + (var(--i) * 5.7%));
+          width: clamp(140px, 16vw, 300px);
+          height: 3px;
           opacity: 0;
-          background: linear-gradient(90deg, transparent, #ffb7b7, transparent);
-          transform: rotate(calc(-24deg + (var(--i) * 5deg)));
-          animation: haki-flash 4.6s ease-out infinite;
-          animation-delay: calc(var(--i) * -.37s);
+          background: linear-gradient(90deg, transparent, #fff, #ff5e66 54%, transparent);
+          box-shadow: 0 0 16px rgba(255,31,52,.88);
+          clip-path: polygon(0 40%, 35% 20%, 43% 70%, 68% 36%, 100% 58%, 100% 78%, 66% 57%, 42% 92%, 33% 43%, 0 65%);
+          transform: rotate(calc(-32deg + (var(--i) * 3.2deg)));
+          animation: haki-flash 3.8s ease-out infinite;
+          animation-delay: calc(var(--i) * -.28s);
+        }
+
+        .skills-weather--haki::before {
+          background:
+            radial-gradient(circle at 50% 42%, rgba(255,34,52,.34), transparent 38%),
+            radial-gradient(circle at 10% 58%, rgba(255,22,44,.24), transparent 30%),
+            radial-gradient(circle at 90% 34%, rgba(255,22,44,.22), transparent 30%);
+          animation: haki-aura 3.8s ease-in-out infinite;
+        }
+
+        .skills-weather--haki::after {
+          background:
+            linear-gradient(90deg, rgba(255,18,40,.24), transparent 18%, transparent 82%, rgba(255,18,40,.24)),
+            radial-gradient(ellipse at 50% 105%, rgba(143,0,15,.34), transparent 52%);
+          animation: haki-breathe 2.6s ease-in-out infinite alternate;
         }
 
         .skills-weather--petals i {
-          top: -20px;
-          left: calc(3% + (var(--i) * 8.5%));
-          width: 9px;
-          height: 6px;
+          top: -30px;
+          left: calc(-2% + (var(--i) * 5.3%));
+          width: 11px;
+          height: 8px;
           border-radius: 70% 20% 70% 20%;
-          background: rgba(255,182,225,.58);
-          animation: petal-fall 8s linear infinite;
-          animation-delay: calc(var(--i) * -.67s);
+          background: rgba(255,191,230,.86);
+          box-shadow: 0 0 9px rgba(239,119,200,.54);
+          animation: petal-fall 7.4s linear infinite;
+          animation-delay: calc(var(--i) * -.51s);
+        }
+
+        .skills-weather--petals i:nth-child(3n) { width: 16px; height: 11px; filter: blur(.4px); }
+        .skills-weather--petals i:nth-child(3n + 1) { width: 8px; height: 6px; }
+
+        .skills-weather--petals::before {
+          background:
+            radial-gradient(ellipse at 20% 40%, rgba(255,105,202,.18), transparent 26%),
+            radial-gradient(ellipse at 80% 58%, rgba(255,105,202,.16), transparent 28%);
+          animation: boa-aura 4.5s ease-in-out infinite alternate;
         }
 
         .bearing-header {
@@ -677,17 +728,6 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
           opacity: 0;
           transform: perspective(900px) rotateX(5deg) scale(.94);
           transform-origin: 50% 60%;
-          border: 1px solid rgba(235,249,248,.36);
-          border-radius: 14px;
-          background:
-            linear-gradient(125deg, rgba(255,255,255,.055), transparent 32%),
-            radial-gradient(circle at 50% 10%, rgba(255,255,255,.06), transparent 58%),
-            rgba(2,13,18,.12);
-          box-shadow:
-            inset 0 0 0 1px rgba(255,255,255,.045),
-            inset 0 -45px 70px rgba(0,0,0,.16),
-            0 0 32px color-mix(in srgb, var(--accent) 28%, transparent);
-          backdrop-filter: blur(2px);
           transition: opacity .55s ease, transform .75s cubic-bezier(.22,1,.36,1);
           pointer-events: auto;
         }
@@ -696,21 +736,6 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
           opacity: 1;
           transform: perspective(900px) rotateX(0) scale(1);
         }
-
-        .glass-corner {
-          position: absolute;
-          width: 18px;
-          height: 18px;
-          border-color: var(--accent);
-          opacity: .76;
-          filter: drop-shadow(0 0 5px var(--accent));
-          pointer-events: none;
-        }
-
-        .glass-corner--tl { left: -2px; top: -2px; border-left: 2px solid; border-top: 2px solid; border-radius: 12px 0 0; }
-        .glass-corner--tr { right: -2px; top: -2px; border-right: 2px solid; border-top: 2px solid; border-radius: 0 12px 0 0; }
-        .glass-corner--bl { left: -2px; bottom: -2px; border-left: 2px solid; border-bottom: 2px solid; border-radius: 0 0 0 12px; }
-        .glass-corner--br { right: -2px; bottom: -2px; border-right: 2px solid; border-bottom: 2px solid; border-radius: 0 0 12px; }
 
         .skill-panel {
           position: relative;
@@ -1154,27 +1179,54 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
         }
 
         @keyframes wind-cut {
-          0%, 78%, 100% { opacity: 0; transform: translate(-20px, 15px) rotate(-18deg) scaleX(.45); }
-          84% { opacity: .22; }
-          94% { opacity: 0; transform: translate(170px, -20px) rotate(-18deg) scaleX(1.2); }
+          0%, 72%, 100% { opacity: 0; transform: translate(-80px, 40px) rotate(-21deg) scaleX(.35); }
+          80% { opacity: .62; }
+          93% { opacity: 0; transform: translate(280px, -55px) rotate(-21deg) scaleX(1.35); }
         }
 
         @keyframes ember-rise {
           from { opacity: 0; transform: translate(0, 0) scale(.6); }
-          20% { opacity: .6; }
-          to { opacity: 0; transform: translate(45px, -80vh) scale(1.25); }
+          18% { opacity: .9; }
+          to { opacity: 0; transform: translate(65px, -88vh) scale(1.45); }
         }
 
         @keyframes haki-flash {
-          0%, 84%, 100% { opacity: 0; transform: scaleX(.2) rotate(-12deg); }
-          87% { opacity: .45; }
-          93% { opacity: 0; transform: scaleX(1.5) rotate(-12deg); }
+          0%, 76%, 100% { opacity: 0; transform: scaleX(.18) rotate(-12deg); }
+          81% { opacity: .92; }
+          89% { opacity: .12; transform: scaleX(1.65) rotate(-12deg); }
+          92% { opacity: .72; }
         }
 
         @keyframes petal-fall {
           from { opacity: 0; transform: translate(0, -20px) rotate(0deg); }
-          10% { opacity: .55; }
-          to { opacity: 0; transform: translate(90px, 100vh) rotate(540deg); }
+          10% { opacity: .9; }
+          to { opacity: 0; transform: translate(130px, 105vh) rotate(620deg); }
+        }
+
+        @keyframes zoro-mist {
+          from { opacity: .58; transform: translateX(-1.5%); }
+          to { opacity: 1; transform: translateX(1.5%); }
+        }
+
+        @keyframes heat-pulse {
+          from { opacity: .55; transform: scaleY(.92); filter: blur(5px); }
+          to { opacity: 1; transform: scaleY(1.08); filter: blur(9px); }
+        }
+
+        @keyframes haki-aura {
+          0%, 72%, 100% { opacity: .62; transform: scale(1); }
+          82% { opacity: 1; transform: scale(1.035); }
+          90% { opacity: .72; transform: scale(.995); }
+        }
+
+        @keyframes haki-breathe {
+          from { opacity: .55; filter: blur(3px); }
+          to { opacity: 1; filter: blur(8px); }
+        }
+
+        @keyframes boa-aura {
+          from { opacity: .55; transform: scale(1); }
+          to { opacity: .95; transform: scale(1.025); }
         }
 
         @keyframes intel-in {

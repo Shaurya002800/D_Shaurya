@@ -140,6 +140,7 @@ function lerpAngle(current, target, t) {
 
 const PLAYER_RADIUS = 0.52
 const LADDER_DECK_SPOT = new THREE.Vector3(2.35, 0.15, -3.05)
+const SKILLS_DECK_RETURN_SPOT = new THREE.Vector3(4.6, 0.15, 1.2)
 const CLIMB = {
   alignDuration: 0.55,
   mountDuration: 0.78,
@@ -337,6 +338,7 @@ function ShadowBlob({ groupRef }) {
   useFrame(() => {
     if (!blobRef.current || !groupRef.current) return
     blobRef.current.position.x = groupRef.current.position.x
+    blobRef.current.position.y = groupRef.current.position.y + 0.07
     blobRef.current.position.z = groupRef.current.position.z
   })
 
@@ -369,6 +371,14 @@ class CameraController {
     this.currentFov  = CAM.fovNormal
     this._tmpVec     = new THREE.Vector3()
     this._tmpLook    = new THREE.Vector3()
+    this._tmpDirection = new THREE.Vector3()
+  }
+
+  syncFromCamera(camera) {
+    this.position.copy(camera.position)
+    camera.getWorldDirection(this._tmpDirection)
+    this.lookTarget.copy(camera.position).addScaledVector(this._tmpDirection, 10)
+    this.currentFov = camera.fov
   }
 
   update(camera, luffyPos, luffyRot, isRunning, dt, workActive = false) {
@@ -389,7 +399,17 @@ class CameraController {
       this._tmpVec.y = Math.min(this._tmpVec.y, -9.6)
     }
 
-    this.position.lerp(this._tmpVec, workActive ? 0.16 : CAM.posLerp)
+    const positionLerp = 1 - Math.pow(
+      1 - (workActive ? 0.16 : CAM.posLerp),
+      dt * 60,
+    )
+    const lookLerp = 1 - Math.pow(
+      1 - (workActive ? 0.18 : CAM.lookLerp),
+      dt * 60,
+    )
+    const fovLerp = 1 - Math.pow(1 - CAM.fovLerp, dt * 60)
+
+    this.position.lerp(this._tmpVec, positionLerp)
     camera.position.copy(this.position)
 
     this._tmpLook.set(
@@ -397,10 +417,10 @@ class CameraController {
       luffyPos.y + lookOffset,
       luffyPos.z,
     )
-    this.lookTarget.lerp(this._tmpLook, workActive ? 0.18 : CAM.lookLerp)
+    this.lookTarget.lerp(this._tmpLook, lookLerp)
     camera.lookAt(this.lookTarget)
 
-    this.currentFov += (fov - this.currentFov) * CAM.fovLerp
+    this.currentFov += (fov - this.currentFov) * fovLerp
     camera.fov = this.currentFov
     camera.updateProjectionMatrix()
   }
@@ -415,6 +435,7 @@ class VelocityController {
     this.vel       = new THREE.Vector3()
     this.speed     = 0
     this._inputDir = new THREE.Vector3()
+    this._targetVel = new THREE.Vector3()
   }
 
   update(keys, shift, dt) {
@@ -436,18 +457,12 @@ class VelocityController {
       this._inputDir.normalize()
     }
 
-    if (moving) {
-      this.vel.x += this._inputDir.x * MOVE.accel * dt
-      this.vel.z += this._inputDir.z * MOVE.accel * dt
-      const spd = this.vel.length()
-      if (spd > maxSpeed) this.vel.multiplyScalar(maxSpeed / spd)
-    } else {
-      const friction = Math.max(0, 1 - MOVE.friction * dt)
-      this.vel.x *= friction
-      this.vel.z *= friction
-      if (this.vel.length() < MOVE.stopThresh) {
-        this.vel.set(0, 0, 0)
-      }
+    this._targetVel.copy(this._inputDir).multiplyScalar(moving ? maxSpeed : 0)
+    const response = 1 - Math.exp(-(moving ? MOVE.accel : MOVE.friction) * dt)
+    this.vel.lerp(this._targetVel, response)
+
+    if (!moving && this.vel.length() < MOVE.stopThresh) {
+      this.vel.set(0, 0, 0)
     }
 
     this.speed = this.vel.length()
@@ -587,7 +602,7 @@ class RotationController {
   }
 
   update(targetAngle, speed, dt) {
-    this.current = lerpAngle(this.current, targetAngle, speed * dt)
+    this.current = lerpAngle(this.current, targetAngle, 1 - Math.exp(-speed * dt))
     return this.current
   }
 }
@@ -630,26 +645,27 @@ class PositionController {
       p.z >= bowStairs.endZ
     )
 
+    let targetY = 0.15
+
     if (onSternStairs) {
       const progress = (p.z - sternStairs.startZ) / (sternStairs.endZ - sternStairs.startZ)
-      p.y = 0.15 + clamp(progress, 0, 1) * (sternStairs.topY - 0.15)
+      targetY = 0.15 + clamp(progress, 0, 1) * (sternStairs.topY - 0.15)
     }
     else if (onBowStairs) {
       const progress = (bowStairs.startZ - p.z) / (bowStairs.startZ - bowStairs.endZ)
-      p.y = 0.15 + clamp(progress, 0, 1) * (bowStairs.topY - 0.15)
+      targetY = 0.15 + clamp(progress, 0, 1) * (bowStairs.topY - 0.15)
     }
     else if (p.z > sternStairs.endZ) {
-      p.y = 2.65
+      targetY = 2.65
     }
     else if (p.z < bowStairs.endZ) {
-      p.y = 2.65
+      targetY = 2.65
     }
     else if (p.x > -1.75 && p.x < 1.75 && p.z > 3.75 && p.z < 6.25) {
-      p.y = 0.28
+      targetY = 0.28
     }
-    else {
-      p.y = 0.15
-    }
+
+    p.y = THREE.MathUtils.lerp(p.y, targetY, 1 - Math.exp(-dt * 16))
   }
 
   // ── Basement movement in WORLD coordinates ───────────────────────────────
@@ -680,8 +696,8 @@ const ZONES = [
   {
     id:       'wheel',
     label:    'Press E — Inspect Wheel',
-    center:   new THREE.Vector3(0, 0.15, 19),
-    radius:   2.5,
+    center:   new THREE.Vector3(0, 2.65, 17.2),
+    radius:   2.8,
     state:    STATE.EXAMINE,
     section:  'about',
   },
@@ -779,7 +795,7 @@ function InteractionHint({ label }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function SpeedIndicator({ speed, state }) {
-  if (process.env.NODE_ENV === 'production') return null
+  if (import.meta.env.PROD) return null
   return (
     <div style={{
       position: 'fixed',
@@ -813,6 +829,7 @@ function Luffy3D({
   debugRef,
   aboutActive = false,
   skillsActive = false,
+  cameraLocked = false,
   onSkillsClimbingChange,
   skillsDirection = 'north',
   workActive = false,
@@ -820,6 +837,7 @@ function Luffy3D({
 }) {
   const groupRef     = useRef()
   const mixerRef     = useRef(null)
+  const characterRootRef = useRef(null)
   const loadedRef    = useRef(false)
   const stateRef     = useRef(STATE.IDLE)
   const zoneRef      = useRef(null)
@@ -841,6 +859,7 @@ function Luffy3D({
   const animSM    = useRef(new AnimStateMachine())
   const footstep  = useRef(new FootstepTimer())
   const wasMoving = useRef(false)
+  const wasCameraLocked = useRef(cameraLocked)
 
   const keys = useKeyboard()
   const { camera, scene } = useThree()
@@ -882,22 +901,64 @@ function Luffy3D({
     onNavigate?.('skills')
   }, [onNavigate, onSkillsClimbingChange])
 
+  const triggerInteraction = useCallback(() => {
+    const zone = zoneRef.current
+    if (!zone || animSM.current.locked || climbRef.current.active) return
+
+    if (zone.id === 'ladder') {
+      beginClimb()
+      return
+    }
+
+    velCtrl.current.vel.set(0, 0, 0)
+
+    if (zone.section) {
+      animSM.current.transition(zone.state, 0.12, true)
+      onNavigate?.(zone.section)
+      return
+    }
+
+    animSM.current.playOnce(zone.state, 0.2)
+  }, [beginClimb, onNavigate])
+
+  useEffect(() => {
+    const handleInteraction = (event) => {
+      if (event.key.toLowerCase() !== 'e' || event.repeat || window.__PORTFOLIO_CHAT_ACTIVE__) return
+      event.preventDefault()
+      triggerInteraction()
+    }
+
+    window.addEventListener('keydown', handleInteraction)
+    return () => window.removeEventListener('keydown', handleInteraction)
+  }, [triggerInteraction])
+
   useEffect(() => {
     if (!glbScene || !groupRef.current) return
 
+    const characterGroup = groupRef.current
     const matList = collectGLBMaterials(glbScene)
     const loader  = new FBXLoader()
     let fbxMesh   = null
+    let mixer     = null
+    let disposed  = false
 
     loader.load(
       ANIM_FILES[STATE.IDLE],
       async (fbx) => {
+        if (disposed) return
+
         fbx.scale.setScalar(0.0099)
         fbx.rotation.set(0, 0, 0)
         applyMaterialsToFBX(fbx, matList)
         fbxMesh = fbx
 
-        const mixer = new THREE.AnimationMixer(fbx)
+        if (characterRootRef.current) {
+          characterGroup.remove(characterRootRef.current)
+        }
+        characterRootRef.current = fbx
+        characterGroup.add(fbx)
+
+        mixer = new THREE.AnimationMixer(fbx)
         mixerRef.current = mixer
         animSM.current.setMixer(mixer)
 
@@ -909,7 +970,6 @@ function Luffy3D({
         animSM.current.register(STATE.IDLE, idleAction)
         stateRef.current = STATE.IDLE
 
-        if (groupRef.current) groupRef.current.add(fbx)
         loadedRef.current = true
         console.log('[Luffy] ✅ Base mesh + idle ready')
 
@@ -917,6 +977,8 @@ function Luffy3D({
         const results  = await Promise.allSettled(
           animKeys.map(k => loadAnim(loader, ANIM_FILES[k], mixer, k))
         )
+        if (disposed || mixerRef.current !== mixer) return
+
         results.forEach((result, i) => {
           if (result.status === 'fulfilled') {
             animSM.current.register(animKeys[i], result.value)
@@ -925,16 +987,25 @@ function Luffy3D({
         console.log('[Luffy] ✅ All animations loaded')
       },
       undefined,
-      (err) => console.error('[Luffy] ❌ Failed to load base mesh:', err)
+      (err) => {
+        if (!disposed) console.error('[Luffy] ❌ Failed to load base mesh:', err)
+      }
     )
 
     return () => {
-      if (mixerRef.current) {
-        mixerRef.current.stopAllAction()
+      disposed = true
+      if (mixer) {
+        mixer.stopAllAction()
+        mixer.uncacheRoot(fbxMesh)
+      }
+      if (mixerRef.current === mixer) {
         mixerRef.current = null
       }
-      if (groupRef.current && fbxMesh) {
-        groupRef.current.remove(fbxMesh)
+      if (fbxMesh) {
+        characterGroup.remove(fbxMesh)
+      }
+      if (characterRootRef.current === fbxMesh) {
+        characterRootRef.current = null
       }
       loadedRef.current = false
     }
@@ -972,9 +1043,9 @@ function Luffy3D({
       groupRef.current.rotation.y = directionRotation[skillsDirection] ?? Math.PI
       velCtrl.current.vel.set(0, 0, 0)
     } else if (!skillsActive && groupRef.current.position.y > 20) {
-      groupRef.current.position.copy(LADDER_DECK_SPOT)
-      groupRef.current.rotation.y = -Math.PI / 2
-      rotCtrl.current.current = -Math.PI / 2
+      groupRef.current.position.copy(SKILLS_DECK_RETURN_SPOT)
+      groupRef.current.rotation.y = 2.65
+      rotCtrl.current.current = 2.65
       velCtrl.current.vel.set(0, 0, 0)
     }
   }, [skillsActive, skillsDirection])
@@ -1081,7 +1152,8 @@ function Luffy3D({
       return
     }
 
-    if (aboutActive || skillsActive) {
+    if (aboutActive || skillsActive || cameraLocked) {
+      if (cameraLocked) wasCameraLocked.current = true
       animSM.current.updateLocomotion({ moving: false, running: false })
       if (stateRef.current !== animSM.current.current) {
         stateRef.current = animSM.current.current
@@ -1089,6 +1161,11 @@ function Luffy3D({
       }
       return
     }
+
+    if (wasCameraLocked.current) {
+      camCtrl.current.syncFromCamera(camera)
+    }
+    wasCameraLocked.current = false
 
     const currentKeys = keys?.current || keys || {}
     const shift = currentKeys.Shift || currentKeys.ShiftLeft || currentKeys.ShiftRight || false
@@ -1141,26 +1218,6 @@ function Luffy3D({
       }
     } else if (projectZoneRef.current !== null) {
       projectZoneRef.current = null
-    }
-
-    if ((currentKeys.e || currentKeys.E) && zone && !animSM.current.locked) {
-      if (keys.current) {
-        keys.current.e = false
-        keys.current.E = false
-      } else {
-        keys.e = false
-        keys.E = false
-      }
-
-      if (zone.id === 'ladder') {
-        beginClimb()
-      } else {
-        animSM.current.playOnce(zone.state, 0.25, () => {
-          if (zone.section && onNavigate) {
-            onNavigate(zone.section)
-          }
-        })
-      }
     }
 
     if (stateRef.current !== animSM.current.current) {
