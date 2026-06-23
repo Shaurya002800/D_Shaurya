@@ -21,7 +21,7 @@ export function useKeyboard() {
         return
       }
 
-      if (keys.current.hasOwnProperty(e.key)) {
+      if (Object.prototype.hasOwnProperty.call(keys.current, e.key)) {
         e.preventDefault()
         keys.current[e.key] = true
       }
@@ -32,16 +32,23 @@ export function useKeyboard() {
         return
       }
 
-      if (keys.current.hasOwnProperty(e.key)) {
+      if (Object.prototype.hasOwnProperty.call(keys.current, e.key)) {
         keys.current[e.key] = false
       }
     }
+    const virtualKey = (e) => {
+      const { key, pressed } = e.detail ?? {}
+      if (!Object.prototype.hasOwnProperty.call(keys.current, key)) return
+      keys.current[key] = Boolean(pressed)
+    }
     window.addEventListener('keydown', down)
     window.addEventListener('keyup', up)
+    window.addEventListener('portfolio-virtual-key', virtualKey)
     window.addEventListener('portfolio-chat-state-change', releaseKeys)
     return () => {
       window.removeEventListener('keydown', down)
       window.removeEventListener('keyup', up)
+      window.removeEventListener('portfolio-virtual-key', virtualKey)
       window.removeEventListener('portfolio-chat-state-change', releaseKeys)
     }
   }, [])

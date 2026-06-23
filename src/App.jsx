@@ -4,6 +4,8 @@ import WorldScene from './scenes/WorldScene'
 import ControlsOverlay from './components/ControlsOverlay'
 import NavWheels from './components/NavWheels'
 import DevilFruitChat from './components/DevilFruitChat.jsx'
+import ArtifactDossier from './components/ArtifactDossier.jsx'
+import MobileControls from './components/MobileControls.jsx'
 import AboutSection, {
   AboutTransitionOverlay,
   SectionTransitionLabel,
@@ -24,6 +26,7 @@ function App() {
   const [skillsClimbing,  setSkillsClimbing]  = useState(false)
   const [workActive,      setWorkActive]      = useState(false)
   const [selectedProject, setSelectedProject] = useState(null)
+  const [selectedArtifact, setSelectedArtifact] = useState(null)
   const [skillsDirection, setSkillsDirection] = useState('north')
   const [hintLabel,       setHintLabel]       = useState(null)
   const [charState,       setCharState]       = useState('idle')
@@ -83,6 +86,7 @@ function App() {
     setSkillsActive(section === 'skills')
     setWorkActive(section === 'work')
     if (section !== 'work') setSelectedProject(null)
+    setSelectedArtifact(null)
   }, [])
 
   return (
@@ -98,6 +102,7 @@ function App() {
         skillsDirection={skillsDirection}
         workActive={workActive}
         onProjectSelect={setSelectedProject}
+        onArtifactOpen={setSelectedArtifact}
       />
 
       {loaded && (
@@ -115,11 +120,12 @@ function App() {
                 charState={charState}
               />
               <WindCompass visible />
+              <MobileControls visible={!selectedArtifact} />
             </>
           )}
 
           {!sectionActive && (
-            <div style={{
+            <div className="chat-dock" style={{
               position:      'fixed',
               bottom:        '30px',
               right:         '30px',
@@ -149,6 +155,11 @@ function App() {
       />
       <WorkTransitionOverlay active={workActive} />
       <WorkSectionLabel      active={workActive} />
+
+      <ArtifactDossier
+        artifact={selectedArtifact}
+        onClose={() => setSelectedArtifact(null)}
+      />
 
       <AboutTransitionOverlay active={aboutActive} />
       <SectionTransitionLabel active={aboutActive} label="ABOUT" />

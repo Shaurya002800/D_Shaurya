@@ -7,6 +7,7 @@ import { useRef, useEffect, useState, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import gsap from 'gsap'
+import { PROFILE } from '../data/profile.js'
 let _sailTexCache = null
 let _blankTexCache = null
 
@@ -16,9 +17,9 @@ const ABOUT = {
   tagline2: 'Designer by instinct. Developer by choice. AI/ML by curiosity.',
   photo: '/shaurya.png', 
   links: [
-    { label: 'GitHub',   href: 'https://github.com'   },
-    { label: 'LinkedIn', href: 'https://linkedin.com'  },
-    { label: 'Resume',   href: '/resume.pdf'           },
+    { label: 'GitHub',   href: PROFILE.links.github   },
+    { label: 'LinkedIn', href: PROFILE.links.linkedin  },
+    { label: 'Resume',   href: PROFILE.links.resume    },
   ],
 }
 

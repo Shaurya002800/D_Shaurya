@@ -626,6 +626,7 @@ export default function WorldScene({
   onStateChange,
   onNavigate,
   onProjectSelect,
+  onArtifactOpen,
   aboutActive = false,
   skillsActive = false,
   onSkillsClimbingChange,
@@ -708,13 +709,20 @@ export default function WorldScene({
 
   <Suspense fallback={null}>
     <Physics gravity={[0, -9.81, 0]} debug={false}>
-      <Ship onProjectSelect={onProjectSelect} aboutActive={aboutActive} skillsActive={skillsActive} weatherId={weather.id} />
+      <Ship
+        onProjectSelect={onProjectSelect}
+        onArtifactOpen={onArtifactOpen}
+        aboutActive={aboutActive}
+        skillsActive={skillsActive}
+        weatherId={weather.id}
+      />
       <LuffyCharacter3D
         position={[0, 0.15, 5]}
         onStateChange={onStateChange}
         onZoneChange={onZoneChange}
         onNavigate={onNavigate}
         onProjectSelect={onProjectSelect}
+        onArtifactOpen={onArtifactOpen}
         debugRef={debugRef}
         aboutActive={aboutActive}
         skillsActive={skillsActive}

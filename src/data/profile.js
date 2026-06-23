@@ -1,0 +1,36 @@
+export const PROFILE = {
+  name: 'Kunwar Shaurya Pratap Singh',
+  shortName: 'Shaurya',
+  role: 'frontend developer, UI/UX designer, AI/ML engineer, and full-stack developer',
+  summary: 'Shaurya is a second-year B.Tech CSE student at VIT Vellore specializing in AI & Data Engineering with production experience across frontend engineering, UI/UX, AI/ML, and full-stack products.',
+  tagline: 'Designer by instinct. Developer by choice. AI/ML by curiosity.',
+  email: 'kunwarshaurya28@gmail.com',
+  phone: '+91 90580 75463',
+  location: 'Meerut, Uttar Pradesh; currently Vellore, Tamil Nadu during college',
+  education: [
+    'VIT Vellore: B.Tech CSE, AI & Data Engineering, 2024-2028, CGPA 9.01/10',
+    'White Lead Public School, Delhi: Class XII CBSE, 82%',
+    "St. Mary's Convent Sr. Sec. School, Uttar Pradesh: Class X CBSE, 86%",
+  ],
+  focus: [
+    'full-stack web development',
+    'AI/ML and RAG systems',
+    'frontend design and animation',
+    'hackathon/event platforms',
+    'blockchain-enabled systems',
+  ],
+  skills: {
+    languages: ['JavaScript', 'TypeScript', 'Python', 'C++', 'Java'],
+    frontend: ['React.js', 'Tailwind CSS', 'Streamlit', 'Figma', 'Photoshop'],
+    aiMl: ['LangChain', 'FAISS', 'XGBoost', 'Groq', 'RAG', 'TensorFlow'],
+    blockchain: ['Solidity', 'Web3.py', 'Polygon'],
+    tools: ['Git', 'GitHub', 'VS Code', 'Cursor', 'REST APIs'],
+  },
+  links: {
+    resume: '/resume.pdf',
+    portfolio: 'https://shauryaportfolio-sage.vercel.app',
+    github: 'https://github.com/Shaurya002800',
+    linkedin: 'https://www.linkedin.com/in/kunwar-shaurya-24581529b/',
+    instagram: 'https://www.instagram.com/kunwar_shaurya_28/',
+  },
+}

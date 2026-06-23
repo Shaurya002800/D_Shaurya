@@ -14,3 +14,12 @@ html, body, #root {
 canvas {
   display: block;
 }
+
+@media (hover: none), (pointer: coarse), (max-width: 760px) {
+  .chat-dock {
+    right: max(14px, env(safe-area-inset-right)) !important;
+    bottom: calc(100px + env(safe-area-inset-bottom)) !important;
+    transform: scale(0.88);
+    transform-origin: bottom right;
+  }
+}

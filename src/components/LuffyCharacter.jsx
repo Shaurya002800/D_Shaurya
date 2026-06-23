@@ -5,6 +5,7 @@ import * as THREE              from 'three'
 import { FBXLoader }           from 'three-stdlib'
 import { useKeyboard }         from '../hooks/useKeyboard'
 import { PROJECTS, PROJECT_GALLERY_SPOTS } from '../data/projects.js'
+import { SHIP_ARTIFACTS, getShipArtifact } from '../data/shipArtifacts.js'
 import {
   SHIP_DECK_BOUNDS,
   SHIP_DECK_BOX_OBSTACLES,
@@ -725,6 +726,15 @@ const ZONES = [
     state:    STATE.WAVE,
     section:  null,
   },
+  ...SHIP_ARTIFACTS.map((artifact) => ({
+    id: `artifact-${artifact.id}`,
+    label: artifact.label,
+    center: new THREE.Vector3(...artifact.center),
+    radius: artifact.radius,
+    state: STATE.EXAMINE,
+    section: null,
+    artifactId: artifact.id,
+  })),
 ]
 
 function getActiveZone(pos) {
@@ -826,6 +836,7 @@ function Luffy3D({
   onZoneChange,
   onNavigate,
   onProjectSelect,
+  onArtifactOpen,
   debugRef,
   aboutActive = false,
   skillsActive = false,
@@ -912,6 +923,13 @@ function Luffy3D({
 
     velCtrl.current.vel.set(0, 0, 0)
 
+    if (zone.artifactId) {
+      animSM.current.playOnce(zone.state, 0.18)
+      const artifact = getShipArtifact(zone.artifactId)
+      if (artifact) onArtifactOpen?.(artifact)
+      return
+    }
+
     if (zone.section) {
       animSM.current.transition(zone.state, 0.12, true)
       onNavigate?.(zone.section)
@@ -919,7 +937,7 @@ function Luffy3D({
     }
 
     animSM.current.playOnce(zone.state, 0.2)
-  }, [beginClimb, onNavigate])
+  }, [beginClimb, onArtifactOpen, onNavigate])
 
   useEffect(() => {
     const handleInteraction = (event) => {
@@ -927,9 +945,17 @@ function Luffy3D({
       event.preventDefault()
       triggerInteraction()
     }
+    const handleVirtualInteraction = () => {
+      if (window.__PORTFOLIO_CHAT_ACTIVE__) return
+      triggerInteraction()
+    }
 
     window.addEventListener('keydown', handleInteraction)
-    return () => window.removeEventListener('keydown', handleInteraction)
+    window.addEventListener('portfolio-interact', handleVirtualInteraction)
+    return () => {
+      window.removeEventListener('keydown', handleInteraction)
+      window.removeEventListener('portfolio-interact', handleVirtualInteraction)
+    }
   }, [triggerInteraction])
 
   useEffect(() => {
@@ -1265,6 +1291,7 @@ export default function LuffyCharacter({
   position = [0, 0.15, 5],
   onNavigate,
   onProjectSelect,
+  onArtifactOpen,
   aboutActive = false,
   skillsActive = false,
   skillsDirection = 'north',
@@ -1300,6 +1327,7 @@ export default function LuffyCharacter({
         onZoneChange={handleZoneChange}
         onNavigate={onNavigate}
         onProjectSelect={onProjectSelect}
+        onArtifactOpen={onArtifactOpen}
         debugRef={debugRef}
         aboutActive={aboutActive}
         skillsActive={skillsActive}
