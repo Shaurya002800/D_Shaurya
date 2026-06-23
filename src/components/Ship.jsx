@@ -167,7 +167,7 @@ function createRaisedDeckShape(section, inset = 0) {
   const wide = 8.45 - inset
   const narrow = (isBow ? 3.2 : 5.4) - inset * 0.5
   const openingHalfWidth = 4.1 - inset * 0.25
-  const openingDepth = 2.25
+  const openingDepth = 0.78
 
   if (isBow) {
     shape.moveTo(0, -minZ)
@@ -3440,6 +3440,18 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
           <DeckMaterial repeat={[2, 1]} />
         </mesh>
       ))}
+      {[-1, 1].map((side) => (
+        <group key={`stern-stair-cheek-${side}`}>
+          <mesh position={[side * 4.24, 1.45, 12.05]} castShadow receiveShadow>
+            <boxGeometry args={[0.28, 2.7, 3.25]} />
+            <WoodMaterial repeat={[1, 1.5]} roughness={0.88} />
+          </mesh>
+          <mesh position={[side * 4.24, 2.86, 12.05]} castShadow>
+            <boxGeometry args={[0.38, 0.15, 3.3]} />
+            <meshStandardMaterial color="#d5a93a" roughness={0.46} metalness={0.18} />
+          </mesh>
+        </group>
+      ))}
       {/* Split railing leaves the visible central staircase open. */}
       {[-6.35, 6.35].map((x) => (
         <mesh key={x} position={[x, 3.9, 13.5]} castShadow>
@@ -3458,6 +3470,18 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
           <boxGeometry args={[8.15, 0.48, 0.72]} />
           <DeckMaterial repeat={[2, 1]} />
         </mesh>
+      ))}
+      {[-1, 1].map((side) => (
+        <group key={`bow-stair-cheek-${side}`}>
+          <mesh position={[side * 4.24, 1.45, -12.05]} castShadow receiveShadow>
+            <boxGeometry args={[0.28, 2.7, 3.25]} />
+            <WoodMaterial repeat={[1, 1.5]} roughness={0.88} />
+          </mesh>
+          <mesh position={[side * 4.24, 2.86, -12.05]} castShadow>
+            <boxGeometry args={[0.38, 0.15, 3.3]} />
+            <meshStandardMaterial color="#d5a93a" roughness={0.46} metalness={0.18} />
+          </mesh>
+        </group>
       ))}
 
       {/* ════════════════════════════════════════════════════════════

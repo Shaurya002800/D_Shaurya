@@ -44,6 +44,106 @@ const CROWS_NEST_CAMERA = {
   },
 }
 
+const WEATHER_DURATION_MS = 180000
+const WEATHER_SEQUENCE = [
+  {
+    id: 'sunny',
+    label: 'Sunny Seas',
+    sky: '#9fd5f2',
+    fog: '#d9edf6',
+    fogNear: 72,
+    fogFar: 300,
+    ambient: 0.48,
+    sun: 1.85,
+    hemi: 0.78,
+    exposure: 0.84,
+    rayleigh: 0.78,
+    turbidity: 4.6,
+    sunPosition: [82, 18, 46],
+    ocean: ['#022640', '#085c91', '#10a4db', '#ffffff'],
+    waveStrength: 1,
+    waveSpeed: 1,
+  },
+  {
+    id: 'rain',
+    label: 'Grand Line Rain',
+    sky: '#637b8c',
+    fog: '#8295a0',
+    fogNear: 38,
+    fogFar: 190,
+    ambient: 0.3,
+    sun: 0.55,
+    hemi: 0.46,
+    exposure: 0.68,
+    rayleigh: 1.8,
+    turbidity: 12,
+    sunPosition: [18, 4, 30],
+    ocean: ['#021725', '#063d59', '#0b6982', '#c6d9dc'],
+    waveStrength: 1.28,
+    waveSpeed: 1.25,
+  },
+  {
+    id: 'night',
+    label: 'Moonlit Watch',
+    sky: '#020917',
+    fog: '#09182a',
+    fogNear: 60,
+    fogFar: 235,
+    ambient: 0.16,
+    sun: 0.34,
+    hemi: 0.3,
+    exposure: 0.5,
+    rayleigh: 0.18,
+    turbidity: 1.8,
+    sunPosition: [-55, -8, -35],
+    ocean: ['#010711', '#031a32', '#08415d', '#9ec7dc'],
+    waveStrength: 0.78,
+    waveSpeed: 0.72,
+  },
+  {
+    id: 'storm',
+    label: 'Thunderstorm',
+    sky: '#1d2630',
+    fog: '#394550',
+    fogNear: 24,
+    fogFar: 145,
+    ambient: 0.2,
+    sun: 0.25,
+    hemi: 0.34,
+    exposure: 0.58,
+    rayleigh: 2.8,
+    turbidity: 18,
+    sunPosition: [-25, 2, 12],
+    ocean: ['#010b12', '#042a3b', '#075166', '#b9d2d5'],
+    waveStrength: 1.72,
+    waveSpeed: 1.65,
+  },
+  {
+    id: 'wind',
+    label: 'Gale Winds',
+    sky: '#83a9ba',
+    fog: '#b7ced6',
+    fogNear: 55,
+    fogFar: 245,
+    ambient: 0.38,
+    sun: 1.05,
+    hemi: 0.62,
+    exposure: 0.76,
+    rayleigh: 1.2,
+    turbidity: 8.5,
+    sunPosition: [54, 11, 20],
+    ocean: ['#011d2d', '#065172', '#0d8dad', '#eef8f5'],
+    waveStrength: 1.45,
+    waveSpeed: 1.5,
+  },
+]
+
+function getInitialWeatherIndex() {
+  const requestedWeather = new URLSearchParams(window.location.search).get('weather')
+  const requestedIndex = WEATHER_SEQUENCE.findIndex((weather) => weather.id === requestedWeather)
+  return requestedIndex >= 0 ? requestedIndex : 0
+}
+
 export function SkillsCameraTransition({
   active,
   direction = 'north',
@@ -254,8 +354,15 @@ function WorkOrbitControl({ active }) {
 }
 
 // ─── STYLIZED "GRAND LINE" OCEAN ──────────────────────────────────────────────
-function Ocean() {
+function Ocean({ weather }) {
   const matRef = useRef()
+  const targetColors = useMemo(() => ({
+    deep: new THREE.Color(),
+    surface: new THREE.Color(),
+    shallow: new THREE.Color(),
+    foam: new THREE.Color(),
+    fog: new THREE.Color(),
+  }), [])
 
   const shader = useMemo(() => ({
     uniforms: {
@@ -264,20 +371,25 @@ function Ocean() {
       uColorSurface: { value: new THREE.Color('#085c91') },
       uColorShallow: { value: new THREE.Color('#10a4db') },
       uColorFoam:    { value: new THREE.Color('#ffffff') },
+      uFogColor:     { value: new THREE.Color('#9ec2d9') },
+      uWaveStrength: { value: 1 },
+      uWaveSpeed:    { value: 1 },
     },
     vertexShader: `
       uniform float uTime;
+      uniform float uWaveStrength;
+      uniform float uWaveSpeed;
       varying vec2 vUv;
       varying float vElevation;
       varying vec3 vWorldPos;
 
       float getWaves(vec2 p) {
-        float time = uTime * 1.2;
+        float time = uTime * 1.2 * uWaveSpeed;
         float h = 0.0;
         h += sin(dot(p, vec2(0.3, 0.7)) * 0.03 + time * 0.8) * 1.8;
         h += sin(dot(p, vec2(0.8, -0.4)) * 0.07 + time * 1.2) * 0.6;
         h += sin(dot(p, vec2(-0.5, 0.5)) * 0.15 + time * 1.5) * 0.3;
-        return h;
+        return h * uWaveStrength;
       }
 
       void main() {
@@ -296,6 +408,7 @@ function Ocean() {
       uniform vec3 uColorSurface;
       uniform vec3 uColorShallow;
       uniform vec3 uColorFoam;
+      uniform vec3 uFogColor;
       uniform float uTime;
 
       varying vec2 vUv;
@@ -335,7 +448,7 @@ function Ocean() {
 
         float dist = length(cameraPosition - vWorldPos);
         float fog = smoothstep(200.0, 600.0, dist);
-        color = mix(color, vec3(0.62, 0.76, 0.85), fog);
+        color = mix(color, uFogColor, fog);
 
         gl_FragColor = vec4(color, 1.0);
         #include <tonemapping_fragment>
@@ -344,9 +457,23 @@ function Ocean() {
     `,
   }), [])
 
-  useFrame(({ clock }) => {
-    if (matRef.current)
-      matRef.current.uniforms.uTime.value = clock.getElapsedTime()
+  useFrame(({ clock }, delta) => {
+    if (!matRef.current) return
+    const uniforms = matRef.current.uniforms
+    const blend = 1 - Math.exp(-delta * 0.75)
+    uniforms.uTime.value = clock.getElapsedTime()
+    targetColors.deep.set(weather.ocean[0])
+    targetColors.surface.set(weather.ocean[1])
+    targetColors.shallow.set(weather.ocean[2])
+    targetColors.foam.set(weather.ocean[3])
+    targetColors.fog.set(weather.fog)
+    uniforms.uColorDeep.value.lerp(targetColors.deep, blend)
+    uniforms.uColorSurface.value.lerp(targetColors.surface, blend)
+    uniforms.uColorShallow.value.lerp(targetColors.shallow, blend)
+    uniforms.uColorFoam.value.lerp(targetColors.foam, blend)
+    uniforms.uFogColor.value.lerp(targetColors.fog, blend)
+    uniforms.uWaveStrength.value = THREE.MathUtils.lerp(uniforms.uWaveStrength.value, weather.waveStrength, blend)
+    uniforms.uWaveSpeed.value = THREE.MathUtils.lerp(uniforms.uWaveSpeed.value, weather.waveSpeed, blend)
   })
 
   return (
@@ -357,11 +484,80 @@ function Ocean() {
   )
 }
 
-function Lighting() {
+function WeatherEnvironment({ weather, workActive }) {
+  const skyRef = useRef()
+  const ambientRef = useRef()
+  const sunRef = useRef()
+  const hemiRef = useRef()
+  const lightningRef = useRef()
+  const lightningTimer = useRef(0)
+  const nextLightning = useRef(1.2)
+  const targetColor = useMemo(() => new THREE.Color(), [])
+  const sunTarget = useMemo(() => new THREE.Vector3(), [])
+
+  useFrame((state, delta) => {
+    const blend = 1 - Math.exp(-delta * 0.72)
+    const scene = state.scene
+
+    targetColor.set(weather.sky)
+    if (!scene.background?.isColor) scene.background = targetColor.clone()
+    scene.background.lerp(targetColor, blend)
+
+    if (!workActive) {
+      if (!scene.fog) scene.fog = new THREE.Fog(weather.fog, weather.fogNear, weather.fogFar)
+      scene.fog.color.lerp(targetColor.set(weather.fog), blend)
+      scene.fog.near = THREE.MathUtils.lerp(scene.fog.near, weather.fogNear, blend)
+      scene.fog.far = THREE.MathUtils.lerp(scene.fog.far, weather.fogFar, blend)
+    }
+
+    state.gl.toneMappingExposure = THREE.MathUtils.lerp(
+      state.gl.toneMappingExposure,
+      weather.exposure,
+      blend,
+    )
+
+    ambientRef.current.intensity = THREE.MathUtils.lerp(ambientRef.current.intensity, weather.ambient, blend)
+    sunRef.current.intensity = THREE.MathUtils.lerp(sunRef.current.intensity, weather.sun, blend)
+    hemiRef.current.intensity = THREE.MathUtils.lerp(hemiRef.current.intensity, weather.hemi, blend)
+
+    targetColor.set(weather.id === 'night' ? '#9fb9ff' : weather.id === 'storm' ? '#c7d4e8' : '#fff3db')
+    sunRef.current.color.lerp(targetColor, blend)
+    targetColor.set(weather.id === 'night' ? '#1c315d' : '#b9ddf0')
+    hemiRef.current.color.lerp(targetColor, blend)
+
+    const uniforms = skyRef.current?.material?.uniforms
+    if (uniforms) {
+      uniforms.rayleigh.value = THREE.MathUtils.lerp(uniforms.rayleigh.value, weather.rayleigh, blend)
+      uniforms.turbidity.value = THREE.MathUtils.lerp(uniforms.turbidity.value, weather.turbidity, blend)
+      sunTarget.set(...weather.sunPosition)
+      uniforms.sunPosition.value.lerp(sunTarget, blend)
+    }
+
+    if (weather.id === 'storm') {
+      lightningTimer.current += delta
+      if (lightningTimer.current >= nextLightning.current) {
+        lightningTimer.current = 0
+        nextLightning.current = 2.2 + Math.random() * 4.8
+        lightningRef.current.intensity = 8 + Math.random() * 7
+        lightningRef.current.position.set(
+          -35 + Math.random() * 70,
+          28 + Math.random() * 35,
+          -35 + Math.random() * 50,
+        )
+      }
+      lightningRef.current.intensity *= Math.exp(-delta * 10)
+    } else {
+      lightningTimer.current = 0
+      lightningRef.current.intensity = 0
+    }
+  })
+
   return (
     <>
-      <ambientLight intensity={0.42} color="#fff0dc" />
+      <Sky ref={skyRef} distance={4500} sunPosition={weather.sunPosition} rayleigh={weather.rayleigh} turbidity={weather.turbidity} />
+      <ambientLight ref={ambientRef} intensity={0.42} color="#fff0dc" />
       <directionalLight
+        ref={sunRef}
         position={[70, 95, 40]}
         intensity={1.8}
         color="#fff3db"
@@ -374,8 +570,73 @@ function Lighting() {
         shadow-camera-top={60}
         shadow-camera-bottom={-60}
       />
-      <hemisphereLight skyColor="#b9ddf0" groundColor="#1e5266" intensity={0.72} />
+      <hemisphereLight ref={hemiRef} skyColor="#b9ddf0" groundColor="#101b20" intensity={0.72} />
+      <pointLight ref={lightningRef} color="#dce8ff" intensity={0} distance={240} decay={1.2} />
     </>
+  )
+}
+
+function WeatherOverlay({ weather }) {
+  const particles = useMemo(() => Array.from({ length: 64 }, (_, index) => ({
+    left: `${(index * 37) % 103}%`,
+    delay: `${-((index * 0.17) % 2.8)}s`,
+    duration: `${0.5 + (index % 7) * 0.055}s`,
+    opacity: 0.32 + (index % 5) * 0.11,
+  })), [])
+
+  return (
+    <div className={`world-weather world-weather--${weather.id}`} aria-hidden="true">
+      <div className="world-weather__clouds" />
+      <div className="world-weather__rain">
+        {particles.map((particle, index) => (
+          <i key={index} style={{
+            left: particle.left,
+            animationDelay: particle.delay,
+            animationDuration: particle.duration,
+            opacity: particle.opacity,
+          }} />
+        ))}
+      </div>
+      <div className="world-weather__wind">
+        {particles.slice(0, 20).map((particle, index) => (
+          <i key={index} style={{
+            top: `${6 + ((index * 13) % 86)}%`,
+            animationDelay: `${-((index * 0.31) % 4)}s`,
+            animationDuration: `${1.4 + (index % 6) * 0.18}s`,
+          }} />
+        ))}
+      </div>
+      <div className="world-weather__lightning" />
+      <div className="world-weather__badge">
+        <span>{weather.id === 'storm' ? 'ϟ' : weather.id === 'night' ? '☾' : weather.id === 'rain' ? '☂' : weather.id === 'wind' ? '≋' : '☀'}</span>
+        <strong>{weather.label}</strong>
+        <small>Grand Line weather · 3 min cycle</small>
+      </div>
+      <style>{`
+        .world-weather { position: fixed; inset: 0; z-index: 6; overflow: hidden; pointer-events: none; transition: background 4s ease; }
+        .world-weather__clouds, .world-weather__rain, .world-weather__wind, .world-weather__lightning { position: absolute; inset: 0; opacity: 0; transition: opacity 3.5s ease; }
+        .world-weather__clouds { background: radial-gradient(ellipse at 15% -10%, rgba(24,34,45,.84), transparent 46%), radial-gradient(ellipse at 72% -18%, rgba(28,37,48,.78), transparent 52%); filter: blur(18px); animation: weather-cloud-drift 18s ease-in-out infinite alternate; }
+        .world-weather--rain .world-weather__clouds, .world-weather--storm .world-weather__clouds { opacity: .92; }
+        .world-weather--night { background: linear-gradient(180deg, rgba(0,4,18,.4), rgba(1,8,22,.18)); }
+        .world-weather--rain .world-weather__rain { opacity: .72; }
+        .world-weather--storm .world-weather__rain { opacity: .95; }
+        .world-weather__rain i { position: absolute; top: -14vh; width: 1px; height: 13vh; background: linear-gradient(transparent, rgba(220,240,255,.82)); transform: rotate(12deg); animation: weather-rain linear infinite; }
+        .world-weather--wind .world-weather__wind { opacity: .72; }
+        .world-weather__wind i { position: absolute; left: -28vw; width: 22vw; height: 2px; border-radius: 50%; background: linear-gradient(90deg, transparent, rgba(240,252,255,.62), transparent); filter: blur(.4px); animation: weather-wind linear infinite; }
+        .world-weather--storm .world-weather__lightning { opacity: 1; animation: weather-lightning 6.7s steps(1) infinite; }
+        .world-weather__lightning { background: rgba(220,235,255,.72); mix-blend-mode: screen; }
+        .world-weather__badge { position: fixed; top: 78px; right: 18px; display: grid; grid-template-columns: 26px auto; column-gap: 8px; min-width: 170px; padding: 8px 12px; border: 1px solid rgba(255,255,255,.16); border-radius: 9px; opacity: .72; background: rgba(4,12,18,.46); color: #eef8ff; backdrop-filter: blur(8px); transition: border-color 2s ease, background 2s ease; }
+        .world-weather__badge span { grid-row: 1 / 3; align-self: center; color: #e8c75a; font-size: 22px; text-align: center; }
+        .world-weather__badge strong { font: 400 13px/1.1 "Pirata One", serif; letter-spacing: .1em; }
+        .world-weather__badge small { margin-top: 2px; color: rgba(255,255,255,.48); font: 8px/1.2 monospace; letter-spacing: .05em; }
+        .world-weather--storm .world-weather__badge { border-color: rgba(158,186,255,.36); background: rgba(5,9,18,.7); }
+        @keyframes weather-rain { to { transform: translate(18vw, 125vh) rotate(12deg); } }
+        @keyframes weather-wind { to { transform: translateX(155vw); } }
+        @keyframes weather-cloud-drift { from { transform: translateX(-3%) scale(1.05); } to { transform: translateX(4%) scale(1.12); } }
+        @keyframes weather-lightning { 0%, 78%, 82%, 100% { opacity: 0; } 79% { opacity: .76; } 80% { opacity: .1; } 81% { opacity: .52; } }
+        @media (prefers-reduced-motion: reduce) { .world-weather * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
+      `}</style>
+    </div>
   )
 }
 
@@ -393,6 +654,8 @@ export default function WorldScene({
 }) {
   const [cloudsCleared, setCloudsCleared] = useState(false)
   const [skillsCameraLocked, setSkillsCameraLocked] = useState(false)
+  const [weatherIndex, setWeatherIndex] = useState(getInitialWeatherIndex)
+  const weather = WEATHER_SEQUENCE[weatherIndex]
   
   // ─── NEW: Global Free Camera State ───
   const [freeCam, setFreeCam] = useState(false)
@@ -400,6 +663,13 @@ export default function WorldScene({
   useEffect(() => {
     const t = setTimeout(() => setCloudsCleared(true), 2000)
     return () => clearTimeout(t)
+  }, [])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setWeatherIndex((current) => (current + 1) % WEATHER_SEQUENCE.length)
+    }, WEATHER_DURATION_MS)
+    return () => clearInterval(interval)
   }, [])
 
   // ─── NEW: Keyboard Listener for 'O' key ───
@@ -443,12 +713,18 @@ export default function WorldScene({
     </>
   )}
   {/* 3. The rest of your scene... */}
-  <fog attach="fog" args={['#e4f0f6', 60, 260]} />
-  <Lighting />
-  <Sky distance={4500} sunPosition={[82, 18, 46]} inclination={0.53} azimuth={0.21} rayleigh={0.78} turbidity={4.6} />
-  <Sparkles count={220} scale={60} size={1.25} speed={0.18} opacity={0.11} color="#ffffff" position={[0, 8, 0]} />
+  <WeatherEnvironment weather={weather} workActive={workActive} />
+  <Sparkles
+    count={weather.id === 'night' ? 420 : 170}
+    scale={weather.id === 'night' ? [240, 90, 240] : 60}
+    size={weather.id === 'night' ? 1.8 : 1.25}
+    speed={weather.id === 'wind' ? 0.7 : 0.18}
+    opacity={weather.id === 'night' ? 0.72 : 0.11}
+    color={weather.id === 'night' ? '#c9dcff' : '#ffffff'}
+    position={[0, weather.id === 'night' ? 35 : 8, 0]}
+  />
   
-  <Ocean />
+  <Ocean weather={weather} />
 
   <Suspense fallback={null}>
     <Physics gravity={[0, -9.81, 0]} debug={false}>
@@ -476,6 +752,7 @@ export default function WorldScene({
     <Vignette eskil={false} offset={0.12} darkness={workActive ? 0.35 : 0.75} />
   </EffectComposer>
 </Canvas>
+      {!workActive && <WeatherOverlay weather={weather} />}
 
       <AnimatePresence>
         {!cloudsCleared && (
