@@ -177,8 +177,7 @@ function ProjectModal({ project, onClose }) {
         alignItems:     'center',
         justifyContent: 'center',
         padding:        '24px 16px',
-  background:     'radial-gradient(ellipse at 50% 35%, rgba(0,60,100,0.22), rgba(0,8,20,0.72))',
-  /* backdrop-filter removed to disable blur for clarity */
+        background:     'radial-gradient(ellipse at 50% 32%, rgba(18,87,98,0.28), rgba(2,10,18,0.78) 62%, rgba(0,0,0,0.86))',
         animation:      'workFadeIn 0.22s ease',
       }}
     >
@@ -186,32 +185,34 @@ function ProjectModal({ project, onClose }) {
       <div
         ref={modalRef}
         style={{
-          width:        'min(700px, 94vw)',
+          width:        'min(980px, 94vw)',
           maxHeight:    '90vh',
           display:      'flex',
           flexDirection:'column',
-          borderRadius: '16px',
-          border:       `1px solid ${project.color}66`,
-          background:   'linear-gradient(160deg, rgba(2,18,36,0.97), rgba(0,8,20,0.99))',
-          boxShadow:    `0 0 40px ${project.color}30, 0 24px 72px rgba(0,0,0,0.55)`,
+          borderRadius: '24px',
+          border:       '3px solid rgba(76,42,18,0.95)',
+          background:   'linear-gradient(135deg, rgba(255,236,176,0.98), rgba(218,176,96,0.98) 48%, rgba(140,84,39,0.98))',
+          boxShadow:    `0 0 44px ${project.color}30, 0 30px 90px rgba(0,0,0,0.62), inset 0 0 0 1px rgba(255,249,214,.55)`,
           overflow:     'hidden',
+          color:        '#321607',
         }}
       >
         {/* Colour accent bar */}
         <div style={{
-          height:     '4px',
+          height:     '12px',
           flexShrink: 0,
-          background: project.color,
-          boxShadow:  `0 0 16px ${project.color}`,
+          background: `linear-gradient(90deg, #3d1b0b, ${project.color}, #3d1b0b)`,
+          boxShadow:  `0 0 18px ${project.color}`,
         }} />
 
         {/* Scrollable body */}
         <div style={{
           overflowY: 'auto',
-          padding:   'clamp(20px, 4vw, 32px)',
+          padding:   'clamp(22px, 4vw, 42px)',
           display:   'flex',
           flexDirection: 'column',
-          gap:       '20px',
+          gap:       '22px',
+          background: 'radial-gradient(circle at 18% 12%, rgba(255,255,255,.38), transparent 28%), radial-gradient(circle at 82% 86%, rgba(82,35,13,.18), transparent 34%)',
         }}>
 
           {/* Header row */}
@@ -221,27 +222,46 @@ function ProjectModal({ project, onClose }) {
             justifyContent: 'space-between',
             gap:            '16px',
           }}>
-            <div>
+            <div style={{ minWidth: 0 }}>
               <div style={{
                 fontFamily:    '"Courier New", monospace',
-                fontSize:      '11px',
-                letterSpacing: '3px',
-                color:         project.color,
-                marginBottom:  '8px',
+                fontSize:      '12px',
+                letterSpacing: '5px',
+                color:         '#9f1f1f',
+                marginBottom:  '10px',
                 textTransform: 'uppercase',
               }}>
-                {project.year} · LIVE PROJECT
+                GRAND LINE FILE · {project.year}
               </div>
               <h2 style={{
                 margin:     0,
                 fontFamily: 'Georgia, "Times New Roman", serif',
-                fontSize:   'clamp(28px, 6vw, 52px)',
-                lineHeight: 1.05,
-                color:      '#ffffff',
-                textShadow: `0 0 20px ${project.color}55`,
+                fontSize:   'clamp(36px, 7vw, 76px)',
+                lineHeight: 0.92,
+                color:      '#2b1206',
+                letterSpacing: '-0.035em',
+                textShadow: '0 2px 0 rgba(255,239,181,.6)',
               }}>
                 {project.name}
               </h2>
+              <div style={{
+                marginTop: '12px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '7px 12px',
+                borderRadius: '999px',
+                border: '1px solid rgba(76,33,11,.26)',
+                background: 'rgba(255,247,202,.4)',
+                fontFamily: '"Courier New", monospace',
+                fontSize: '12px',
+                letterSpacing: '2px',
+                color: '#693016',
+                textTransform: 'uppercase',
+              }}>
+                <span style={{ color: project.color }}>●</span>
+                Live Project
+              </div>
             </div>
 
             <button
@@ -250,26 +270,26 @@ function ProjectModal({ project, onClose }) {
               aria-label="Close project details"
               style={{
                 flexShrink:     0,
-                width:          '38px',
-                height:         '38px',
+                width:          '46px',
+                height:         '46px',
                 borderRadius:   '50%',
-                border:         '1px solid rgba(100,210,255,0.3)',
-                background:     'rgba(2,24,48,0.9)',
-                color:          'rgba(160,220,255,0.9)',
+                border:         '2px solid rgba(76,33,11,0.55)',
+                background:     'rgba(255,232,151,0.72)',
+                color:          '#421806',
                 cursor:         'pointer',
-                fontSize:       '16px',
+                fontSize:       '20px',
                 display:        'flex',
                 alignItems:     'center',
                 justifyContent: 'center',
                 transition:     'background 0.18s, border-color 0.18s',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background     = 'rgba(0,150,255,0.18)'
-                e.currentTarget.style.borderColor    = 'rgba(100,210,255,0.7)'
+                e.currentTarget.style.background     = 'rgba(255,248,204,0.96)'
+                e.currentTarget.style.borderColor    = project.color
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background     = 'rgba(2,24,48,0.9)'
-                e.currentTarget.style.borderColor    = 'rgba(100,210,255,0.3)'
+                e.currentTarget.style.background     = 'rgba(255,232,151,0.72)'
+                e.currentTarget.style.borderColor    = 'rgba(76,33,11,0.55)'
               }}
             >
               ✕
@@ -277,14 +297,60 @@ function ProjectModal({ project, onClose }) {
           </div>
 
           {/* Description */}
-          <p style={{
-            margin:     0,
-            fontSize:   'clamp(14px, 2vw, 16px)',
-            lineHeight: 1.75,
-            color:      'rgba(210,238,255,0.88)',
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1fr) minmax(150px, 220px)',
+            gap: 'clamp(16px, 4vw, 34px)',
+            alignItems: 'stretch',
           }}>
-            {project.desc}
-          </p>
+            <p style={{
+              margin:     0,
+              fontSize:   'clamp(16px, 2vw, 21px)',
+              lineHeight: 1.65,
+              color:      '#44200d',
+              fontFamily: 'Georgia, "Times New Roman", serif',
+            }}>
+              {project.desc}
+            </p>
+            <div style={{
+              borderRadius: '18px',
+              border: '1px solid rgba(76,33,11,.28)',
+              background: 'linear-gradient(180deg, rgba(60,24,8,.86), rgba(33,13,5,.92))',
+              color: '#ffe7a2',
+              padding: '18px',
+              display: 'grid',
+              alignContent: 'center',
+              gap: '7px',
+              boxShadow: 'inset 0 0 0 1px rgba(255,237,172,.08)',
+            }}>
+              <span style={{
+                fontFamily: '"Courier New", monospace',
+                fontSize: '10px',
+                letterSpacing: '3px',
+                color: 'rgba(255,231,162,.62)',
+                textTransform: 'uppercase',
+              }}>
+                Current Bounty
+              </span>
+              <strong style={{
+                fontFamily: 'Georgia, "Times New Roman", serif',
+                fontSize: 'clamp(24px, 4vw, 34px)',
+                lineHeight: 1,
+                color: project.color,
+                textShadow: `0 0 16px ${project.color}55`,
+              }}>
+                {project.bounty}
+              </strong>
+              <span style={{
+                fontFamily: '"Courier New", monospace',
+                fontSize: '11px',
+                letterSpacing: '2px',
+                color: 'rgba(255,239,189,.76)',
+              }}>
+                BERRIES
+              </span>
+            </div>
+          </div>
 
           {/* Stack pills */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -292,14 +358,16 @@ function ProjectModal({ project, onClose }) {
               <span
                 key={item}
                 style={{
-                  padding:       '7px 14px',
+                  padding:       '9px 15px',
                   borderRadius:  '999px',
-                  border:        `1px solid ${project.color}44`,
-                  background:    `${project.color}14`,
-                  color:         '#ddf4ff',
+                  border:        '1px solid rgba(76,33,11,0.26)',
+                  background:    'rgba(255,248,208,0.48)',
+                  color:         '#321607',
                   fontFamily:    '"Courier New", monospace',
-                  fontSize:      '11px',
+                  fontWeight:    700,
+                  fontSize:      '12px',
                   letterSpacing: '1px',
+                  boxShadow:     `inset 0 -2px 0 ${project.color}44`,
                 }}
               >
                 {item}
@@ -314,14 +382,14 @@ function ProjectModal({ project, onClose }) {
             justifyContent: 'space-between',
             flexWrap:       'wrap',
             gap:            '14px',
-            paddingTop:     '4px',
-            borderTop:      '1px solid rgba(255,255,255,0.07)',
+            paddingTop:     '18px',
+            borderTop:      '1px solid rgba(76,33,11,0.2)',
           }}>
             <span style={{
               fontFamily:    '"Courier New", monospace',
               fontSize:      '11px',
               letterSpacing: '2px',
-              color:         'rgba(160,220,255,0.55)',
+              color:         'rgba(60,24,8,0.58)',
             }}>
               PRESS ESC OR CLICK OUTSIDE TO RETURN
             </span>
@@ -332,17 +400,19 @@ function ProjectModal({ project, onClose }) {
                 target="_blank"
                 rel="noreferrer"
                 style={{
-                  padding:       '11px 22px',
+                  padding:       '14px 26px',
                   borderRadius:  '999px',
-                  background:    project.color,
-                  color:         '#00111f',
+                  background:    '#ff4259',
+                  color:         '#1b0903',
+                  border:        '2px solid rgba(76,33,11,.72)',
                   fontFamily:    '"Courier New", monospace',
                   fontWeight:    700,
-                  fontSize:      '12px',
-                  letterSpacing: '1px',
+                  fontSize:      '13px',
+                  letterSpacing: '2px',
                   textDecoration:'none',
                   whiteSpace:    'nowrap',
                   transition:    'opacity 0.15s',
+                  boxShadow:     `0 10px 28px ${project.color}33`,
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.82' }}
                 onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}

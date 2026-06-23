@@ -333,11 +333,13 @@ function lastPortfolioTopic(history) {
 
 function bestProjectForQuestion(text) {
   const q = normalize(text)
-  if (q.includes('ai') || q.includes('ml') || q.includes('rag')) return PROJECTS.find((project) => project.name === 'Vivayu') || PROJECTS[1]
+  if (q.includes('exam') || q.includes('credential') || q.includes('verifiable')) return PROJECTS.find((project) => project.name === 'ExamChain') || PROJECTS[0]
+  if (q.includes('ai') || q.includes('ml') || q.includes('rag') || q.includes('astrology')) return PROJECTS.find((project) => project.name === 'Serenova Engine') || PROJECTS[3]
   if (q.includes('full stack') || q.includes('backend') || q.includes('marketplace')) return PROJECTS.find((project) => project.name === 'DevBoard') || PROJECTS[2]
-  if (q.includes('design') || q.includes('frontend') || q.includes('event')) return PROJECTS.find((project) => project.name === 'Hack Battle') || PROJECTS[3]
+  if (q.includes('startup') || q.includes('spend') || q.includes('saas')) return PROJECTS.find((project) => project.name === 'SpendLens') || PROJECTS[4]
+  if (q.includes('notes') || q.includes('auth') || q.includes('productivity')) return PROJECTS.find((project) => project.name === 'Peblo Notes') || PROJECTS[5]
   if (q.includes('blockchain') || q.includes('iot') || q.includes('security')) return PROJECTS.find((project) => project.name === 'SentinelMesh') || PROJECTS[0]
-  return PROJECTS.find((project) => project.name === 'SentinelMesh') || PROJECTS[0]
+  return PROJECTS.find((project) => project.name === 'ExamChain') || PROJECTS[0]
 }
 
 function projectSummary(project) {
@@ -393,7 +395,7 @@ function fallbackReply(text, history = []) {
   }
 
   if (asksForOpinion(text)) {
-    return `Based on this portfolio, Shaurya looks strongest for roles or collaborations that need frontend polish plus AI/ML thinking. I would judge him by the shipped project mix: DevBoard for full-stack work, Vivayu for applied AI/RAG, and SentinelMesh for more ambitious AI plus systems thinking.`
+    return `Based on this portfolio, Shaurya looks strongest for roles or collaborations that need product engineering plus AI/security thinking. I would judge him by ExamChain for ambitious system design, DevBoard for full-stack execution, Serenova Engine for deterministic AI-assisted domain logic, and SentinelMesh for hardware/security ambition.`
   }
 
   if ((q.includes('best') || q.includes('strongest') || q.includes('which one')) && (previousTopic === 'projects' || q.includes('project'))) {
@@ -413,7 +415,7 @@ function fallbackReply(text, history = []) {
   }
 
   if (asksFollowUp && previousTopic === 'ai') {
-    return `The AI/ML side is strongest around practical applied systems: RAG with LangChain and FAISS, fast inference with Groq, classical ML with XGBoost, and deployment-minded work like TFLite in SentinelMesh. Vivayu is the cleanest project to discuss for RAG/product AI.`
+    return `The AI/ML side is strongest around practical applied systems: Serenova Engine for deterministic chart computation plus guarded LLM interpretation, Vivayu for RAG and crop guidance, SpendLens for AI-assisted business recommendations, and SentinelMesh for edge inference with TensorFlow Lite Micro.`
   }
 
   if (q.includes('skill') || q.includes('tech') || q.includes('stack')) {

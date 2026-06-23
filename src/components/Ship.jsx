@@ -933,6 +933,42 @@ function Lantern({ position, castShadow = true }) {
   )
 }
 
+function RailLanternMount({ position }) {
+  const side = Math.sign(position[0]) || 1
+  const railX = side * 8.17
+  const armX = side * 7.72
+  const z = position[2]
+
+  return (
+    <group>
+      <RigLine from={[railX, 1.48, z]} to={[railX, 2.78, z]} thickness={0.035} />
+      <RigLine from={[railX, 2.78, z]} to={[armX, 2.76, z]} thickness={0.04} />
+      <RigLine from={[armX, 2.76, z]} to={[position[0], position[1] + 0.45, z]} thickness={0.02} />
+      <mesh position={[railX, 1.48, z]}>
+        <sphereGeometry args={[0.1, 10, 8]} />
+        <meshStandardMaterial color="#d5a93a" roughness={0.42} metalness={0.35} />
+      </mesh>
+      <Lantern position={position} />
+    </group>
+  )
+}
+
+function NightDeckLights({ active }) {
+  const intensity = active ? 1 : 0
+
+  return (
+    <group>
+      <pointLight position={[0, 4.4, 5.5]} color="#ffd789" intensity={3.1 * intensity} distance={15} decay={2.1} />
+      <pointLight position={[0, 5.2, -7.2]} color="#ffd789" intensity={2.6 * intensity} distance={14} decay={2.05} />
+      <pointLight position={[0, 6.4, 18.2]} color="#ffe5a8" intensity={2.8 * intensity} distance={13} decay={2.1} />
+      <pointLight position={[-6.7, 2.45, 10.8]} color="#ffc96f" intensity={1.8 * intensity} distance={8} decay={2.2} />
+      <pointLight position={[6.7, 2.45, 10.8]} color="#ffc96f" intensity={1.8 * intensity} distance={8} decay={2.2} />
+      <pointLight position={[-6.7, 2.45, -11]} color="#ffc96f" intensity={1.6 * intensity} distance={8} decay={2.2} />
+      <pointLight position={[6.7, 2.45, -11]} color="#ffc96f" intensity={1.6 * intensity} distance={8} decay={2.2} />
+    </group>
+  )
+}
+
 function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 3) {
   const words = text.split(' ')
   const lines = []
@@ -3267,8 +3303,9 @@ function BowPlatform({ position }) {
 }
 
 // signature — add skillsActive to whatever props Ship already receives
-export default function Ship({ aboutActive = false, skillsActive = false, onProjectSelect }){
+export default function Ship({ aboutActive = false, skillsActive = false, weatherId = 'sunny', onProjectSelect }){
   const shipRef = useRef()
+  const isNightWeather = weatherId === 'night'
 
   // Gentle ocean rocking — kinematic physics body moves with waves
   useFrame(({ clock }) => {
@@ -3659,8 +3696,9 @@ export default function Ship({ aboutActive = false, skillsActive = false, onProj
           LANTERNS — atmospheric lighting
       ════════════════════════════════════════════════════════════ */}
       {SHIP_PROP_LAYOUT.railLanterns.map((position) => (
-        <Lantern key={position.join('-')} position={position} />
+        <RailLanternMount key={position.join('-')} position={position} />
       ))}
+      <NightDeckLights active={isNightWeather} />
 
       {/* ════════════════════════════════════════════════════════════
           MASTHEAD LANTERN — top of mast area

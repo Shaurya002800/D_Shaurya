@@ -118,24 +118,6 @@ const WEATHER_SEQUENCE = [
     waveStrength: 1.72,
     waveSpeed: 1.65,
   },
-  {
-    id: 'wind',
-    label: 'Gale Winds',
-    sky: '#83a9ba',
-    fog: '#b7ced6',
-    fogNear: 55,
-    fogFar: 245,
-    ambient: 0.38,
-    sun: 1.05,
-    hemi: 0.62,
-    exposure: 0.76,
-    rayleigh: 1.2,
-    turbidity: 8.5,
-    sunPosition: [54, 11, 20],
-    ocean: ['#011d2d', '#065172', '#0d8dad', '#eef8f5'],
-    waveStrength: 1.45,
-    waveSpeed: 1.5,
-  },
 ]
 
 function getInitialWeatherIndex() {
@@ -597,41 +579,39 @@ function WeatherOverlay({ weather }) {
           }} />
         ))}
       </div>
-      <div className="world-weather__wind">
-        {particles.slice(0, 20).map((particle, index) => (
-          <i key={index} style={{
-            top: `${6 + ((index * 13) % 86)}%`,
-            animationDelay: `${-((index * 0.31) % 4)}s`,
-            animationDuration: `${1.4 + (index % 6) * 0.18}s`,
-          }} />
-        ))}
-      </div>
+      <div className="world-weather__mist" />
+      <div className="world-weather__moon" />
       <div className="world-weather__lightning" />
       <div className="world-weather__badge">
-        <span>{weather.id === 'storm' ? 'ϟ' : weather.id === 'night' ? '☾' : weather.id === 'rain' ? '☂' : weather.id === 'wind' ? '≋' : '☀'}</span>
+        <span>{weather.id === 'storm' ? 'ϟ' : weather.id === 'night' ? '☾' : weather.id === 'rain' ? '☂' : '☀'}</span>
         <strong>{weather.label}</strong>
         <small>Grand Line weather · 3 min cycle</small>
       </div>
       <style>{`
         .world-weather { position: fixed; inset: 0; z-index: 6; overflow: hidden; pointer-events: none; transition: background 4s ease; }
-        .world-weather__clouds, .world-weather__rain, .world-weather__wind, .world-weather__lightning { position: absolute; inset: 0; opacity: 0; transition: opacity 3.5s ease; }
-        .world-weather__clouds { background: radial-gradient(ellipse at 15% -10%, rgba(24,34,45,.84), transparent 46%), radial-gradient(ellipse at 72% -18%, rgba(28,37,48,.78), transparent 52%); filter: blur(18px); animation: weather-cloud-drift 18s ease-in-out infinite alternate; }
-        .world-weather--rain .world-weather__clouds, .world-weather--storm .world-weather__clouds { opacity: .92; }
-        .world-weather--night { background: linear-gradient(180deg, rgba(0,4,18,.4), rgba(1,8,22,.18)); }
-        .world-weather--rain .world-weather__rain { opacity: .72; }
-        .world-weather--storm .world-weather__rain { opacity: .95; }
-        .world-weather__rain i { position: absolute; top: -14vh; width: 1px; height: 13vh; background: linear-gradient(transparent, rgba(220,240,255,.82)); transform: rotate(12deg); animation: weather-rain linear infinite; }
-        .world-weather--wind .world-weather__wind { opacity: .72; }
-        .world-weather__wind i { position: absolute; left: -28vw; width: 22vw; height: 2px; border-radius: 50%; background: linear-gradient(90deg, transparent, rgba(240,252,255,.62), transparent); filter: blur(.4px); animation: weather-wind linear infinite; }
+        .world-weather__clouds, .world-weather__rain, .world-weather__mist, .world-weather__moon, .world-weather__lightning { position: absolute; inset: 0; opacity: 0; transition: opacity 3.5s ease; }
+        .world-weather__clouds { background: radial-gradient(ellipse at 18% -12%, rgba(24,34,45,.8), transparent 44%), radial-gradient(ellipse at 76% -16%, rgba(28,37,48,.74), transparent 52%), linear-gradient(180deg, rgba(0,0,0,.14), transparent 48%); filter: blur(18px); animation: weather-cloud-drift 20s ease-in-out infinite alternate; }
+        .world-weather--rain .world-weather__clouds { opacity: .7; }
+        .world-weather--storm .world-weather__clouds { opacity: .94; }
+        .world-weather--night { background: radial-gradient(circle at 72% 16%, rgba(118,148,220,.18), transparent 24%), linear-gradient(180deg, rgba(0,4,18,.52), rgba(1,8,22,.2)); }
+        .world-weather--rain { background: linear-gradient(180deg, rgba(20,36,46,.2), rgba(10,24,32,.1)); }
+        .world-weather--storm { background: linear-gradient(180deg, rgba(0,0,0,.2), rgba(5,8,16,.18)); }
+        .world-weather--night .world-weather__moon { opacity: .7; }
+        .world-weather__moon { left: auto; right: 8vw; top: 10vh; width: 72px; height: 72px; border-radius: 50%; background: radial-gradient(circle at 38% 34%, #fff8c7, #b9cffc 46%, transparent 66%); filter: blur(.2px) drop-shadow(0 0 24px rgba(182,211,255,.56)); }
+        .world-weather--rain .world-weather__mist, .world-weather--storm .world-weather__mist { opacity: .55; }
+        .world-weather__mist { background: linear-gradient(180deg, transparent 36%, rgba(160,200,220,.14) 64%, transparent 100%); animation: weather-mist 16s ease-in-out infinite alternate; }
+        .world-weather--rain .world-weather__rain { opacity: .62; }
+        .world-weather--storm .world-weather__rain { opacity: .9; }
+        .world-weather__rain i { position: absolute; top: -14vh; width: 1px; height: 13vh; background: linear-gradient(transparent, rgba(220,240,255,.78)); transform: rotate(12deg); animation: weather-rain linear infinite; }
         .world-weather--storm .world-weather__lightning { opacity: 1; animation: weather-lightning 6.7s steps(1) infinite; }
         .world-weather__lightning { background: rgba(220,235,255,.72); mix-blend-mode: screen; }
-        .world-weather__badge { position: fixed; top: 78px; right: 18px; display: grid; grid-template-columns: 26px auto; column-gap: 8px; min-width: 170px; padding: 8px 12px; border: 1px solid rgba(255,255,255,.16); border-radius: 9px; opacity: .72; background: rgba(4,12,18,.46); color: #eef8ff; backdrop-filter: blur(8px); transition: border-color 2s ease, background 2s ease; }
+        .world-weather__badge { position: fixed; top: 78px; right: 18px; display: grid; grid-template-columns: 26px auto; column-gap: 8px; min-width: 170px; padding: 8px 12px; border: 1px solid rgba(255,255,255,.16); border-radius: 12px; opacity: .78; background: rgba(4,12,18,.5); color: #eef8ff; backdrop-filter: blur(8px); box-shadow: 0 12px 30px rgba(0,0,0,.18); transition: border-color 2s ease, background 2s ease; }
         .world-weather__badge span { grid-row: 1 / 3; align-self: center; color: #e8c75a; font-size: 22px; text-align: center; }
         .world-weather__badge strong { font: 400 13px/1.1 "Pirata One", serif; letter-spacing: .1em; }
         .world-weather__badge small { margin-top: 2px; color: rgba(255,255,255,.48); font: 8px/1.2 monospace; letter-spacing: .05em; }
         .world-weather--storm .world-weather__badge { border-color: rgba(158,186,255,.36); background: rgba(5,9,18,.7); }
         @keyframes weather-rain { to { transform: translate(18vw, 125vh) rotate(12deg); } }
-        @keyframes weather-wind { to { transform: translateX(155vw); } }
+        @keyframes weather-mist { from { transform: translateY(2vh); } to { transform: translateY(-2vh); } }
         @keyframes weather-cloud-drift { from { transform: translateX(-3%) scale(1.05); } to { transform: translateX(4%) scale(1.12); } }
         @keyframes weather-lightning { 0%, 78%, 82%, 100% { opacity: 0; } 79% { opacity: .76; } 80% { opacity: .1; } 81% { opacity: .52; } }
         @media (prefers-reduced-motion: reduce) { .world-weather * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
@@ -718,7 +698,7 @@ export default function WorldScene({
     count={weather.id === 'night' ? 420 : 170}
     scale={weather.id === 'night' ? [240, 90, 240] : 60}
     size={weather.id === 'night' ? 1.8 : 1.25}
-    speed={weather.id === 'wind' ? 0.7 : 0.18}
+    speed={weather.id === 'storm' ? 0.34 : 0.18}
     opacity={weather.id === 'night' ? 0.72 : 0.11}
     color={weather.id === 'night' ? '#c9dcff' : '#ffffff'}
     position={[0, weather.id === 'night' ? 35 : 8, 0]}
@@ -728,7 +708,7 @@ export default function WorldScene({
 
   <Suspense fallback={null}>
     <Physics gravity={[0, -9.81, 0]} debug={false}>
-      <Ship onProjectSelect={onProjectSelect} aboutActive={aboutActive} skillsActive={skillsActive} />
+      <Ship onProjectSelect={onProjectSelect} aboutActive={aboutActive} skillsActive={skillsActive} weatherId={weather.id} />
       <LuffyCharacter3D
         position={[0, 0.15, 5]}
         onStateChange={onStateChange}
