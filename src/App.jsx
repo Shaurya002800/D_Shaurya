@@ -6,6 +6,7 @@ import DevilFruitChat from './components/DevilFruitChat.jsx'
 import ArtifactDossier from './components/ArtifactDossier.jsx'
 import MobileControls from './components/MobileControls.jsx'
 import OceanMusic from './components/OceanMusic.jsx'
+import SwordCursor from './components/SwordCursor.jsx'
 import AboutSection, {
   AboutTransitionOverlay,
   SectionTransitionLabel,
@@ -181,6 +182,8 @@ function App() {
       {!loaded && (
         <LoadingScreen onComplete={() => setLoaderComplete(true)} />
       )}
+
+      <SwordCursor />
     </div>
   )
 }

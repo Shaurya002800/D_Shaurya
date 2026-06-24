@@ -1,227 +1,335 @@
 import { useEffect, useRef, useState } from 'react'
 
+const CURSOR_ASSET = '/katana-1.svg'
 const INTERACTIVE_SELECTOR = [
   'a',
   'button',
   'input',
   'textarea',
   'select',
-  'summary',
   '[role="button"]',
-  '[tabindex]:not([tabindex="-1"])',
+  '[data-cursor-hover]',
 ].join(',')
 
+function watchMediaQuery(query, onChange) {
+  if (query.addEventListener) {
+    query.addEventListener('change', onChange)
+    return () => query.removeEventListener('change', onChange)
+  }
+
+  query.addListener(onChange)
+  return () => query.removeListener(onChange)
+}
+
 export default function SwordCursor() {
-  const bladeRef = useRef(null)
-  const auraRef = useRef(null)
-  const pointerRef = useRef({ x: 0, y: 0 })
+  const cursorRef = useRef(null)
+  const trailLayerRef = useRef(null)
+  const frameRef = useRef(null)
+  const slashTimeoutRef = useRef(null)
+  const trailTimeoutsRef = useRef(new Set())
+  const visibleRef = useRef(false)
+  const hoveringRef = useRef(false)
+  const reducedMotionRef = useRef(false)
+  const targetRef = useRef({ x: 0, y: 0 })
   const currentRef = useRef({ x: 0, y: 0 })
-  const lastRef = useRef({ x: 0, y: 0 })
-  const rafRef = useRef(null)
   const [enabled, setEnabled] = useState(false)
-  const [visible, setVisible] = useState(false)
-  const [hovering, setHovering] = useState(false)
-  const [slashing, setSlashing] = useState(false)
-  const [slashes, setSlashes] = useState([])
 
   useEffect(() => {
-    const query = window.matchMedia('(hover: hover) and (pointer: fine)')
-    const syncEnabled = () => setEnabled(query.matches)
+    const pointerQuery = window.matchMedia('(hover: hover) and (pointer: fine)')
+    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
 
-    syncEnabled()
-    query.addEventListener('change', syncEnabled)
+    const syncPointer = () => setEnabled(pointerQuery.matches)
+    const syncReducedMotion = () => {
+      reducedMotionRef.current = reducedMotionQuery.matches
+    }
 
-    return () => query.removeEventListener('change', syncEnabled)
+    syncPointer()
+    syncReducedMotion()
+
+    const cleanupPointer = watchMediaQuery(pointerQuery, syncPointer)
+    const cleanupReducedMotion = watchMediaQuery(reducedMotionQuery, syncReducedMotion)
+
+    return () => {
+      cleanupPointer()
+      cleanupReducedMotion()
+    }
   }, [])
+
+  useEffect(() => {
+    const root = document.documentElement
+    root.classList.toggle('sword-cursor-enabled', enabled)
+
+    return () => {
+      root.classList.remove('sword-cursor-enabled')
+    }
+  }, [enabled])
 
   useEffect(() => {
     if (!enabled) return undefined
 
-    let slashTimer
-    const cleanupSlashes = new Map()
+    const cursor = cursorRef.current
+    const trailLayer = trailLayerRef.current
+    const trailTimeouts = trailTimeoutsRef.current
+    if (!cursor || !trailLayer) return undefined
+
+    const setVisible = (nextVisible) => {
+      if (visibleRef.current === nextVisible) return
+      visibleRef.current = nextVisible
+      cursor.classList.toggle('visible', nextVisible)
+    }
+
+    const setHovering = (target) => {
+      const nextHovering = Boolean(target?.closest?.(INTERACTIVE_SELECTOR))
+      if (hoveringRef.current === nextHovering) return
+      hoveringRef.current = nextHovering
+      cursor.classList.toggle('hovering', nextHovering)
+    }
+
+    const removeSlashClass = () => {
+      cursor.classList.remove('slashing')
+    }
+
+    const addSlashTrail = (event) => {
+      const trail = document.createElement('span')
+      const removeTrail = () => {
+        trail.remove()
+        window.clearTimeout(timeout)
+        trailTimeouts.delete(timeout)
+      }
+      const timeout = window.setTimeout(removeTrail, 520)
+
+      trail.className = 'sword-cursor__trail'
+      trail.style.left = `${event.clientX}px`
+      trail.style.top = `${event.clientY}px`
+      trailLayer.appendChild(trail)
+      trail.addEventListener('animationend', removeTrail, { once: true })
+      trailTimeouts.add(timeout)
+    }
 
     const onPointerMove = (event) => {
-      pointerRef.current.x = event.clientX
-      pointerRef.current.y = event.clientY
-      if (!visible) {
+      if (event.pointerType && event.pointerType !== 'mouse') return
+
+      targetRef.current.x = event.clientX
+      targetRef.current.y = event.clientY
+      setHovering(event.target)
+
+      if (!visibleRef.current) {
         currentRef.current.x = event.clientX
         currentRef.current.y = event.clientY
-        lastRef.current.x = event.clientX
-        lastRef.current.y = event.clientY
         setVisible(true)
       }
     }
 
-    const onPointerLeave = () => setVisible(false)
-    const onPointerEnter = (event) => {
-      pointerRef.current.x = event.clientX
-      pointerRef.current.y = event.clientY
-      setVisible(true)
-    }
-
-    const onPointerOver = (event) => {
-      setHovering(Boolean(event.target.closest?.(INTERACTIVE_SELECTOR)))
-    }
-
-    const onPointerOut = (event) => {
-      if (!event.relatedTarget?.closest?.(INTERACTIVE_SELECTOR)) {
-        setHovering(false)
-      }
-    }
-
     const onPointerDown = (event) => {
-      const id = window.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`
-      const angle = bladeRef.current?.dataset.angle ?? '35'
+      if (event.pointerType && event.pointerType !== 'mouse') return
 
-      setSlashing(true)
-      setSlashes((items) => [
-        ...items.slice(-4),
-        {
-          id,
-          angle,
-          x: event.clientX,
-          y: event.clientY,
-        },
-      ])
+      if (reducedMotionRef.current) {
+        removeSlashClass()
+        return
+      }
 
-      clearTimeout(slashTimer)
-      slashTimer = window.setTimeout(() => setSlashing(false), 170)
+      cursor.classList.remove('slashing')
+      void cursor.offsetWidth
+      cursor.classList.add('slashing')
 
-      const cleanup = window.setTimeout(() => {
-        setSlashes((items) => items.filter((item) => item.id !== id))
-        cleanupSlashes.delete(id)
-      }, 520)
-      cleanupSlashes.set(id, cleanup)
+      window.clearTimeout(slashTimeoutRef.current)
+      slashTimeoutRef.current = window.setTimeout(removeSlashClass, 430)
+      addSlashTrail(event)
+    }
+
+    const onPointerLeave = () => {
+      setVisible(false)
+      setHovering(null)
     }
 
     const tick = () => {
-      const pointer = pointerRef.current
+      const target = targetRef.current
       const current = currentRef.current
-      const last = lastRef.current
-      const dx = pointer.x - current.x
-      const dy = pointer.y - current.y
+      const ease = reducedMotionRef.current ? 0.55 : 0.2
 
-      current.x += dx * 0.24
-      current.y += dy * 0.24
+      current.x += (target.x - current.x) * ease
+      current.y += (target.y - current.y) * ease
+      cursor.style.transform = `translate3d(${current.x}px, ${current.y}px, 0)`
 
-      const velocityX = current.x - last.x
-      const velocityY = current.y - last.y
-      const speed = Math.min(Math.hypot(velocityX, velocityY), 44)
-      const travelAngle = Math.atan2(velocityY, velocityX) * 180 / Math.PI
-      const restingAngle = 36
-      const angle = speed > 0.35 ? travelAngle + 38 : restingAngle
-      const tilt = Math.max(-12, Math.min(12, velocityY * 0.26))
-      const scale = hovering ? 1.16 : 1
-
-      if (bladeRef.current) {
-        bladeRef.current.dataset.angle = String(angle)
-        bladeRef.current.style.transform = [
-          `translate3d(${current.x - 15}px, ${current.y - 72}px, 0)`,
-          `rotate(${angle + tilt}deg)`,
-          `scale(${scale})`,
-        ].join(' ')
-      }
-
-      if (auraRef.current) {
-        auraRef.current.style.transform = `translate3d(${current.x - 18}px, ${current.y - 18}px, 0) scale(${hovering ? 1.55 : 1})`
-      }
-
-      last.x = current.x
-      last.y = current.y
-      rafRef.current = window.requestAnimationFrame(tick)
+      frameRef.current = window.requestAnimationFrame(tick)
     }
 
     window.addEventListener('pointermove', onPointerMove, { passive: true })
-    window.addEventListener('pointerenter', onPointerEnter, { passive: true })
-    window.addEventListener('pointerleave', onPointerLeave, { passive: true })
-    window.addEventListener('pointerover', onPointerOver, { passive: true })
-    window.addEventListener('pointerout', onPointerOut, { passive: true })
     window.addEventListener('pointerdown', onPointerDown)
-    rafRef.current = window.requestAnimationFrame(tick)
+    document.addEventListener('mouseleave', onPointerLeave)
+    window.addEventListener('blur', onPointerLeave)
+    frameRef.current = window.requestAnimationFrame(tick)
 
     return () => {
       window.removeEventListener('pointermove', onPointerMove)
-      window.removeEventListener('pointerenter', onPointerEnter)
-      window.removeEventListener('pointerleave', onPointerLeave)
-      window.removeEventListener('pointerover', onPointerOver)
-      window.removeEventListener('pointerout', onPointerOut)
       window.removeEventListener('pointerdown', onPointerDown)
-      window.cancelAnimationFrame(rafRef.current)
-      clearTimeout(slashTimer)
-      cleanupSlashes.forEach(clearTimeout)
+      document.removeEventListener('mouseleave', onPointerLeave)
+      window.removeEventListener('blur', onPointerLeave)
+      window.cancelAnimationFrame(frameRef.current)
+      window.clearTimeout(slashTimeoutRef.current)
+      trailTimeouts.forEach((timeout) => window.clearTimeout(timeout))
+      trailTimeouts.clear()
+      cursor.classList.remove('visible', 'hovering', 'slashing')
+      cursor.style.transform = ''
+      visibleRef.current = false
+      hoveringRef.current = false
     }
-  }, [enabled, hovering, visible])
+  }, [enabled])
 
   if (!enabled) return null
 
   return (
     <>
-      <div
-        ref={auraRef}
-        className={`sword-cursor__aura${visible ? ' is-visible' : ''}${hovering ? ' is-hovering' : ''}`}
-        aria-hidden="true"
-      />
+      <style>{`
+        @media (hover: hover) and (pointer: fine) {
+          html.sword-cursor-enabled,
+          html.sword-cursor-enabled * {
+            cursor: none !important;
+          }
+        }
 
-      <div
-        ref={bladeRef}
-        className={[
-          'sword-cursor',
-          visible ? 'is-visible' : '',
-          hovering ? 'is-hovering' : '',
-          slashing ? 'is-slashing' : '',
-        ].join(' ')}
-        aria-hidden="true"
-      >
-        <svg viewBox="0 0 96 96" className="sword-cursor__svg">
-          <defs>
-            <linearGradient id="swordBlade" x1="14" y1="5" x2="57" y2="66" gradientUnits="userSpaceOnUse">
-              <stop offset="0" stopColor="#ffffff" />
-              <stop offset="0.38" stopColor="#dff8ff" />
-              <stop offset="0.78" stopColor="#9ab7c4" />
-              <stop offset="1" stopColor="#5e7581" />
-            </linearGradient>
-            <linearGradient id="swordGreen" x1="54" y1="60" x2="88" y2="90" gradientUnits="userSpaceOnUse">
-              <stop offset="0" stopColor="#9bff72" />
-              <stop offset="0.48" stopColor="#2db84f" />
-              <stop offset="1" stopColor="#102f1d" />
-            </linearGradient>
-            <filter id="swordGlow" x="-60%" y="-60%" width="220%" height="220%">
-              <feDropShadow dx="0" dy="0" stdDeviation="2.5" floodColor="#72ff84" floodOpacity="0.72" />
-            </filter>
-          </defs>
+        .sword-cursor {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 48px;
+          height: 48px;
+          z-index: 2147483647;
+          pointer-events: none;
+          opacity: 0;
+          transform: translate3d(-100px, -100px, 0);
+          transition: opacity 120ms ease;
+          will-change: transform, opacity;
+          contain: layout style paint;
+        }
 
-          <path
-            className="sword-cursor__shadow"
-            d="M12 5 18 3 64 58 58 64 13 12Z"
-            fill="rgba(0,0,0,.36)"
-            transform="translate(3 4)"
-          />
-          <path d="M12 5 18 3 64 58 58 64 13 12Z" fill="url(#swordBlade)" stroke="#111f24" strokeWidth="2.2" strokeLinejoin="round" />
-          <path d="M18 3 64 58 61 61 15 8Z" fill="rgba(255,255,255,.42)" />
-          <path d="M54 65 65 54 72 61 61 72Z" fill="#152418" stroke="#89ff7c" strokeWidth="2.2" filter="url(#swordGlow)" />
-          <path d="M63 71 72 62 91 81c2.1 2.1 2.1 5.5 0 7.6l-.4.4c-2.1 2.1-5.5 2.1-7.6 0Z" fill="url(#swordGreen)" stroke="#0e160f" strokeWidth="2.2" />
-          <path d="M72.5 70.5 78.5 64.5" stroke="#e6ffd8" strokeWidth="4" strokeLinecap="round" />
-          <path d="M79.5 77.5 85.5 71.5" stroke="#e6ffd8" strokeWidth="4" strokeLinecap="round" />
-          <circle cx="72" cy="72" r="4.2" fill="#d9c56a" stroke="#171208" strokeWidth="1.8" />
-        </svg>
+        .sword-cursor.visible {
+          opacity: 1;
+        }
+
+        .sword-cursor__blade {
+          display: block;
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          user-select: none;
+          -webkit-user-drag: none;
+          transform: translate(-25%, -20%) rotate(-25deg);
+          transform-origin: 24% 22%;
+          filter:
+            drop-shadow(0 0 4px rgba(85, 255, 120, 0.42))
+            drop-shadow(0 1px 2px rgba(0, 0, 0, 0.32));
+          transition:
+            filter 160ms ease,
+            transform 160ms ease;
+          will-change: transform, filter;
+        }
+
+        .sword-cursor.hovering .sword-cursor__blade {
+          transform: translate(-25%, -20%) rotate(-16deg) scale(1.12);
+          filter:
+            drop-shadow(0 0 7px rgba(93, 255, 125, 0.76))
+            drop-shadow(0 0 14px rgba(29, 211, 81, 0.36))
+            drop-shadow(0 2px 3px rgba(0, 0, 0, 0.38));
+        }
+
+        .sword-cursor.slashing .sword-cursor__blade {
+          animation: swordSlash 430ms cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .sword-cursor__trails {
+          position: fixed;
+          inset: 0;
+          z-index: 2147483646;
+          pointer-events: none;
+          overflow: hidden;
+        }
+
+        .sword-cursor__trail {
+          position: fixed;
+          width: 64px;
+          height: 14px;
+          pointer-events: none;
+          transform: translate(-36%, -58%) rotate(-23deg);
+          transform-origin: 20% 50%;
+          border-radius: 999px;
+          background:
+            linear-gradient(90deg,
+              rgba(151, 255, 165, 0) 0%,
+              rgba(151, 255, 165, 0.78) 44%,
+              rgba(234, 255, 237, 0.9) 58%,
+              rgba(63, 255, 115, 0) 100%);
+          box-shadow: 0 0 14px rgba(64, 255, 112, 0.42);
+          opacity: 0;
+          animation: swordTrail 420ms ease-out forwards;
+          will-change: transform, opacity;
+        }
+
+        @keyframes swordSlash {
+          0% {
+            transform: translate(-25%, -20%) rotate(-25deg) scale(1);
+          }
+          34% {
+            transform: translate(-16%, -28%) rotate(18deg) scale(1.16);
+          }
+          64% {
+            transform: translate(-28%, -18%) rotate(-34deg) scale(1.06);
+          }
+          100% {
+            transform: translate(-25%, -20%) rotate(-25deg) scale(1);
+          }
+        }
+
+        @keyframes swordTrail {
+          0% {
+            opacity: 0;
+            transform: translate(-42%, -58%) rotate(-23deg) scaleX(0.22);
+          }
+          24% {
+            opacity: 0.82;
+          }
+          100% {
+            opacity: 0;
+            transform: translate(-26%, -58%) rotate(-23deg) scaleX(1);
+          }
+        }
+
+        @media (pointer: coarse) {
+          html.sword-cursor-enabled,
+          html.sword-cursor-enabled * {
+            cursor: auto !important;
+          }
+
+          .sword-cursor,
+          .sword-cursor__trails {
+            display: none !important;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .sword-cursor {
+            transition-duration: 60ms;
+          }
+
+          .sword-cursor__blade {
+            transition-duration: 80ms;
+          }
+
+          .sword-cursor.slashing .sword-cursor__blade {
+            animation: none;
+          }
+
+          .sword-cursor__trail {
+            display: none;
+            animation: none;
+          }
+        }
+      `}</style>
+
+      <div ref={trailLayerRef} className="sword-cursor__trails" aria-hidden="true" />
+      <div ref={cursorRef} className="sword-cursor" aria-hidden="true">
+        <img className="sword-cursor__blade" src={CURSOR_ASSET} alt="" draggable="false" />
       </div>
-
-      {slashes.map((slash) => (
-        <span
-          key={slash.id}
-          className="sword-cursor__slash"
-          style={{
-            left: slash.x,
-            top: slash.y,
-            transform: `translate(-50%, -50%) rotate(${Number(slash.angle) + 8}deg)`,
-          }}
-          aria-hidden="true"
-        >
-          <i />
-          <b />
-          <em />
-        </span>
-      ))}
     </>
   )
 }
