@@ -5,7 +5,6 @@ import { Sky, Sparkles, OrbitControls } from '@react-three/drei'
 import { Physics } from '@react-three/rapier'
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing'
 import * as THREE from 'three'
-import { motion, AnimatePresence } from 'framer-motion'
 import { LuffyCharacter3D } from '../components/LuffyCharacter'
 import Ship from '../components/Ship'
 import { AboutCameraController } from '../components/AboutSection'
@@ -252,89 +251,6 @@ export function WorkCameraTransition({ active }) {
   return null
 }
 
-// ─── WORK BASEMENT FREE-LOOK (mouse drag) ────────────────────────────────────
-function WorkOrbitControl({ active }) {
-  const isDragging = useRef(false)
-  const lastMouse  = useRef({ x: 0, y: 0 })
-  const yaw        = useRef(0)
-  const pitch      = useRef(-0.08)
-  const activeRef  = useRef(active)
- 
-  useEffect(() => { activeRef.current = active }, [active])
- 
-  useEffect(() => {
-    if (!active) {
-      isDragging.current = false
-      yaw.current        = 0
-      pitch.current      = -0.08
-    }
-  }, [active])
- 
-  useEffect(() => {
-    if (!active) return
- 
-    const onDown = (e) => {
-      isDragging.current = true
-      lastMouse.current  = { x: e.clientX, y: e.clientY }
-    }
-    const onUp = () => { isDragging.current = false }
-    const onMove = (e) => {
-      if (!isDragging.current) return
-      yaw.current -= (e.clientX - lastMouse.current.x) * 0.003
-      // CLAMP yaw: ±55° (≈ ±0.96 rad) — prevents wall clipping
-      yaw.current = Math.max(-0.96, Math.min(0.96, yaw.current))
-      pitch.current = Math.max(-0.45, Math.min(0.30,
-        pitch.current - (e.clientY - lastMouse.current.y) * 0.0022
-      ))
-      lastMouse.current = { x: e.clientX, y: e.clientY }
-    }
-    const onTouchStart = (e) => {
-      isDragging.current = true
-      lastMouse.current  = { x: e.touches[0].clientX, y: e.touches[0].clientY }
-    }
-    const onTouchMove = (e) => {
-      if (!isDragging.current) return
-      yaw.current -= (e.touches[0].clientX - lastMouse.current.x) * 0.0035
-      yaw.current = Math.max(-0.96, Math.min(0.96, yaw.current))
-      pitch.current = Math.max(-0.45, Math.min(0.30,
-        pitch.current - (e.touches[0].clientY - lastMouse.current.y) * 0.0028
-      ))
-      lastMouse.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
-    }
- 
-    window.addEventListener('mousedown',  onDown,       { passive: true })
-    window.addEventListener('mouseup',    onUp,         { passive: true })
-    window.addEventListener('mousemove',  onMove,       { passive: true })
-    window.addEventListener('touchstart', onTouchStart, { passive: true })
-    window.addEventListener('touchend',   onUp,         { passive: true })
-    window.addEventListener('touchmove',  onTouchMove,  { passive: true })
- 
-    return () => {
-      window.removeEventListener('mousedown',  onDown)
-      window.removeEventListener('mouseup',    onUp)
-      window.removeEventListener('mousemove',  onMove)
-      window.removeEventListener('touchstart', onTouchStart)
-      window.removeEventListener('touchend',   onUp)
-      window.removeEventListener('touchmove',  onTouchMove)
-      isDragging.current = false
-    }
-  }, [active])
- 
-  useFrame((state) => {
-    if (!activeRef.current) return
-
-    const base = CAM_WORK.position
-    const forward = CAM_WORK.target.clone().sub(base)
-    forward.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw.current)
-
-    const lookTarget = base.clone().add(forward)
-    lookTarget.y += Math.sin(pitch.current + 0.08) * 8
-    state.camera.lookAt(lookTarget)
-  })
- 
-  return null
-}
-
 // ─── STYLIZED "GRAND LINE" OCEAN ──────────────────────────────────────────────
 function Ocean({ weather }) {
   const matRef = useRef()
@@ -460,7 +376,7 @@ function Ocean({ weather }) {
 
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -3.5, 0]} receiveShadow={false}>
-      <planeGeometry args={[2500, 2500, 64, 64]} />
+      <planeGeometry args={[2500, 2500, 32, 32]} />
       <shaderMaterial ref={matRef} args={[shader]} />
     </mesh>
   )
@@ -544,7 +460,7 @@ function WeatherEnvironment({ weather, workActive }) {
         intensity={1.8}
         color="#fff3db"
         castShadow
-        shadow-mapSize={[1024, 1024]}
+        shadow-mapSize={[768, 768]}
         shadow-camera-far={200}
         shadow-camera-near={1}
         shadow-camera-left={-60}
@@ -559,18 +475,19 @@ function WeatherEnvironment({ weather, workActive }) {
 }
 
 function WeatherOverlay({ weather }) {
-  const particles = useMemo(() => Array.from({ length: 64 }, (_, index) => ({
+  const particles = useMemo(() => Array.from({ length: 44 }, (_, index) => ({
     left: `${(index * 37) % 103}%`,
     delay: `${-((index * 0.17) % 2.8)}s`,
     duration: `${0.5 + (index % 7) * 0.055}s`,
     opacity: 0.32 + (index % 5) * 0.11,
   })), [])
+  const showRain = weather.id === 'rain' || weather.id === 'storm'
 
   return (
     <div className={`world-weather world-weather--${weather.id}`} aria-hidden="true">
       <div className="world-weather__clouds" />
       <div className="world-weather__rain">
-        {particles.map((particle, index) => (
+        {showRain && particles.map((particle, index) => (
           <i key={index} style={{
             left: particle.left,
             animationDelay: particle.delay,
@@ -632,19 +549,22 @@ export default function WorldScene({
   onSkillsClimbingChange,
   skillsDirection = 'north',
   workActive = false,
+  onReady,
 }) {
-  const [cloudsCleared, setCloudsCleared] = useState(false)
   const [skillsCameraLocked, setSkillsCameraLocked] = useState(false)
   const [weatherIndex, setWeatherIndex] = useState(getInitialWeatherIndex)
   const weather = WEATHER_SEQUENCE[weatherIndex]
+  const effectsEnabled = useMemo(() => {
+    if (typeof window === 'undefined') return true
+    return !window.matchMedia('(max-width: 760px), (prefers-reduced-motion: reduce)').matches
+  }, [])
   
   // ─── NEW: Global Free Camera State ───
   const [freeCam, setFreeCam] = useState(false)
 
   useEffect(() => {
-    const t = setTimeout(() => setCloudsCleared(true), 2000)
-    return () => clearTimeout(t)
-  }, [])
+    onReady?.()
+  }, [onReady])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -671,15 +591,15 @@ export default function WorldScene({
       background: 'linear-gradient(180deg, #cfe6f5 0%, #9fc6df 46%, #6f9dbd 100%)',
     }}>
 <Canvas
-  shadows="soft"
+  shadows
   camera={{ position: [0, 8.5, 16], fov: 68, near: 0.1, far: 2000 }}
   performance={{ min: 0.5 }}
-  dpr={[1, 2]}
-  gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.84 }}
+  dpr={[0.85, 1.25]}
+  gl={{ antialias: false, powerPreference: 'high-performance', toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.84 }}
   style={{ position: 'absolute', inset: 0, zIndex: 1 }}
 >
   {/* 1. OrbitControls is ALWAYS mounted, but disabled until you press 'O' */}
-  <OrbitControls makeDefault enabled={freeCam} target={[0, 0, 0]} />
+  {freeCam && <OrbitControls makeDefault enabled target={[0, 0, 0]} />}
 
   {/* 2. Your Camera Controllers */}
   {!freeCam && (
@@ -695,15 +615,17 @@ export default function WorldScene({
   )}
   {/* 3. The rest of your scene... */}
   <WeatherEnvironment weather={weather} workActive={workActive} />
-  <Sparkles
-    count={weather.id === 'night' ? 420 : 170}
-    scale={weather.id === 'night' ? [240, 90, 240] : 60}
-    size={weather.id === 'night' ? 1.8 : 1.25}
-    speed={weather.id === 'storm' ? 0.34 : 0.18}
-    opacity={weather.id === 'night' ? 0.72 : 0.11}
-    color={weather.id === 'night' ? '#c9dcff' : '#ffffff'}
-    position={[0, weather.id === 'night' ? 35 : 8, 0]}
-  />
+  {!workActive && (
+    <Sparkles
+      count={weather.id === 'night' ? 180 : 70}
+      scale={weather.id === 'night' ? [220, 82, 220] : 52}
+      size={weather.id === 'night' ? 1.55 : 1.05}
+      speed={weather.id === 'storm' ? 0.28 : 0.14}
+      opacity={weather.id === 'night' ? 0.58 : 0.08}
+      color={weather.id === 'night' ? '#c9dcff' : '#ffffff'}
+      position={[0, weather.id === 'night' ? 35 : 8, 0]}
+    />
+  )}
   
   <Ocean weather={weather} />
 
@@ -735,28 +657,14 @@ export default function WorldScene({
     </Physics>
   </Suspense>
 
-  <EffectComposer disableNormalPass multisampling={0}>
-    <Bloom luminanceThreshold={workActive ? 1.8 : 1.1} mipmapBlur={!workActive} intensity={workActive ? 0.06 : 0.3} levels={workActive ? 2 : 4} />
-    <Vignette eskil={false} offset={0.12} darkness={workActive ? 0.35 : 0.75} />
-  </EffectComposer>
+  {effectsEnabled && (
+    <EffectComposer disableNormalPass multisampling={0}>
+      <Bloom luminanceThreshold={workActive ? 1.9 : 1.2} mipmapBlur={false} intensity={workActive ? 0.03 : 0.18} levels={2} />
+      <Vignette eskil={false} offset={0.12} darkness={workActive ? 0.28 : 0.62} />
+    </EffectComposer>
+  )}
 </Canvas>
       {!workActive && <WeatherOverlay weather={weather} />}
-
-      <AnimatePresence>
-        {!cloudsCleared && (
-          <motion.div
-            key="cloud-wipe" initial={{ y: '0%' }}
-            exit={{ y: '105%', transition: { duration: 2.2, ease: [0.65, 0, 0.25, 1] } }}
-            style={{ position: 'absolute', inset: 0, zIndex: 9999, backgroundColor: '#ffffff', pointerEvents: 'none' }}
-          >
-            <div style={{ width: '100%', height: '160px', position: 'absolute', bottom: '-158px' }}>
-              <svg viewBox="0 0 1440 160" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
-                <path fill="#ffffff" d="M0,80L48,72C96,64,192,48,288,53.3C384,59,480,85,576,96C672,107,768,101,864,88C960,75,1056,53,1152,53.3C1248,53,1344,75,1392,85.3L1440,96L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z" />
-              </svg>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   )
 }

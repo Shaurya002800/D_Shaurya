@@ -108,9 +108,9 @@ export default function OceanMusic({ visible = true }) {
           grid-template-columns: 26px minmax(0, 1fr) 18px;
           align-items: center;
           column-gap: 8px;
-          width: 300px;
-          max-width: min(300px, calc(100vw - 36px));
-          min-height: 60px;
+          width: 225px;
+          max-width: min(225px, calc(100vw - 36px));
+          min-height: 50px;
           padding: 8px 12px;
           border: 1px solid rgba(255, 255, 255, 0.16);
           border-radius: 14px;

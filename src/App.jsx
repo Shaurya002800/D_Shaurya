@@ -1,6 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { lazy, Suspense, useState, useRef, useEffect, useCallback } from 'react'
 import LoadingScreen from './components/LoadingScreen'
-import WorldScene from './scenes/WorldScene'
 import ControlsOverlay from './components/ControlsOverlay'
 import NavWheels from './components/NavWheels'
 import DevilFruitChat from './components/DevilFruitChat.jsx'
@@ -19,8 +18,11 @@ import WorkSection, {
   WorkSectionLabel,
 } from './components/WorkSection'
 
+const WorldScene = lazy(() => import('./scenes/WorldScene'))
+
 function App() {
-  const [loaded,          setLoaded]          = useState(false)
+  const [loaderComplete,  setLoaderComplete]  = useState(false)
+  const [worldReady,      setWorldReady]      = useState(false)
   const [activeSection,   setActiveSection]   = useState('explore')
   const [aboutActive,     setAboutActive]     = useState(false)
   const [skillsActive,    setSkillsActive]    = useState(false)
@@ -33,6 +35,7 @@ function App() {
   const [charState,       setCharState]       = useState('idle')
   const [speed,           setSpeed]           = useState(0)
   const debugRef   = useRef(null)
+  const loaded = loaderComplete && worldReady
   const sectionActive = aboutActive || skillsActive || skillsClimbing || workActive
 
   // ── Close handlers ────────────────────────────────────────────────
@@ -63,12 +66,17 @@ function App() {
 
   // Stable callback so WorkSection doesn't re-render on every project change
   const handleProjectClose = useCallback(() => setSelectedProject(null), [])
+  const handleWorldReady = useCallback(() => setWorldReady(true), [])
 
   // ── Speed polling for Luffy UI ────────────────────────────────────
   useEffect(() => {
     const id = setInterval(() => {
-      if (debugRef.current) setSpeed(debugRef.current.speed ?? 0)
-    }, 100)
+      if (!debugRef.current) return
+      const nextSpeed = debugRef.current.speed ?? 0
+      setSpeed((currentSpeed) => (
+        Math.abs(currentSpeed - nextSpeed) > 0.01 ? nextSpeed : currentSpeed
+      ))
+    }, 160)
     return () => clearInterval(id)
   }, [])
 
@@ -92,19 +100,22 @@ function App() {
 
   return (
     <div style={{ width: '100%', height: '100%' }}>
-      <WorldScene
-        debugRef={debugRef}
-        onZoneChange={setHintLabel}
-        onStateChange={setCharState}
-        onNavigate={handleNavigate}
-        aboutActive={aboutActive}
-        skillsActive={skillsActive}
-        onSkillsClimbingChange={setSkillsClimbing}
-        skillsDirection={skillsDirection}
-        workActive={workActive}
-        onProjectSelect={setSelectedProject}
-        onArtifactOpen={setSelectedArtifact}
-      />
+      <Suspense fallback={null}>
+        <WorldScene
+          debugRef={debugRef}
+          onZoneChange={setHintLabel}
+          onStateChange={setCharState}
+          onNavigate={handleNavigate}
+          aboutActive={aboutActive}
+          skillsActive={skillsActive}
+          onSkillsClimbingChange={setSkillsClimbing}
+          skillsDirection={skillsDirection}
+          workActive={workActive}
+          onProjectSelect={setSelectedProject}
+          onArtifactOpen={setSelectedArtifact}
+          onReady={handleWorldReady}
+        />
+      </Suspense>
 
       {loaded && (
         <>
@@ -168,7 +179,7 @@ function App() {
       <SectionTransitionLabel active={aboutActive} label="ABOUT" />
 
       {!loaded && (
-        <LoadingScreen onComplete={() => setLoaded(true)} />
+        <LoadingScreen onComplete={() => setLoaderComplete(true)} />
       )}
     </div>
   )
