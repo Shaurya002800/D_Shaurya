@@ -642,5 +642,101 @@ export function WindCompass({ visible }) { return null }
 
 // REPLACE the entire default export at the bottom:
 export default function AboutSection({ active, onClose }) {
-  return null
+  if (!active) return null
+
+  return (
+    <>
+      <button className="about-close" onClick={onClose} aria-label="Return to deck">
+        <span>×</span>
+        <small>DECK</small>
+      </button>
+
+      <div className="about-return-hint">PRESS ESC TO RETURN</div>
+
+      <style>{`
+        .about-close {
+          position: fixed;
+          top: clamp(16px, 2.5vh, 28px);
+          right: clamp(16px, 2vw, 28px);
+          z-index: 9400;
+          display: flex;
+          width: 50px;
+          height: 50px;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(255,255,255,.2);
+          border-radius: 50%;
+          opacity: 0;
+          background: rgba(9,16,20,.54);
+          color: rgba(255,246,213,.72);
+          cursor: pointer;
+          transform: scale(.76);
+          backdrop-filter: blur(10px);
+          box-shadow: 0 16px 36px rgba(0,0,0,.24), inset 0 0 0 1px rgba(255,255,255,.05);
+          animation: about-close-in .42s .32s ease forwards;
+          transition: border-color .2s ease, color .2s ease, background .2s ease, transform .2s ease;
+        }
+
+        .about-close:hover {
+          border-color: #f0c040;
+          background: rgba(34,24,10,.74);
+          color: #f0c040;
+          transform: scale(1.07);
+        }
+
+        .about-close span {
+          font-size: 19px;
+          line-height: .8;
+        }
+
+        .about-close small {
+          margin-top: 4px;
+          font-size: 6px;
+          letter-spacing: .14em;
+        }
+
+        .about-return-hint {
+          position: fixed;
+          bottom: max(22px, env(safe-area-inset-bottom));
+          left: 50%;
+          z-index: 9390;
+          padding: 9px 18px;
+          border: 1px solid rgba(232,206,158,.22);
+          border-radius: 999px;
+          opacity: 0;
+          background: rgba(18,12,6,.58);
+          color: rgba(244,225,187,.82);
+          font: 700 10px/1 system-ui, sans-serif;
+          letter-spacing: .16em;
+          transform: translateX(-50%) translateY(8px);
+          backdrop-filter: blur(6px);
+          pointer-events: none;
+          animation: about-hint-in .45s .55s ease forwards;
+        }
+
+        @keyframes about-close-in {
+          to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes about-hint-in {
+          to { opacity: .86; transform: translateX(-50%) translateY(0); }
+        }
+
+        @media (max-width: 720px) {
+          .about-close {
+            width: 44px;
+            height: 44px;
+            top: max(14px, env(safe-area-inset-top));
+            right: max(14px, env(safe-area-inset-right));
+          }
+
+          .about-return-hint {
+            bottom: calc(96px + env(safe-area-inset-bottom));
+            font-size: 9px;
+          }
+        }
+      `}</style>
+    </>
+  )
 }
