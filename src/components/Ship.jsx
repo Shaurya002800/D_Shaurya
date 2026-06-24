@@ -2087,74 +2087,6 @@ function DigitalScreen({ project, facingRight, workActive }) {
 }
 
 
-function ProjectCard({ project, position, rotation = [0, 0, 0], onSelect }) {
-  const ref = useRef()
-  const phase = useMemo(() => Math.random() * Math.PI * 2, [])
-  const handleSelect = (event) => {
-    event.stopPropagation()
-    if (onSelect) onSelect(project)
-  }
-
-  useFrame(({ clock }) => {
-    if (ref.current) {
-      ref.current.position.y = position[1] + Math.sin(clock.getElapsedTime() * 0.4 + phase) * 0.12
-    }
-  })
-
-  return (
-    <group
-      ref={ref}
-      position={position}
-      rotation={rotation}
-      onClick={handleSelect}
-      onPointerOver={(event) => {
-        event.stopPropagation()
-        document.body.style.cursor = 'pointer'
-      }}
-      onPointerOut={() => {
-        document.body.style.cursor = 'default'
-      }}
-    >
-      {/* Glass frame */}
-      <mesh castShadow>
-        <boxGeometry args={[5.2, 3.3, 0.08]} />
-        <meshStandardMaterial
-          color="#0a2040"
-          roughness={0.05}
-          metalness={0.4}
-          transparent
-          opacity={0.7}
-          emissive="#001830"
-          emissiveIntensity={0.3}
-        />
-      </mesh>
-      {/* Card texture face */}
-      <mesh position={[0, 0, 0.045]}>
-        <planeGeometry args={[5.0, 3.15]} />
-        <meshStandardMaterial map={tex} roughness={0.1} transparent opacity={0.97} side={THREE.FrontSide} emissive="#ffffff" emissiveIntensity={0.15} />
-      </mesh>
-      {/* Glowing edge frame */}
-      <mesh position={[0, 0, 0.02]}>
-        <boxGeometry args={[5.22, 3.32, 0.02]} />
-        <meshStandardMaterial
-          color={project.color}
-          emissive={project.color}
-          emissiveIntensity={0.4}
-          transparent
-          opacity={0.0}
-          wireframe
-        />
-      </mesh>
-      {/* Corner bolts */}
-      {[[-2.4,1.4],[ 2.4,1.4],[-2.4,-1.4],[2.4,-1.4]].map(([x,y],i) => (
-        <mesh key={i} position={[x, y, 0.06]}>
-          <cylinderGeometry args={[0.07, 0.07, 0.04, 10]} rotation={[Math.PI/2,0,0]} />
-          <meshStandardMaterial color="#888" roughness={0.3} metalness={0.8} />
-        </mesh>
-      ))}
-    </group>
-  )
-}
 
 // ─────────────────────────────────────────────────────────────────────
 // CAUSTIC LIGHT PANEL — animated underwater light shimmer on floor
@@ -2179,118 +2111,6 @@ function CausticFloor({ position }) {
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────
-// AQUARIUM TANK — one of 6 project tanks built into the wall
-// ─────────────────────────────────────────────────────────────────────
-function ProjectTank({ project, position, facingRight = true, onSelect }) {
-  const dir = facingRight ? 1 : -1
- 
-  return (
-    <group position={position}>
- 
-      {/* Back panel — wall side */}
-      <mesh position={[-dir * 3.05, 4.5, 0]}>
-        <boxGeometry args={[0.22, 9.2, 5.2]} />
-        <meshStandardMaterial color="#040c16" roughness={0.96} />
-      </mesh>
- 
-      {/* Top rim */}
-      <mesh position={[0, 9.12, 0]}>
-        <boxGeometry args={[6.3, 0.16, 5.3]} />
-        <meshStandardMaterial color="#152840" roughness={0.4} metalness={0.75} />
-      </mesh>
- 
-      {/* Bottom rim */}
-      <mesh position={[0, 0.07, 0]}>
-        <boxGeometry args={[6.3, 0.16, 5.3]} />
-        <meshStandardMaterial color="#152840" roughness={0.4} metalness={0.75} />
-      </mesh>
- 
-      {/* Side glass Z=±2.55 */}
-      <mesh position={[0, 4.5, -2.55]}>
-        <boxGeometry args={[6.1, 9.0, 0.06]} />
-        <meshStandardMaterial color="#88bbff" roughness={0.02} transparent opacity={0.14}
-          emissive="#002299" emissiveIntensity={0.12} />
-      </mesh>
-      <mesh position={[0, 4.5, 2.55]}>
-        <boxGeometry args={[6.1, 9.0, 0.06]} />
-        <meshStandardMaterial color="#88bbff" roughness={0.02} transparent opacity={0.14}
-          emissive="#002299" emissiveIntensity={0.12} />
-      </mesh>
- 
-      {/* Front glass — viewer side, nearly invisible, clickable */}
-      <mesh
-        position={[dir * 3.05, 4.5, 0]}
-        onClick={(e) => { e.stopPropagation(); onSelect?.(project) }}
-        onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer' }}
-        onPointerOut={() => { document.body.style.cursor = 'default' }}
-      >
-        <boxGeometry args={[0.06, 9.0, 5.1]} />
-        <meshStandardMaterial color="#aaccff" roughness={0.01} transparent opacity={0.06}
-          emissive="#0033bb" emissiveIntensity={0.03} />
-      </mesh>
- 
-      {/* Corner posts */}
-      {[
-        [dir * 3.05, 4.5, -2.55], [dir * 3.05, 4.5, 2.55],
-        [-dir * 3.05, 4.5, -2.55], [-dir * 3.05, 4.5, 2.55],
-      ].map(([x, y, z], i) => (
-        <mesh key={i} position={[x, y, z]}>
-          <boxGeometry args={[0.13, 9.3, 0.13]} />
-          <meshStandardMaterial color="#152840" roughness={0.3} metalness={0.8} />
-        </mesh>
-      ))}
- 
-      {/* Water volume — very low opacity */}
-      <mesh position={[0, 4.5, 0]}>
-        <boxGeometry args={[6.0, 8.9, 5.0]} />
-        <meshStandardMaterial color="#010b18" roughness={0.04} transparent opacity={0.16}
-          emissive="#000a14" emissiveIntensity={0.02} />
-      </mesh>
- 
-      {/* Digital screen mounted facing the aisle — positioned at tank centre height */}
-      <group position={[0, 4.5, 0.8]}>
-        <DigitalScreen project={project} facingRight={facingRight} />
-      </group>
- 
-      {/* Fish — tight radius to stay inside 5-deep tank */}
-      <Fish color={project.color} startPos={[0, 5.5, 0]} radius={1.0} speed={0.38} yOffset={0} />
-      <Fish color="#88ccff"       startPos={[0, 3.8, 0]} radius={0.65} speed={0.50} yOffset={0.25} />
- 
-      {/* Bubbles */}
-      <Bubble startPos={[-0.5, 0.3, -0.4]} speed={0.24} />
-      <Bubble startPos={[0.4,  0.3,  0.3]} speed={0.29} />
-      <Bubble startPos={[0.0,  0.3, -0.1]} speed={0.26} />
- 
-      {/* Tank floor */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.12, 0]}>
-        <planeGeometry args={[6.0, 5.0]} />
-        <meshStandardMaterial color="#020a14" roughness={0.97} />
-      </mesh>
- 
-      {/* Gravel pebbles */}
-      {[[-0.7, 0.18, -0.5], [0.5, 0.18, 0.6], [-0.2, 0.18, 0.9], [0.9, 0.18, -0.35]].map(([x, y, z], i) => (
-        <mesh key={i} position={[x, y, z]}>
-          <sphereGeometry args={[0.12 + i * 0.025, 5, 4]} />
-          <meshStandardMaterial color="#0e1a24" roughness={0.98} />
-        </mesh>
-      ))}
- 
-      {/* Coral */}
-      {[[-0.9, 0.3, -0.8], [0.7, 0.3, 0.7], [-0.2, 0.3, 1.0], [1.0, 0.3, -0.45]].map(([x, y, z], i) => (
-        <mesh key={i} position={[x, y, z]}>
-          <cylinderGeometry args={[0.05, 0.09, 0.38 + i * 0.09, 6]} />
-          <meshStandardMaterial
-            color={i % 2 === 0 ? '#e03318' : '#ee6600'}
-            roughness={0.7}
-            emissive={i % 2 === 0 ? '#aa1100' : '#bb3300'}
-            emissiveIntensity={0.3}
-          />
-        </mesh>
-      ))}
-    </group>
-  )
-}
 
 function ArchiveHullDetails() {
   const ribZ = [-18, -11.5, -3, 5.5, 13]
@@ -2363,48 +2183,42 @@ function ArchivePromenade() {
 }
 
 function GrandLineArchiveCrest() {
+  const toBeContinuedTexture = useTexture('/image copy 2.png')
+
   return (
-    <group position={[0, 5.6, -20.45]}>
-      <mesh position={[0, 0, -0.12]}>
-        <boxGeometry args={[7.4, 4.8, 0.28]} />
-        <meshStandardMaterial color="#3b2010" roughness={0.88} />
+    <group position={[0, 3.9, -20.45]}>
+      {/* Layer 1: High-contrast framing plate to separate the logo from the wood grain */}
+      <mesh position={[0, 0, 0.01]}>
+        <planeGeometry args={[6.8, 2.8]} />
+        <meshBasicMaterial 
+          color="#0d0805" 
+          transparent 
+          opacity={0.9} 
+        />
       </mesh>
-      <mesh position={[0, 0, 0.04]}>
-        <planeGeometry args={[6.9, 4.3]} />
-        <meshStandardMaterial color="#d5aa52" roughness={0.72} emissive="#8a4b17" emissiveIntensity={0.08} />
+
+      {/* Layer 2: Hard-edged 3D Drop Shadow (The black silhouette layer) */}
+      <mesh position={[0.05, -0.05, 0.03]}>
+        <planeGeometry args={[6.5, 2.5]} />
+        <meshBasicMaterial 
+          map={toBeContinuedTexture} 
+          transparent={true} 
+          alphaTest={0.1}
+          color="#000000" /* Forces the texture asset into a crisp black shadow */
+          toneMapped={false}
+        />
       </mesh>
-      <mesh position={[0, 0.35, 0.12]}>
-        <ringGeometry args={[0.92, 1.2, 28]} />
-        <meshStandardMaterial color="#8b1f16" emissive="#8b1f16" emissiveIntensity={0.18} roughness={0.6} />
+
+      {/* Layer 3: Main vibrant foreground text */}
+      <mesh position={[0, 0, 0.05]}>
+        <planeGeometry args={[6.5, 2.5]} />
+        <meshBasicMaterial 
+          map={toBeContinuedTexture} 
+          transparent={true} 
+          alphaTest={0.1} 
+          toneMapped={false} /* Prevents 3D scene lighting/shadows from washing out the red */
+        />
       </mesh>
-      <mesh position={[0, 0.35, 0.14]} rotation={[0, 0, Math.PI / 4]}>
-        <boxGeometry args={[0.22, 2.25, 0.08]} />
-        <meshStandardMaterial color="#f3df9c" roughness={0.65} />
-      </mesh>
-      <mesh position={[0, 0.35, 0.15]} rotation={[0, 0, -Math.PI / 4]}>
-        <boxGeometry args={[0.22, 2.25, 0.08]} />
-        <meshStandardMaterial color="#f3df9c" roughness={0.65} />
-      </mesh>
-      <Text
-        position={[0, -1.42, 0.18]}
-        fontSize={0.46}
-        color="#3b2010"
-        anchorX="center"
-        anchorY="middle"
-        letterSpacing={0.12}
-      >
-        GRAND LINE ARCHIVE
-      </Text>
-      <Text
-        position={[0, -1.92, 0.18]}
-        fontSize={0.22}
-        color="#70401c"
-        anchorX="center"
-        anchorY="middle"
-        letterSpacing={0.08}
-      >
-        PROJECT LOGS OF THE SUNNY
-      </Text>
     </group>
   )
 }
@@ -2551,70 +2365,6 @@ function AquariumBasement({ position = [0, -14, 2], onProjectSelect }) {
 }
  
 
-
-// ─────────────────────────────────────────────────────────────────────
-// COUP DE VENT CANNON — the giant front cannon on Sunny
-// ─────────────────────────────────────────────────────────────────────
-function CoupDeVentCannon({ position }) {
-  return (
-    <group position={position} rotation={[0.15, 0, 0]}>
-      {/* Main barrel */}
-      <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
-        <cylinderGeometry args={[0.55, 0.72, 5.5, 16]} />
-        <meshStandardMaterial color="#2a2a2a" roughness={0.6} metalness={0.7} />
-      </mesh>
-      {/* Muzzle ring */}
-      <mesh position={[0, 0, -2.8]} rotation={[Math.PI / 2, 0, 0]} castShadow>
-        <torusGeometry args={[0.58, 0.12, 10, 24]} />
-        <meshStandardMaterial color="#444" roughness={0.5} metalness={0.8} />
-      </mesh>
-      {/* Breech end cap */}
-      <mesh position={[0, 0, 2.8]} rotation={[Math.PI / 2, 0, 0]} castShadow>
-        <cylinderGeometry args={[0.78, 0.78, 0.4, 16]} />
-        <meshStandardMaterial color="#333" roughness={0.5} metalness={0.8} />
-      </mesh>
-      {/* Reinforcement rings along barrel */}
-      {[-1.8, -0.6, 0.6, 1.8].map((z, i) => (
-        <mesh key={i} position={[0, 0, z]} rotation={[Math.PI/2, 0, 0]} castShadow>
-          <torusGeometry args={[0.62 + i*0.02, 0.07, 8, 20]} />
-          <meshStandardMaterial color="#555" roughness={0.5} metalness={0.7} />
-        </mesh>
-      ))}
-      {/* Cannon mouth dark hole */}
-      <mesh position={[0, 0, -2.95]} rotation={[Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.48, 20]} />
-        <meshBasicMaterial color="#050505" />
-      </mesh>
-      {/* Wooden carriage left */}
-      <mesh position={[-0.85, -0.75, 0]} castShadow>
-        <boxGeometry args={[0.25, 1.0, 4.5]} />
-        <meshStandardMaterial color="#4a2e15" roughness={0.85} />
-      </mesh>
-      {/* Wooden carriage right */}
-      <mesh position={[0.85, -0.75, 0]} castShadow>
-        <boxGeometry args={[0.25, 1.0, 4.5]} />
-        <meshStandardMaterial color="#4a2e15" roughness={0.85} />
-      </mesh>
-      {/* Carriage wheels */}
-      {[-1.5, 1.5].map((z, i) => (
-        <group key={i}>
-          <mesh position={[-1.05, -1.05, z]} rotation={[0, 0, Math.PI/2]} castShadow>
-            <torusGeometry args={[0.35, 0.07, 8, 16]} />
-            <meshStandardMaterial color="#2a1505" roughness={0.8} />
-          </mesh>
-          <mesh position={[1.05, -1.05, z]} rotation={[0, 0, Math.PI/2]} castShadow>
-            <torusGeometry args={[0.35, 0.07, 8, 16]} />
-            <meshStandardMaterial color="#2a1505" roughness={0.8} />
-          </mesh>
-        </group>
-      ))}
-    </group>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// SUNNY'S ICONIC OBSERVATION DECK — the wraparound stern balcony
-// ─────────────────────────────────────────────────────────────────────
 function SternBalcony({ position }) {
   return (
     <group position={position}>
