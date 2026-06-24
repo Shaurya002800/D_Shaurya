@@ -23,12 +23,11 @@ function watchMediaQuery(query, onChange) {
 
 export default function SwordCursor() {
   const cursorRef = useRef(null)
-  const trailLayerRef = useRef(null)
+  const slashLayerRef = useRef(null)
   const frameRef = useRef(null)
   const slashTimeoutRef = useRef(null)
-  const trailTimeoutsRef = useRef(new Set())
+  const cleanupTimersRef = useRef(new Set())
   const visibleRef = useRef(false)
-  const hoveringRef = useRef(false)
   const reducedMotionRef = useRef(false)
   const targetRef = useRef({ x: 0, y: 0 })
   const currentRef = useRef({ x: 0, y: 0 })
@@ -68,9 +67,9 @@ export default function SwordCursor() {
     if (!enabled) return undefined
 
     const cursor = cursorRef.current
-    const trailLayer = trailLayerRef.current
-    const trailTimeouts = trailTimeoutsRef.current
-    if (!cursor || !trailLayer) return undefined
+    const slashLayer = slashLayerRef.current
+    const cleanupTimers = cleanupTimersRef.current
+    if (!cursor || !slashLayer) return undefined
 
     const setVisible = (nextVisible) => {
       if (visibleRef.current === nextVisible) return
@@ -79,31 +78,28 @@ export default function SwordCursor() {
     }
 
     const setHovering = (target) => {
-      const nextHovering = Boolean(target?.closest?.(INTERACTIVE_SELECTOR))
-      if (hoveringRef.current === nextHovering) return
-      hoveringRef.current = nextHovering
-      cursor.classList.toggle('hovering', nextHovering)
+      cursor.classList.toggle('hovering', Boolean(target?.closest?.(INTERACTIVE_SELECTOR)))
     }
 
     const removeSlashClass = () => {
       cursor.classList.remove('slashing')
     }
 
-    const addSlashTrail = (event) => {
-      const trail = document.createElement('span')
-      const removeTrail = () => {
-        trail.remove()
+    const addSlash = (event) => {
+      const slash = document.createElement('span')
+      const removeSlash = () => {
+        slash.remove()
         window.clearTimeout(timeout)
-        trailTimeouts.delete(timeout)
+        cleanupTimers.delete(timeout)
       }
-      const timeout = window.setTimeout(removeTrail, 520)
+      const timeout = window.setTimeout(removeSlash, 460)
 
-      trail.className = 'sword-cursor__trail'
-      trail.style.left = `${event.clientX}px`
-      trail.style.top = `${event.clientY}px`
-      trailLayer.appendChild(trail)
-      trail.addEventListener('animationend', removeTrail, { once: true })
-      trailTimeouts.add(timeout)
+      slash.className = 'sword-cursor__slash'
+      slash.style.left = `${event.clientX}px`
+      slash.style.top = `${event.clientY}px`
+      slashLayer.appendChild(slash)
+      slash.addEventListener('animationend', removeSlash, { once: true })
+      cleanupTimers.add(timeout)
     }
 
     const onPointerMove = (event) => {
@@ -122,19 +118,15 @@ export default function SwordCursor() {
 
     const onPointerDown = (event) => {
       if (event.pointerType && event.pointerType !== 'mouse') return
-
-      if (reducedMotionRef.current) {
-        removeSlashClass()
-        return
-      }
+      if (reducedMotionRef.current) return
 
       cursor.classList.remove('slashing')
       void cursor.offsetWidth
       cursor.classList.add('slashing')
 
       window.clearTimeout(slashTimeoutRef.current)
-      slashTimeoutRef.current = window.setTimeout(removeSlashClass, 430)
-      addSlashTrail(event)
+      slashTimeoutRef.current = window.setTimeout(removeSlashClass, 420)
+      addSlash(event)
     }
 
     const onPointerLeave = () => {
@@ -145,7 +137,7 @@ export default function SwordCursor() {
     const tick = () => {
       const target = targetRef.current
       const current = currentRef.current
-      const ease = reducedMotionRef.current ? 0.55 : 0.2
+      const ease = reducedMotionRef.current ? 0.55 : 0.22
 
       current.x += (target.x - current.x) * ease
       current.y += (target.y - current.y) * ease
@@ -167,12 +159,12 @@ export default function SwordCursor() {
       window.removeEventListener('blur', onPointerLeave)
       window.cancelAnimationFrame(frameRef.current)
       window.clearTimeout(slashTimeoutRef.current)
-      trailTimeouts.forEach((timeout) => window.clearTimeout(timeout))
-      trailTimeouts.clear()
+      cleanupTimers.forEach((timeout) => window.clearTimeout(timeout))
+      cleanupTimers.clear()
+      slashLayer.replaceChildren()
       cursor.classList.remove('visible', 'hovering', 'slashing')
       cursor.style.transform = ''
       visibleRef.current = false
-      hoveringRef.current = false
     }
   }, [enabled])
 
@@ -216,28 +208,19 @@ export default function SwordCursor() {
           -webkit-user-drag: none;
           transform: translate(-25%, -20%) rotate(-25deg);
           transform-origin: 24% 22%;
-          filter:
-            drop-shadow(0 0 4px rgba(85, 255, 120, 0.42))
-            drop-shadow(0 1px 2px rgba(0, 0, 0, 0.32));
-          transition:
-            filter 160ms ease,
-            transform 160ms ease;
-          will-change: transform, filter;
+          transition: transform 150ms ease;
+          will-change: transform;
         }
 
         .sword-cursor.hovering .sword-cursor__blade {
-          transform: translate(-25%, -20%) rotate(-16deg) scale(1.12);
-          filter:
-            drop-shadow(0 0 7px rgba(93, 255, 125, 0.76))
-            drop-shadow(0 0 14px rgba(29, 211, 81, 0.36))
-            drop-shadow(0 2px 3px rgba(0, 0, 0, 0.38));
+          transform: translate(-25%, -20%) rotate(-16deg) scale(1.1);
         }
 
         .sword-cursor.slashing .sword-cursor__blade {
-          animation: swordSlash 430ms cubic-bezier(0.16, 1, 0.3, 1);
+          animation: swordSlash 420ms cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .sword-cursor__trails {
+        .sword-cursor__slash-layer {
           position: fixed;
           inset: 0;
           z-index: 2147483646;
@@ -245,24 +228,40 @@ export default function SwordCursor() {
           overflow: hidden;
         }
 
-        .sword-cursor__trail {
+        .sword-cursor__slash {
           position: fixed;
-          width: 64px;
-          height: 14px;
+          left: 0;
+          top: 0;
+          width: 78px;
+          height: 18px;
           pointer-events: none;
-          transform: translate(-36%, -58%) rotate(-23deg);
-          transform-origin: 20% 50%;
-          border-radius: 999px;
-          background:
-            linear-gradient(90deg,
-              rgba(151, 255, 165, 0) 0%,
-              rgba(151, 255, 165, 0.78) 44%,
-              rgba(234, 255, 237, 0.9) 58%,
-              rgba(63, 255, 115, 0) 100%);
-          box-shadow: 0 0 14px rgba(64, 255, 112, 0.42);
+          transform: translate(-36%, -58%) rotate(-24deg) scaleX(0.2);
+          transform-origin: 18% 50%;
           opacity: 0;
-          animation: swordTrail 420ms ease-out forwards;
           will-change: transform, opacity;
+          animation: swordTrail 400ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .sword-cursor__slash::before,
+        .sword-cursor__slash::after {
+          content: '';
+          position: absolute;
+          left: 0;
+          right: 0;
+          border-radius: 999px;
+        }
+
+        .sword-cursor__slash::before {
+          top: 8px;
+          height: 2px;
+          background: linear-gradient(90deg, transparent 0%, rgba(120, 255, 136, 0.78) 40%, rgba(245, 255, 245, 0.95) 54%, transparent 100%);
+        }
+
+        .sword-cursor__slash::after {
+          top: 12px;
+          height: 1px;
+          width: 54px;
+          background: linear-gradient(90deg, transparent 0%, rgba(108, 220, 120, 0.52) 48%, transparent 100%);
         }
 
         @keyframes swordSlash {
@@ -270,10 +269,10 @@ export default function SwordCursor() {
             transform: translate(-25%, -20%) rotate(-25deg) scale(1);
           }
           34% {
-            transform: translate(-16%, -28%) rotate(18deg) scale(1.16);
+            transform: translate(-15%, -28%) rotate(18deg) scale(1.13);
           }
-          64% {
-            transform: translate(-28%, -18%) rotate(-34deg) scale(1.06);
+          66% {
+            transform: translate(-28%, -18%) rotate(-34deg) scale(1.04);
           }
           100% {
             transform: translate(-25%, -20%) rotate(-25deg) scale(1);
@@ -283,14 +282,14 @@ export default function SwordCursor() {
         @keyframes swordTrail {
           0% {
             opacity: 0;
-            transform: translate(-42%, -58%) rotate(-23deg) scaleX(0.22);
+            transform: translate(-42%, -58%) rotate(-24deg) scaleX(0.18);
           }
           24% {
-            opacity: 0.82;
+            opacity: 0.88;
           }
           100% {
             opacity: 0;
-            transform: translate(-26%, -58%) rotate(-23deg) scaleX(1);
+            transform: translate(-10%, -68%) rotate(-24deg) scaleX(1);
           }
         }
 
@@ -301,32 +300,28 @@ export default function SwordCursor() {
           }
 
           .sword-cursor,
-          .sword-cursor__trails {
+          .sword-cursor__slash-layer {
             display: none !important;
           }
         }
 
         @media (prefers-reduced-motion: reduce) {
-          .sword-cursor {
-            transition-duration: 60ms;
-          }
-
           .sword-cursor__blade {
             transition-duration: 80ms;
           }
 
-          .sword-cursor.slashing .sword-cursor__blade {
+          .sword-cursor.slashing .sword-cursor__blade,
+          .sword-cursor__slash {
             animation: none;
           }
 
-          .sword-cursor__trail {
+          .sword-cursor__slash {
             display: none;
-            animation: none;
           }
         }
       `}</style>
 
-      <div ref={trailLayerRef} className="sword-cursor__trails" aria-hidden="true" />
+      <div ref={slashLayerRef} className="sword-cursor__slash-layer" aria-hidden="true" />
       <div ref={cursorRef} className="sword-cursor" aria-hidden="true">
         <img className="sword-cursor__blade" src={CURSOR_ASSET} alt="" draggable="false" />
       </div>
