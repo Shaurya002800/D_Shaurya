@@ -2,6 +2,7 @@ import { useMemo, useRef, useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { send } from '@emailjs/browser'
 import { PROJECTS } from '../data/projects.js'
+import { PROFILE } from '../data/profile.js'
 
 const EMAILJS = {
   serviceId: import.meta.env.VITE_EMAILJS_SERVICE_ID || 'service_qeqrp17',
@@ -27,54 +28,15 @@ function initialAssistantStatus() {
   return 'Local context mode'
 }
 
-const PROFILE = {
-  name: 'Kunwar Shaurya Pratap Singh',
-  shortName: 'Shaurya',
-  role: 'frontend developer, UI/UX designer, AI/ML engineer, and full-stack developer',
-  summary: 'Shaurya is a second-year B.Tech CSE student at VIT Vellore specializing in AI & Data Engineering with production experience across frontend engineering, UI/UX, AI/ML, and full-stack products.',
-  tagline: 'Designer by instinct. Developer by choice. AI/ML by curiosity.',
-  email: 'kunwarshaurya28@gmail.com',
-  phone: '+91 90580 75463',
-  location: 'Meerut, Uttar Pradesh; currently Vellore, Tamil Nadu during college',
-  education: [
-    'VIT Vellore: B.Tech CSE, AI & Data Engineering, 2024-2028, CGPA 9.01/10',
-    'White Lead Public School, Delhi: Class XII CBSE, 82%',
-    "St. Mary's Convent Sr. Sec. School, Uttar Pradesh: Class X CBSE, 86%",
-  ],
-  focus: [
-    'full-stack web development',
-    'AI/ML and RAG systems',
-    'frontend design and animation',
-    'hackathon/event platforms',
-    'blockchain-enabled systems',
-  ],
-  skills: {
-    languages: ['JavaScript', 'TypeScript', 'Python', 'C++', 'Java'],
-    frontend: ['React.js', 'Tailwind CSS', 'Streamlit', 'Figma', 'Photoshop'],
-    aiMl: ['LangChain', 'FAISS', 'XGBoost', 'Groq', 'RAG', 'TensorFlow'],
-    blockchain: ['Solidity', 'Web3.py', 'Polygon'],
-    tools: ['Git', 'GitHub', 'VS Code', 'Cursor', 'REST APIs'],
-  },
-  links: {
-    resume: '/resume.pdf',
-    portfolio: 'https://shauryaportfolio-sage.vercel.app',
-    github: 'https://github.com/Shaurya002800',
-    linkedin: 'https://www.linkedin.com/in/kunwar-shaurya-24581529b/',
-    instagram: 'https://www.instagram.com/kunwar_shaurya_28/',
-  },
-}
-
 const EXPERIENCE = [
   {
     org: 'MyPerro',
-    title: 'Full-Time Frontend Developer & UI/UX Designer',
+    title: 'Frontend Developer & UI/UX Designer',
     period: 'August 2024 - Present',
     details: [
-      'Sole frontend developer and design lead since the startup founding, owning product UI/UX, design systems, brand creatives, merchandise, packaging, and display assets.',
-      'Built and shipped the product frontend using React.js, TypeScript, Tailwind CSS, and Figma.',
-      'Worked directly with founders and supported brand/product assets featured on Shark Tank India Season 5 Campus Special.',
-      'Grew social media presence across 3+ platforms through consistent design systems and campaigns.',
-      'AI integration profile includes connecting personalization/model inference workflows to frontend clients through Python REST API style integrations.',
+      'Designed product UI/UX flows, brand creatives, and launch collateral for a smart pet-tech startup across web, app, and investor-facing touchpoints.',
+      'Contributed to Shark Tank India Season 5 Campus Special preparation through branding, packaging, presentation assets, and product experience design.',
+      'Built reusable design assets and improved visual consistency across product screens, website sections, marketing creatives, and demo materials.',
     ],
   },
   {
@@ -82,33 +44,29 @@ const EXPERIENCE = [
     title: 'Senior Core Member, Technical & Design',
     period: 'February 2025 - Present',
     details: [
-      'Dual-domain senior core role covering technical and design responsibilities.',
-      'Led frontend development and UI/UX for 3+ high-traffic chapter platforms and event websites.',
-      'Shipped ieeecsvit.com and Hack Battle, serving 500+ participants with zero critical UI failures.',
-      'Mentored 10+ junior developers across engineering and design domains.',
+      'Contributes to technical and design initiatives for IEEE CS-VIT, including official chapter platforms and event/hackathon interfaces.',
+      'Helped ship platforms for events such as HackBattle, supporting participant-facing flows for 500+ users with responsive UI and clear information architecture.',
+      'Collaborates with cross-functional teams on frontend development, UI/UX design, technical execution, and junior member guidance.',
     ],
   },
 ]
 
 const ACHIEVEMENTS = [
-  'Shark Tank India Season 5 Campus Special: MyPerro merchandise, packaging, and brand assets featured nationally while Shaurya was a first-year student.',
-  'IEEE CS-VIT Senior Core Member: selected as a dual-domain Technical & Design member.',
-  "WomenTechies '26, GDG On Campus VIT: Certificate of Exemplary Performance as member of Team Togepi.",
-  'Yantra 2026: Certificate of Participation, Brain to Brand Business Challenge at VIT Vellore.',
-  'RIVIERA 2026: Certificate of Recognition as volunteer for the annual international sports and cultural fest.',
+  'MyPerro branding and product presentation work contributed to a Shark Tank India Season 5 Campus Special feature.',
+  'Built and contributed to IEEE CS-VIT platforms and event experiences serving 500+ participants.',
+  'Won Best UI/UX Design recognition at Yantra hackathon.',
+  'Contributed to award-winning product prototypes across AI, IoT, and product design.',
 ]
 
 const INTERNSHIP_HUNT = [
-  'Available May 9 - July 6, 2026; preferred remote, Bangalore, Hyderabad, or Delhi-NCR.',
-  'Applied: Salesforce Software Engineer Intern, Oracle Intern Job ID 314122, Cisco Software Intern, Infosys InStep Tech Intern, Busibud UI/UX cum Product Designer, Assessli SDE Intern, ScientiFlow Scientific Tooling & UI/UX, Gurugram CyberPolice Cyber Security Intern.',
-  'HardcoreAI AI Intern: interview scheduled.',
-  'DekNek Full Stack Developer Intern: Round 2 assignment.',
-  'Caterpillar Summer Internship 2028 Batch: registered.',
-  'Google SWE Intern through Unstop: applying.',
+  'Seeking Software Development, Frontend, Full-Stack, and AI/ML internship roles.',
+  'Strong fit for React/Next.js product interfaces, Node/FastAPI backends, PostgreSQL/Redis data flows, and AI/ML product features.',
+  'Public GitHub profile also positions him as open to paid internships in Frontend, AI/ML, Full-stack, and GenAI product development.',
 ]
 
 const EXTRA_PROJECTS = [
-  'Personal Portfolio Website: custom animated responsive portfolio with loader, vertical navigation, resume download, and UI/UX/front-end showcases.',
+  'Personal Portfolio Website: custom animated Grand Line portfolio with Three.js world navigation, resume download, chatbot assistant, and UI/UX/front-end showcases.',
+  'Hack Battle Platform: hackathon platform and interface for a 500+ participant IEEE CS-VIT event, built around React, Tailwind CSS, and Figma workflows.',
 ]
 
 const QUICK_PROMPTS = [
@@ -166,6 +124,7 @@ ${experienceLines}
 SKILLS
 Languages: ${PROFILE.skills.languages.join(', ')}
 Frontend and design: ${PROFILE.skills.frontend.join(', ')}
+Backend and databases: ${PROFILE.skills.backend.join(', ')}
 AI/ML: ${PROFILE.skills.aiMl.join(', ')}
 Blockchain: ${PROFILE.skills.blockchain.join(', ')}
 Tools: ${PROFILE.skills.tools.join(', ')}
@@ -177,13 +136,13 @@ ${EXTRA_PROJECTS.map((item) => `- ${item}`).join('\n')}
 ACHIEVEMENTS
 ${ACHIEVEMENTS.map((item) => `- ${item}`).join('\n')}
 
-INTERNSHIP HUNT SUMMER 2026
+INTERNSHIP FOCUS
 ${INTERNSHIP_HUNT.map((item) => `- ${item}`).join('\n')}
 
 CONTACT POLICY
 If someone wants to contact, hire, collaborate, recruit, interview, offer an internship, or asks Shaurya to call them, collect their name, any contact method, and the message. The UI sends the full transcript to Shaurya.
 UNKNOWN FACTS
-This portfolio does not provide Shaurya's age or date of birth. If asked, say age is not listed. Do not infer it from school year. For the latest internship or availability updates, suggest contacting Shaurya because statuses may change.
+This portfolio does not provide Shaurya's age or date of birth. If asked, say age is not listed. Do not infer it from school year. For time-sensitive recruiting status, suggest contacting Shaurya because applications and availability can change.
 
 STYLE
 Be conversational and adaptive, like a smaller ChatGPT. Answer the exact question first. Use the previous chat naturally. Ask a short follow-up only when it helps. Do not sound like a static FAQ. Do not repeat the same intro.
@@ -334,7 +293,8 @@ function lastPortfolioTopic(history) {
 function bestProjectForQuestion(text) {
   const q = normalize(text)
   if (q.includes('exam') || q.includes('credential') || q.includes('verifiable')) return PROJECTS.find((project) => project.name === 'ExamChain') || PROJECTS[0]
-  if (q.includes('ai') || q.includes('ml') || q.includes('rag') || q.includes('astrology')) return PROJECTS.find((project) => project.name === 'Serenova Engine') || PROJECTS[3]
+  if (q.includes('ai') || q.includes('ml') || q.includes('rag') || q.includes('crop') || q.includes('agri')) return PROJECTS.find((project) => project.name === 'Vivayu') || PROJECTS[7]
+  if (q.includes('astrology')) return PROJECTS.find((project) => project.name === 'Serenova Engine') || PROJECTS[3]
   if (q.includes('full stack') || q.includes('backend') || q.includes('marketplace')) return PROJECTS.find((project) => project.name === 'DevBoard') || PROJECTS[2]
   if (q.includes('startup') || q.includes('spend') || q.includes('saas')) return PROJECTS.find((project) => project.name === 'SpendLens') || PROJECTS[4]
   if (q.includes('notes') || q.includes('auth') || q.includes('productivity')) return PROJECTS.find((project) => project.name === 'Peblo Notes') || PROJECTS[5]
@@ -379,15 +339,15 @@ function fallbackReply(text, history = []) {
   }
 
   if (q.includes('internship') || q.includes('intern')) {
-    return `For Summer 2026, Shaurya is available from May 9 to July 6 and is targeting remote, Bangalore, Hyderabad, or Delhi-NCR roles. Current listed status: HardcoreAI AI Intern interview scheduled, DekNek Full Stack Developer Intern Round 2 assignment, several applications submitted including Salesforce, Oracle, Cisco, Infosys InStep, Busibud, Assessli, ScientiFlow, Caterpillar, Google SWE via Unstop, and Gurugram CyberPolice.`
+    return `Shaurya is seeking Software Development, Frontend, Full-Stack, and AI/ML internship roles. His strongest fit is product engineering work that needs React/Next.js interfaces, Node or FastAPI backends, PostgreSQL/Redis data flows, and practical AI/ML features.`
   }
 
   if (q.includes('experience') || q.includes('myperro') || q.includes('job')) {
-    return `Shaurya has full-time startup experience at MyPerro since August 2024 as the sole frontend developer and UI/UX design lead. He built the product frontend with React, TypeScript, Tailwind, and Figma, worked directly with founders, and created brand assets featured on Shark Tank India Season 5 Campus Special. He is also a Senior Core Member at IEEE CS-VIT in Technical & Design.`
+    return `Shaurya has experience at MyPerro since August 2024 as a Frontend Developer and UI/UX Designer, where he designed product flows, brand creatives, launch collateral, and presentation assets for a smart pet-tech startup. He is also a Senior Core Member at IEEE CS-VIT in Technical & Design, contributing to chapter platforms and event interfaces such as HackBattle for 500+ users.`
   }
 
   if (q.includes('education') || q.includes('college') || q.includes('cgpa') || q.includes('gpa')) {
-    return `Shaurya is pursuing B.Tech CSE with specialization in AI & Data Engineering at VIT Vellore from 2024 to 2028, with a CGPA of 9.01/10. Earlier, he scored 82% in Class XII CBSE and 86% in Class X CBSE.`
+    return `Shaurya is a third-year B.Tech CSE student specializing in AI & Data Engineering at VIT Vellore, from August 2024 to May 2028, with a CGPA of 9.02/10. His listed coursework includes DSA, OOP, database systems, machine learning, probability and statistics, and computer organization.`
   }
 
   if (asksFollowUp && previousProject) {
@@ -395,7 +355,7 @@ function fallbackReply(text, history = []) {
   }
 
   if (asksForOpinion(text)) {
-    return `Based on this portfolio, Shaurya looks strongest for roles or collaborations that need product engineering plus AI/security thinking. I would judge him by ExamChain for ambitious system design, DevBoard for full-stack execution, Serenova Engine for deterministic AI-assisted domain logic, and SentinelMesh for hardware/security ambition.`
+    return `Based on this portfolio, Shaurya looks strongest for roles or collaborations that need product engineering plus AI/security thinking. I would judge him by DevBoard for full-stack execution, ExamChain for ambitious secure infrastructure, SentinelMesh for edge AI and IoT security, and Vivayu or SpendLens for practical AI product work.`
   }
 
   if ((q.includes('best') || q.includes('strongest') || q.includes('which one')) && (previousTopic === 'projects' || q.includes('project'))) {
@@ -411,23 +371,23 @@ function fallbackReply(text, history = []) {
   }
 
   if (asksFollowUp && previousTopic === 'skills') {
-    return `The strongest combination is frontend polish plus AI/ML systems. Shaurya can design the interface, build it in React/Tailwind, and connect AI pieces like LangChain, FAISS, Groq, XGBoost, or TensorFlow when the product needs intelligence.`
+    return `The strongest combination is frontend polish plus full-stack and AI/ML systems. Shaurya can design the interface, build it in React/Next.js/Tailwind, connect Node or FastAPI APIs, and add AI pieces like LangChain, FAISS, Groq, XGBoost, scikit-learn, or TensorFlow Lite Micro when the product needs intelligence.`
   }
 
   if (asksFollowUp && previousTopic === 'ai') {
-    return `The AI/ML side is strongest around practical applied systems: Serenova Engine for deterministic chart computation plus guarded LLM interpretation, Vivayu for RAG and crop guidance, SpendLens for AI-assisted business recommendations, and SentinelMesh for edge inference with TensorFlow Lite Micro.`
+    return `The AI/ML side is strongest around practical applied systems: Vivayu for RAG and crop guidance, SpendLens for AI-assisted spend auditing, SentinelMesh for edge inference with TensorFlow Lite Micro, and Serenova Engine for deterministic computation plus guarded LLM interpretation.`
   }
 
   if (q.includes('skill') || q.includes('tech') || q.includes('stack')) {
-    return `Shaurya's core stack is React, Tailwind, JavaScript/TypeScript, Python, LangChain, FAISS, XGBoost, Groq, TensorFlow, Solidity, Web3.py, Git, and REST APIs. His strongest mix is frontend polish plus AI/ML product thinking.`
+    return `Shaurya's core stack includes Python, Java, JavaScript/TypeScript, SQL, C/C++, Solidity, React, Next.js, Tailwind, Node.js, Express, FastAPI, PostgreSQL, Redis, LangChain, FAISS, Groq, TensorFlow Lite Micro, XGBoost, scikit-learn, Web3.py, Hardhat, Docker, Railway, and Vercel. His strongest mix is polished frontend execution plus practical AI/ML and full-stack product thinking.`
   }
 
   if (q.includes('ai') || q.includes('ml') || q.includes('rag') || q.includes('genai')) {
-    return `On AI/ML, Shaurya has worked with LangChain, FAISS, RAG, Groq, XGBoost, TensorFlow, and TFLite. Vivayu shows RAG and crop-disease intelligence; SentinelMesh shows on-device AI inference and autonomous threat intelligence.`
+    return `On AI/ML, Shaurya has worked with LangChain, FAISS, Groq, TensorFlow Lite Micro, XGBoost, scikit-learn, pandas, and NumPy. Vivayu shows RAG and crop-disease intelligence; SentinelMesh shows on-device AI inference; SpendLens shows AI-assisted SaaS spend auditing.`
   }
 
   if (q.includes('about') || q.includes('who') || q.includes('shaurya')) {
-    return `${PROFILE.name} is a ${PROFILE.role}. ${PROFILE.tagline} He focuses on polished web interfaces, AI/ML systems, and creative interactive experiences like this Grand Line portfolio.`
+    return `${PROFILE.summary} He focuses on polished web interfaces, full-stack products, AI/ML systems, and creative interactive experiences like this Grand Line portfolio.`
   }
 
   if (q.includes('resume')) {

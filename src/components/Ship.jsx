@@ -964,6 +964,10 @@ function NightDeckLights({ active }) {
       <pointLight position={[0, 6.4, 18.2]} color="#ffe5a8" intensity={2.8 * intensity} distance={13} decay={2.1} />
       <pointLight position={[-6.7, 2.45, 10.8]} color="#ffc96f" intensity={1.8 * intensity} distance={8} decay={2.2} />
       <pointLight position={[6.7, 2.45, 10.8]} color="#ffc96f" intensity={1.8 * intensity} distance={8} decay={2.2} />
+      <pointLight position={[-6.7, 2.45, 3.6]} color="#ffd184" intensity={1.35 * intensity} distance={7} decay={2.25} />
+      <pointLight position={[6.7, 2.45, 3.6]} color="#ffd184" intensity={1.35 * intensity} distance={7} decay={2.25} />
+      <pointLight position={[-6.7, 2.45, -3.8]} color="#ffd184" intensity={1.35 * intensity} distance={7} decay={2.25} />
+      <pointLight position={[6.7, 2.45, -3.8]} color="#ffd184" intensity={1.35 * intensity} distance={7} decay={2.25} />
       <pointLight position={[-6.7, 2.45, -11]} color="#ffc96f" intensity={1.6 * intensity} distance={8} decay={2.2} />
       <pointLight position={[6.7, 2.45, -11]} color="#ffc96f" intensity={1.6 * intensity} distance={8} decay={2.2} />
     </group>

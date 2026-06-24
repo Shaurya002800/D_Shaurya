@@ -1,8 +1,8 @@
 export const PROJECTS = [
   {
     name: 'ExamChain',
-    desc: 'Zero-trust exam infrastructure with encrypted question vaults, threshold-key release, agent-based integrity scoring, and blockchain-verifiable credentials.',
-    stack: ['Next.js', 'Blockchain', 'Agents', 'VCs'],
+    desc: 'Zero-trust examination infrastructure with encrypted question vaults, Merkle-root chain locking, autonomous integrity agents, QR credential verification, and live risk telemetry.',
+    stack: ['React', 'FastAPI', 'PostgreSQL', 'Redis', 'Solidity', 'Web3.py'],
     color: '#46d9ff',
     year: '2026',
     bounty: '140,000,000',
@@ -11,7 +11,7 @@ export const PROJECTS = [
   {
     name: 'SentinelMesh',
     desc: 'Decentralized threat-intelligence mesh using ESP32 edge devices, TensorFlow Lite Micro anomaly detection, ESP-NOW sync, and Polygon audit logs.',
-    stack: ['ESP32', 'TFLite', 'ESP-NOW', 'Polygon'],
+    stack: ['ESP32', 'TFLite Micro', 'C++', 'Python', 'Node.js', 'Socket.IO', 'React', 'D3.js'],
     color: '#ff4a5f',
     year: '2026',
     bounty: '132,000,000',
@@ -20,7 +20,7 @@ export const PROJECTS = [
   {
     name: 'DevBoard',
     desc: 'Full-stack indie talent marketplace where founders post scoped work and developers apply with structured pitches, JWT auth, dashboards, and deployed API.',
-    stack: ['Next.js', 'Express', 'PostgreSQL', 'JWT'],
+    stack: ['Next.js', 'React', 'Node.js', 'Express', 'PostgreSQL', 'JWT', 'Tailwind CSS'],
     color: '#4f8cff',
     year: '2026',
     bounty: '118,000,000',
