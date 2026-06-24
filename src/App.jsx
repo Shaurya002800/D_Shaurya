@@ -6,6 +6,7 @@ import NavWheels from './components/NavWheels'
 import DevilFruitChat from './components/DevilFruitChat.jsx'
 import ArtifactDossier from './components/ArtifactDossier.jsx'
 import MobileControls from './components/MobileControls.jsx'
+import OceanMusic from './components/OceanMusic.jsx'
 import AboutSection, {
   AboutTransitionOverlay,
   SectionTransitionLabel,
@@ -107,6 +108,8 @@ function App() {
 
       {loaded && (
         <>
+          <OceanMusic visible={loaded} />
+
           {!sectionActive && (
             <>
               <NavWheels

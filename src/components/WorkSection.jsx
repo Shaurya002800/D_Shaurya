@@ -1,35 +1,28 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 
 // ─────────────────────────────────────────────────────────────────────
-// CONSTANTS
+// TIMING CONSTANTS
 // ─────────────────────────────────────────────────────────────────────
-const TRANSITION_MS  = 300   // flash overlay fade duration
-const LABEL_DELAY_MS = 380   // delay before section label appears
-const PANEL_DELAY_MS = 420   // delay before main panel fades in
+const TRANSITION_MS = 300
+const LABEL_DELAY_MS = 380
+const PANEL_DELAY_MS = 420
 
 // ─────────────────────────────────────────────────────────────────────
 // WORK TRANSITION OVERLAY
-// Cinematic flash on enter/exit — uses CSS transitions, no RAF timers
 // ─────────────────────────────────────────────────────────────────────
 export function WorkTransitionOverlay({ active }) {
-  const [mounted, setMounted]   = useState(false)
-  const [visible, setVisible]   = useState(false)
-  const timerRef                = useRef([])
+  const [mounted, setMounted] = useState(false)
+  const [visible, setVisible] = useState(false)
+  const timerRef = useRef([])
 
-  const clearTimers = () => {
-    timerRef.current.forEach(clearTimeout)
-    timerRef.current = []
-  }
+  const clearTimers = () => { timerRef.current.forEach(clearTimeout); timerRef.current = [] }
 
   useEffect(() => {
     clearTimers()
     if (active) {
       timerRef.current.push(setTimeout(() => setMounted(true), 0))
-      // Next tick: fade in
-      timerRef.current.push(setTimeout(() => setVisible(true),  16))
-      // Hold, then fade out
+      timerRef.current.push(setTimeout(() => setVisible(true), 16))
       timerRef.current.push(setTimeout(() => setVisible(false), TRANSITION_MS + 80))
-      // Unmount after fade out completes
       timerRef.current.push(setTimeout(() => setMounted(false), TRANSITION_MS + 600))
     } else {
       timerRef.current.push(setTimeout(() => setVisible(false), 0))
@@ -39,17 +32,14 @@ export function WorkTransitionOverlay({ active }) {
   }, [active])
 
   if (!mounted) return null
-
   return (
     <div
       aria-hidden="true"
       style={{
-        position:   'fixed',
-        inset:      0,
-        zIndex:     9900,
-        background: '#00111f',
-        opacity:    visible ? 1 : 0,
-        transition: `opacity ${TRANSITION_MS}ms ease`,
+        position: 'fixed', inset: 0, zIndex: 9900,
+        background: '#0a0d14',
+        opacity: visible ? 1 : 0,
+        transition: `opacity ${TRANSITION_MS}ms cubic-bezier(0.4, 0, 0.2, 1)`,
         pointerEvents: 'none',
       }}
     />
@@ -58,17 +48,13 @@ export function WorkTransitionOverlay({ active }) {
 
 // ─────────────────────────────────────────────────────────────────────
 // WORK SECTION LABEL
-// Top badge — mounts/unmounts cleanly with no lingering state
 // ─────────────────────────────────────────────────────────────────────
 export function WorkSectionLabel({ active }) {
   const [mounted, setMounted] = useState(false)
   const [visible, setVisible] = useState(false)
-  const timerRef              = useRef([])
+  const timerRef = useRef([])
 
-  const clearTimers = () => {
-    timerRef.current.forEach(clearTimeout)
-    timerRef.current = []
-  }
+  const clearTimers = () => { timerRef.current.forEach(clearTimeout); timerRef.current = [] }
 
   useEffect(() => {
     clearTimers()
@@ -77,648 +63,519 @@ export function WorkSectionLabel({ active }) {
       timerRef.current.push(setTimeout(() => setVisible(true), LABEL_DELAY_MS))
     } else {
       timerRef.current.push(setTimeout(() => setVisible(false), 0))
-      // Unmount only after CSS transition completes (500 ms)
       timerRef.current.push(setTimeout(() => setMounted(false), 500))
     }
     return clearTimers
   }, [active])
 
   if (!mounted) return null
-
   return (
     <div
       aria-live="polite"
       style={{
-        position:       'fixed',
-        top:            0,
-        left:           0,
-        right:          0,
-        display:        'flex',
-        justifyContent: 'center',
-        pointerEvents:  'none',
-        zIndex:         8500,
-        opacity:        visible ? 1 : 0,
-        transform:      visible ? 'translateY(0)' : 'translateY(-14px)',
-        transition:     'opacity 0.45s ease, transform 0.45s ease',
+        position: 'fixed', top: 0, left: 0, right: 0,
+        display: 'flex', justifyContent: 'center',
+        pointerEvents: 'none', zIndex: 8500,
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(-20px)',
+        transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
       <div style={{
-        marginTop:      '18px',
-        padding:        '6px 28px',
-        background:     'rgba(28,58,24,0.84)',
-        border:         '1px solid rgba(174,231,89,0.38)',
-        borderRadius:   '40px',
-        /* backdrop-filter removed to disable blur for clarity */
-        fontFamily:     '"Courier New", monospace',
-        fontSize:       '12px',
-        letterSpacing:  '4px',
-        color:          'rgba(231,255,190,0.92)',
-        textTransform:  'uppercase',
+        marginTop: '24px',
+        padding: '8px 32px',
+        background: 'rgba(10, 15, 24, 0.85)',
+        backdropFilter: 'blur(8px)',
+        border: '1px solid rgba(64, 169, 255, 0.3)',
+        borderRadius: '4px',
+        fontFamily: '"Courier New", Courier, monospace',
+        fontSize: '11px',
+        letterSpacing: '6px',
+        color: '#8be9fd',
+        textTransform: 'uppercase',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(64, 169, 255, 0.1)',
       }}>
-        BASEMENT
+        PACIFISTA INTEL DATABASE
       </div>
     </div>
   )
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// PROJECT DETAIL MODAL
-// Shown when user clicks a tank card — keyboard‑trapped, scrollable
+// HYPE COUNTER — animated reader-rating readout for the cover panel
+// ─────────────────────────────────────────────────────────────────────
+function HypeCounter({ value }) {
+  const [display, setDisplay] = useState('0')
+  const rafRef = useRef()
+
+  useEffect(() => {
+    cancelAnimationFrame(rafRef.current)
+    const numStr = String(value || '').replace(/[^0-9]/g, '')
+    const target = parseInt(numStr, 10) || 0
+    if (!target) { setDisplay(value || '—'); return }
+
+    const dur = 1600
+    const start = performance.now()
+    const tick = (now) => {
+      const t = Math.min((now - start) / dur, 1)
+      const eased = 1 - Math.pow(1 - t, 4)
+      const current = Math.round(eased * target)
+      setDisplay(current.toLocaleString('en-US'))
+      if (t < 1) rafRef.current = requestAnimationFrame(tick)
+    }
+    rafRef.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [value])
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'baseline', gap: '7px', justifyContent: 'center' }}>
+      <span style={{ fontFamily: 'Georgia, serif', fontSize: '1.4rem', fontWeight: 900, color: '#c1272d' }}>★</span>
+      <span style={{
+        fontFamily: '"Anton", Georgia, sans-serif',
+        fontSize: 'clamp(1.5rem, 3vw, 2.1rem)',
+        color: '#15120f',
+        letterSpacing: '0.01em',
+      }}>
+        {display}
+      </span>
+      <span style={{
+        fontFamily: '"Courier New", monospace', fontSize: '9px',
+        color: '#6b6354', letterSpacing: '1.5px', textTransform: 'uppercase',
+        alignSelf: 'flex-end', marginBottom: '5px',
+      }}>
+        reader hype
+      </span>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// PROJECT DETAIL MODAL — MANGA PAGE DOSSIER
 // ─────────────────────────────────────────────────────────────────────
 function ProjectModal({ project, onClose }) {
-  const modalRef   = useRef()
-  const closeRef   = useRef()
+  const modalRef = useRef()
+  const closeRef = useRef()
+  const [coverHover, setCoverHover] = useState(false)
 
-  // Focus modal on open, restore on close
   useEffect(() => {
     const prev = document.activeElement
     closeRef.current?.focus()
-    return () => prev?.focus()
+    return () => { prev?.focus() }
   }, [])
 
-  // Keyboard: Escape closes, Tab traps focus inside modal
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Escape') { onClose(); return }
     if (e.key !== 'Tab') return
-
     const focusable = modalRef.current?.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])'
     )
-    if (!focusable || focusable.length === 0) { e.preventDefault(); return }
-
-    const first = focusable[0]
-    const last  = focusable[focusable.length - 1]
-
-    if (e.shiftKey) {
-      if (document.activeElement === first) { e.preventDefault(); last.focus() }
-    } else {
-      if (document.activeElement === last)  { e.preventDefault(); first.focus() }
-    }
+    if (!focusable?.length) { e.preventDefault(); return }
+    const first = focusable[0], last = focusable[focusable.length - 1]
+    if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus() } }
+    else            { if (document.activeElement === last)  { e.preventDefault(); first.focus() } }
   }, [onClose])
 
-  // Backdrop click closes (but not clicks inside the card)
   const handleBackdropClick = useCallback((e) => {
     if (e.target === e.currentTarget) onClose()
   }, [onClose])
 
+  // ── Ink palette ──────────────────────────────────────────────────
+  const ink = '#15120f'
+  const paper = '#f3eee2'
+  const hanko = '#c1272d'
+  const inkSoft = '#3c352a'
+  const tone = '#b9b19c'
+
+  const year = project.year || new Date().getFullYear()
+  const isLive = project.url && project.url !== '#'
+
+  const fileId = String(
+    Math.abs((project.name || '').split('').reduce((a, c) => a * 31 + c.charCodeAt(0), 17) % 99999)
+  ).padStart(5, '0')
+  const seed = parseInt(fileId, 10)
+  const chapterNo = String((seed % 180) + 1).padStart(3, '0')
+  const pageNo = String((seed % 80) + 10).padStart(3, '0')
+
+  const halftone = {
+    backgroundImage: `radial-gradient(${tone} 1px, transparent 1.6px)`,
+    backgroundSize: '8px 8px',
+  }
+  const grain = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E")`
+
   return (
     <div
-      className="project-briefing"
       role="dialog"
       aria-modal="true"
       aria-label={`Project: ${project.name}`}
       onKeyDown={handleKeyDown}
       onClick={handleBackdropClick}
-      style={{ '--project-color': project.color }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 9200,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 'clamp(16px, 4vw, 40px)',
+        background: '#0b0907',
+        backgroundImage: 'radial-gradient(rgba(255,255,255,0.045) 1px, transparent 1.6px)',
+        backgroundSize: '7px 7px',
+        backdropFilter: 'blur(5px)',
+        animation: 'fadeIn 0.3s ease both',
+      }}
     >
-      <div ref={modalRef} className="project-briefing__board">
+      {/* Hidden SVG filter used to rough up the hanko stamp edge */}
+      <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
+        <filter id="inkRough">
+          <feTurbulence type="fractalNoise" baseFrequency="0.045 0.09" numOctaves="2" seed="4" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.2" />
+        </filter>
+      </svg>
+
+      <div
+        ref={modalRef}
+        className="manga-page"
+        style={{
+          width: 'min(1080px, 100%)',
+          maxHeight: 'min(92vh, 820px)',
+          display: 'flex', flexDirection: 'column',
+          background: paper,
+          border: `5px solid ${ink}`,
+          borderRadius: '2px',
+          position: 'relative',
+          overflow: 'hidden',
+          boxShadow: '0 30px 60px -15px rgba(0,0,0,0.65), 0 0 0 1px rgba(0,0,0,0.4)',
+          animation: 'pageSlam 0.45s cubic-bezier(0.16, 1, 0.3, 1) both',
+        }}
+      >
+        {/* Paper grain, across the whole page */}
+        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, backgroundImage: grain, pointerEvents: 'none', zIndex: 0 }} />
+
+        {/* Close — inked corner stamp */}
         <button
-          ref={closeRef}
-          className="project-briefing__close"
-          onClick={onClose}
-          aria-label="Close project details"
+          ref={closeRef} onClick={onClose} aria-label="Close manga page"
+          style={{
+            position: 'absolute', top: '14px', right: '14px', zIndex: 20,
+            width: '34px', height: '34px',
+            background: paper, border: `2.5px solid ${ink}`,
+            color: ink, fontSize: '15px', fontWeight: 900, cursor: 'pointer',
+            display: 'grid', placeItems: 'center',
+            transform: 'rotate(-6deg)',
+            transition: 'all 0.2s',
+            boxShadow: `2px 2px 0 ${ink}`,
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = ink
+            e.currentTarget.style.color = paper
+            e.currentTarget.style.transform = 'rotate(0deg) scale(1.08)'
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = paper
+            e.currentTarget.style.color = ink
+            e.currentTarget.style.transform = 'rotate(-6deg) scale(1)'
+          }}
         >
-          <span aria-hidden="true">×</span>
-          <small>Deck</small>
+          ✕
         </button>
 
-        <div className="project-briefing__rail" aria-hidden="true" />
-        <div className="project-briefing__scan" aria-hidden="true" />
+        {/* ═══════════════════════════════════════════════════════
+            THE PAGE — panels separated by black-gutter grid
+        ═══════════════════════════════════════════════════════ */}
+        <div
+          className="manga-grid"
+          style={{
+            flex: 1,
+            position: 'relative', zIndex: 1,
+            display: 'grid',
+            gridTemplateColumns: '320px minmax(0, 1fr)',
+            gridTemplateRows: '78px auto auto 70px',
+            gap: '6px',
+            padding: '6px',
+            background: ink,
+            overflowY: 'auto',
+          }}
+        >
+          {/* ── PANEL: COVER ────────────────────────────────────── */}
+          <div
+            className="panel-cover"
+            onMouseEnter={() => setCoverHover(true)}
+            onMouseLeave={() => setCoverHover(false)}
+            style={{
+              gridColumn: 1, gridRow: '1 / span 4',
+              background: paper, ...halftone,
+              padding: '26px 20px 20px',
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              position: 'relative',
+              transform: coverHover ? 'scale(1.01)' : 'scale(1)',
+              transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+              animation: 'panelIn 0.4s ease 0.05s both',
+            }}
+          >
+            <div style={{
+              fontFamily: '"Courier New", monospace', fontSize: '10px',
+              fontWeight: 700, letterSpacing: '0.25em', color: inkSoft,
+              textTransform: 'uppercase', marginBottom: '14px',
+            }}>
+              ※ Featured Series
+            </div>
 
-        <section className="project-briefing__wanted" aria-labelledby="project-briefing-title">
-          <div className="project-briefing__file">
-            <span>Grand Line File</span>
-            <i />
-            <span>{project.year}</span>
+            {/* Cover art placeholder, crosshatched like unfinished inking */}
+            <div style={{
+              width: '100%', height: '188px',
+              background: `repeating-linear-gradient(45deg, ${ink} 0px, ${ink} 1.5px, transparent 1.5px, transparent 7px)`,
+              backgroundColor: '#e7e0cd',
+              border: `3px solid ${ink}`,
+              marginBottom: '18px',
+              position: 'relative',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              overflow: 'hidden',
+            }}>
+              <span style={{
+                fontFamily: '"Courier New", monospace', color: paper, background: ink,
+                fontSize: '11px', letterSpacing: '1.5px', textTransform: 'uppercase',
+                padding: '4px 10px', border: `1px solid ${paper}`,
+              }}>
+                panel still inking
+              </span>
+            </div>
+
+            <div style={{
+              fontFamily: '"Anton", Georgia, sans-serif',
+              fontSize: 'clamp(1.6rem, 3.4vw, 2.5rem)',
+              color: ink, textAlign: 'center', lineHeight: 1.04,
+              textTransform: 'uppercase', marginBottom: '10px',
+            }}>
+              {project.name}
+            </div>
+
+            <div style={{ width: '46px', height: '4px', background: hanko, marginBottom: '18px' }} />
+
+            <HypeCounter value={project.bounty} />
+
+            {/* Hanko approval stamp */}
+            <div style={{
+              position: 'absolute', bottom: '18px', right: '14px',
+              width: '88px', height: '88px', borderRadius: '50%',
+              border: `4px solid ${hanko}`,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              color: hanko, fontWeight: 900, transform: 'rotate(-12deg)',
+              animation: 'stampDown 0.5s cubic-bezier(0.2, 2, 0.3, 1) 0.7s both',
+              filter: 'url(#inkRough)', opacity: 0.9, pointerEvents: 'none',
+            }}>
+              <div style={{ position: 'absolute', inset: '4px', border: `1px solid rgba(193,39,45,0.5)`, borderRadius: '50%' }} />
+              <span style={{ fontFamily: '"Anton", Georgia, sans-serif', fontSize: '13px', letterSpacing: '1px' }}>EDITOR'S</span>
+              <span style={{ fontFamily: '"Anton", Georgia, sans-serif', fontSize: '13px', letterSpacing: '1px' }}>PICK</span>
+            </div>
           </div>
 
-          <strong className="project-briefing__wanted-label">Wanted</strong>
-          <h2 id="project-briefing-title">{project.name}</h2>
+          {/* ── PANEL: TITLE / CHAPTER STRIP (inverted, diagonal cut) ── */}
+          <div
+            className="panel-title"
+            style={{
+              gridColumn: 2, gridRow: 1,
+              background: ink,
+              backgroundImage: 'repeating-conic-gradient(from 0deg at 0% 0%, rgba(255,255,255,0.07) 0deg 1.6deg, transparent 1.6deg 6deg)',
+              clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 86%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '0 22px', position: 'relative', overflow: 'hidden',
+              animation: 'panelIn 0.4s ease 0.1s both',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px' }}>
+              <span style={{ fontFamily: '"Anton", Georgia, sans-serif', fontSize: '1.8rem', color: paper, letterSpacing: '0.02em' }}>
+                CH. {chapterNo}
+              </span>
+              <span style={{ fontFamily: '"Courier New", monospace', fontSize: '10px', color: 'rgba(243,238,226,0.55)', letterSpacing: '2px', textTransform: 'uppercase' }}>
+                vol. {year}
+              </span>
+            </div>
 
-          <div className="project-briefing__live">
-            <span />
-            Live Project
+            {/* Comic burst badge */}
+            <div style={{
+              position: 'relative',
+              fontFamily: '"Bangers", "Anton", cursive', fontSize: '11px',
+              color: ink, background: hanko,
+              padding: '6px 14px', transform: 'rotate(6deg)',
+              clipPath: 'polygon(8% 0%, 92% 5%, 100% 50%, 94% 100%, 6% 95%, 0% 50%)',
+              letterSpacing: '0.5px', textTransform: 'uppercase',
+              animation: 'burstPop 0.45s cubic-bezier(0.2, 2, 0.3, 1) 0.35s both',
+              boxShadow: '2px 2px 0 rgba(0,0,0,0.5)',
+            }}>
+              {isLive ? 'on sale now' : 'work in progress'}
+            </div>
           </div>
 
-          <div className="project-briefing__stamp">Verified Build</div>
-        </section>
+          {/* ── PANEL: SYNOPSIS (speech bubble) ─────────────────── */}
+          <div
+            className="panel-synopsis"
+            style={{
+              gridColumn: 2, gridRow: 2,
+              background: paper, position: 'relative',
+              padding: '24px 28px',
+              animation: 'panelIn 0.4s ease 0.18s both',
+            }}
+          >
+            <div className="bubble-tail" aria-hidden="true" style={{ position: 'absolute', left: '-16px', top: '26px', width: 0, height: 0, borderTop: '10px solid transparent', borderBottom: '10px solid transparent', borderRight: `16px solid ${ink}` }} />
+            <div className="bubble-tail" aria-hidden="true" style={{ position: 'absolute', left: '-12px', top: '29px', width: 0, height: 0, borderTop: '7px solid transparent', borderBottom: '7px solid transparent', borderRight: `12px solid ${paper}` }} />
 
-        <section className="project-briefing__brief">
-          <div className="project-briefing__section-label">Mission Brief</div>
-          <p>{project.desc}</p>
-        </section>
-
-        <aside className="project-briefing__intel" aria-label="Project intelligence">
-          <div className="project-briefing__bounty">
-            <span>Current Bounty</span>
-            <strong>{project.bounty}</strong>
-            <em>Berries</em>
+            <div style={{ fontFamily: '"Courier New", monospace', fontSize: '10px', color: hanko, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px', fontWeight: 700 }}>
+              [ Synopsis ]
+            </div>
+            <p style={{
+              color: inkSoft, fontSize: '1.02rem', lineHeight: 1.75,
+              margin: 0, fontFamily: 'system-ui, -apple-system, sans-serif', fontWeight: 400,
+            }}>
+              {project.desc}
+            </p>
           </div>
 
-          <div className="project-briefing__stack" aria-label="Technology stack">
-            {project.stack.map((item, index) => (
-              <b key={item} style={{ '--tag-delay': `${240 + index * 70}ms` }}>
-                {item}
-              </b>
-            ))}
+          {/* ── PANEL: TECHNIQUES (tech stack as move-list tags) ── */}
+          <div
+            className="panel-techniques"
+            style={{
+              gridColumn: 2, gridRow: 3,
+              background: paper, padding: '22px 28px',
+              animation: 'panelIn 0.4s ease 0.26s both',
+            }}
+          >
+            <div style={{ fontFamily: '"Courier New", monospace', fontSize: '10px', color: hanko, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '14px', fontWeight: 700 }}>
+              [ Techniques Unlocked ]
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+              {project.stack?.map((item, i) => (
+                <span
+                  key={item}
+                  style={{
+                    '--chip-rot': `${i % 2 === 0 ? -2.5 : 2.5}deg`,
+                    padding: '7px 14px',
+                    background: paper,
+                    border: `2.5px solid ${ink}`,
+                    color: ink,
+                    fontFamily: '"Anton", Georgia, sans-serif',
+                    fontSize: '11.5px', letterSpacing: '0.5px',
+                    textTransform: 'uppercase',
+                    clipPath: 'polygon(4% 0, 100% 0, 96% 100%, 0% 100%)',
+                    animation: `chipFade 0.4s ease ${0.4 + i * 0.07}s both`,
+                    cursor: 'default',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = ink
+                    e.currentTarget.style.color = paper
+                    e.currentTarget.style.transform = 'rotate(0deg) scale(1.07)'
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = paper
+                    e.currentTarget.style.color = ink
+                    e.currentTarget.style.transform = 'rotate(var(--chip-rot)) scale(1)'
+                  }}
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
           </div>
-        </aside>
 
-        <footer className="project-briefing__footer">
-          <span>Esc or outside click returns to gallery</span>
+          {/* ── PANEL: NEXT-PAGE CAPTION / CTA ──────────────────── */}
+          <div
+            className="panel-cta"
+            style={{
+              gridColumn: 2, gridRow: 4,
+              background: paper,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '0 24px',
+              animation: 'panelIn 0.4s ease 0.34s both',
+            }}
+          >
+            <span style={{
+              fontFamily: '"Courier New", monospace', fontSize: '10px',
+              color: inkSoft, letterSpacing: '1.5px', textTransform: 'uppercase',
+              display: 'flex', alignItems: 'center', gap: '8px',
+            }}>
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: isLive ? hanko : '#999', display: 'inline-block' }} />
+              {isLive ? 'serialization · ongoing' : 'unscanned · draft only'}
+            </span>
 
-          {project.url && project.url !== '#' && (
-            <a href={project.url} target="_blank" rel="noreferrer">
-              Open Live
-            </a>
-          )}
-        </footer>
+            {isLive ? (
+              <a
+                href={project.url}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '8px',
+                  background: ink, color: paper,
+                  padding: '9px 18px',
+                  border: `2px solid ${ink}`,
+                  fontFamily: '"Anton", Georgia, sans-serif',
+                  fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase',
+                  textDecoration: 'none',
+                  transition: 'all 0.25s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = hanko; e.currentTarget.style.borderColor = hanko }}
+                onMouseLeave={e => { e.currentTarget.style.background = ink; e.currentTarget.style.borderColor = ink }}
+              >
+                turn the page ▶
+              </a>
+            ) : (
+              <span style={{
+                fontFamily: '"Anton", Georgia, sans-serif', fontSize: '11px', letterSpacing: '1px',
+                color: '#9a9282', padding: '9px 16px',
+                border: `2px dashed ${tone}`, textTransform: 'uppercase',
+              }}>
+                pages not yet scanned
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* ── Printed-page footer strip ──────────────────────────── */}
+        <div style={{
+          position: 'relative', zIndex: 1,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '6px 16px',
+          borderTop: `2px solid ${ink}`,
+          background: paper,
+          fontFamily: '"Courier New", monospace', fontSize: '10px',
+          color: inkSoft, letterSpacing: '1px',
+        }}>
+          <span>FILE №{fileId}</span>
+          <span>— {pageNo} —</span>
+        </div>
       </div>
 
       <style>{`
-        .project-briefing {
-          position: fixed;
-          inset: 0;
-          z-index: 9200;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: clamp(14px, 3vw, 28px);
-          background:
-            radial-gradient(circle at 50% 46%, color-mix(in srgb, var(--project-color) 18%, transparent), transparent 34%),
-            radial-gradient(circle at 50% 10%, rgba(45, 91, 105, .22), transparent 38%),
-            linear-gradient(180deg, rgba(2, 8, 13, .68), rgba(0, 0, 0, .92));
-          animation: project-briefing-fade .2s ease both;
+        @import url('https://fonts.googleapis.com/css2?family=Anton&family=Bangers&display=swap');
+
+        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes pageSlam {
+          0% { opacity: 0; transform: scale(0.86) rotate(-2deg); }
+          60% { opacity: 1; transform: scale(1.015) rotate(0.4deg); }
+          100% { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+        @keyframes panelIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes burstPop {
+          0% { opacity: 0; transform: rotate(-25deg) scale(0); }
+          60% { opacity: 1; transform: rotate(10deg) scale(1.15); }
+          100% { opacity: 1; transform: rotate(6deg) scale(1); }
+        }
+        @keyframes stampDown {
+          0% { opacity: 0; transform: rotate(-30deg) scale(2.4); }
+          55% { opacity: 1; transform: rotate(-6deg) scale(0.92); }
+          100% { opacity: 0.9; transform: rotate(-12deg) scale(1); }
+        }
+        @keyframes chipFade {
+          from { opacity: 0; transform: translateY(8px) rotate(0deg); }
+          to { opacity: 1; transform: translateY(0) rotate(var(--chip-rot, 0deg)); }
         }
 
-        .project-briefing__board {
-          position: relative;
-          width: min(1080px, 94vw);
-          max-height: min(84vh, 760px);
-          display: grid;
-          grid-template-columns: minmax(260px, .82fr) minmax(0, 1.18fr);
-          grid-template-areas:
-            "wanted brief"
-            "wanted intel"
-            "footer footer";
-          gap: 14px;
-          overflow: hidden auto;
-          padding: clamp(18px, 3vw, 34px);
-          border: 1px solid rgba(246, 212, 137, .34);
-          border-radius: 14px;
-          color: #221108;
-          background:
-            linear-gradient(90deg, rgba(255,255,255,.08), transparent 16%, transparent 84%, rgba(255,255,255,.07)),
-            repeating-linear-gradient(90deg, rgba(77, 41, 17, .18) 0 2px, transparent 2px 96px),
-            linear-gradient(135deg, #26140c 0%, #4c2b16 42%, #1a1010 100%);
-          box-shadow:
-            0 36px 90px rgba(0,0,0,.72),
-            0 0 46px color-mix(in srgb, var(--project-color) 24%, transparent),
-            inset 0 0 0 1px rgba(255,255,255,.07);
-          transform-origin: 50% 0;
-          animation: project-briefing-board-in .46s cubic-bezier(.18,.88,.2,1.1) both;
-        }
-
-        .project-briefing__board::before {
-          content: "";
-          position: absolute;
-          inset: 12px;
-          border: 1px solid rgba(255, 230, 168, .17);
-          border-radius: 10px;
-          pointer-events: none;
-        }
-
-        .project-briefing__board::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          background:
-            radial-gradient(circle at 14% 16%, rgba(255, 230, 158, .12), transparent 16%),
-            radial-gradient(circle at 88% 82%, color-mix(in srgb, var(--project-color) 18%, transparent), transparent 24%);
-          mix-blend-mode: screen;
-        }
-
-        .project-briefing__rail {
-          position: absolute;
-          left: 0;
-          right: 0;
-          top: 0;
-          height: 8px;
-          background:
-            linear-gradient(90deg, transparent, color-mix(in srgb, var(--project-color) 70%, #ffe3a5), transparent),
-            linear-gradient(#100706, #100706);
-          box-shadow: 0 0 22px color-mix(in srgb, var(--project-color) 40%, transparent);
-          opacity: .82;
-        }
-
-        .project-briefing__scan {
-          position: absolute;
-          left: -30%;
-          top: -40%;
-          width: 42%;
-          height: 180%;
-          pointer-events: none;
-          background: linear-gradient(90deg, transparent, rgba(255, 246, 197, .18), transparent);
-          transform: rotate(16deg);
-          animation: project-briefing-scan 2.6s .3s ease-out both;
-        }
-
-        .project-briefing__close {
-          position: absolute;
-          top: 22px;
-          right: 22px;
-          z-index: 4;
-          display: grid;
-          width: 54px;
-          height: 54px;
-          place-items: center;
-          border: 1px solid rgba(255, 231, 172, .38);
-          border-radius: 50%;
-          background: rgba(10, 24, 26, .78);
-          color: #fff3bf;
-          cursor: pointer;
-          box-shadow: 0 12px 26px rgba(0,0,0,.34), inset 0 0 0 1px rgba(255,255,255,.08);
-          transition: transform .18s ease, border-color .18s ease, background .18s ease;
-        }
-
-        .project-briefing__close:hover {
-          border-color: var(--project-color);
-          background: rgba(22, 38, 36, .94);
-          transform: translateY(-1px) scale(1.04);
-        }
-
-        .project-briefing__close span {
-          font-size: 26px;
-          line-height: .72;
-        }
-
-        .project-briefing__close small {
-          margin-top: -8px;
-          color: rgba(255, 243, 191, .68);
-          font: 800 8px/1 "Courier New", monospace;
-          letter-spacing: .16em;
-          text-transform: uppercase;
-        }
-
-        .project-briefing__wanted,
-        .project-briefing__brief,
-        .project-briefing__intel,
-        .project-briefing__footer {
-          position: relative;
-          z-index: 2;
-          opacity: 0;
-          animation: project-briefing-panel-in .42s ease both;
-        }
-
-        .project-briefing__wanted {
-          grid-area: wanted;
-          min-height: 452px;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-          padding: 28px 24px;
-          border: 1px solid rgba(77, 25, 12, .24);
-          border-radius: 8px;
-          background:
-            radial-gradient(circle at 18% 14%, rgba(255, 255, 230, .7), transparent 22%),
-            repeating-linear-gradient(0deg, rgba(86, 46, 22, .045) 0 1px, transparent 1px 10px),
-            linear-gradient(160deg, #f7e5ad 0%, #d8b36b 54%, #98724a 100%);
-          box-shadow:
-            0 18px 28px rgba(0,0,0,.18),
-            inset 0 0 0 1px rgba(255,255,255,.2);
-          transform: rotate(-1.5deg);
-          animation-delay: .08s;
-        }
-
-        .project-briefing__wanted::before,
-        .project-briefing__wanted::after {
-          content: "";
-          position: absolute;
-          top: 16px;
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
-          background: var(--project-color);
-          box-shadow: inset 0 0 0 3px rgba(34, 10, 6, .24), 0 0 18px color-mix(in srgb, var(--project-color) 65%, transparent);
-        }
-
-        .project-briefing__wanted::before { left: 16px; }
-        .project-briefing__wanted::after { right: 16px; }
-
-        .project-briefing__file {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding-left: 20px;
-          color: rgba(97, 38, 24, .68);
-          font: 900 .7rem/1 "Courier New", monospace;
-          letter-spacing: .22em;
-          text-transform: uppercase;
-        }
-
-        .project-briefing__file i {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          background: rgba(97, 38, 24, .48);
-        }
-
-        .project-briefing__wanted-label {
-          margin-top: 34px;
-          color: rgba(68, 19, 12, .78);
-          font: 900 1.45rem/1 Georgia, "Times New Roman", serif;
-          letter-spacing: .28em;
-          text-align: center;
-          text-transform: uppercase;
-        }
-
-        .project-briefing__wanted h2 {
-          margin: 18px 0 0;
-          color: #2a0f07;
-          font: 900 4.35rem/.86 Georgia, "Times New Roman", serif;
-          letter-spacing: 0;
-          overflow-wrap: anywhere;
-          text-align: center;
-          text-shadow: 0 2px 0 rgba(255, 244, 197, .56);
-        }
-
-        .project-briefing__live {
-          align-self: center;
-          display: inline-flex;
-          align-items: center;
-          gap: 9px;
-          margin-top: 24px;
-          padding: 9px 14px;
-          border: 1px solid rgba(68,31,12,.2);
-          border-radius: 999px;
-          background: rgba(255,249,218,.48);
-          color: rgba(47, 20, 9, .74);
-          font: 900 .7rem/1 "Courier New", monospace;
-          letter-spacing: .13em;
-          text-transform: uppercase;
-        }
-
-        .project-briefing__live span {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background: var(--project-color);
-          box-shadow: 0 0 14px var(--project-color);
-        }
-
-        .project-briefing__stamp {
-          align-self: flex-end;
-          margin-top: auto;
-          color: color-mix(in srgb, var(--project-color) 68%, #5d1611);
-          border: 3px solid currentColor;
-          border-radius: 7px;
-          padding: 8px 12px;
-          font: 900 .78rem/1 "Courier New", monospace;
-          letter-spacing: .16em;
-          text-transform: uppercase;
-          transform: rotate(-11deg) scale(.88);
-          opacity: 0;
-          animation: project-briefing-stamp .42s .46s cubic-bezier(.18,.9,.22,1.18) both;
-        }
-
-        .project-briefing__brief {
-          grid-area: brief;
-          min-height: 236px;
-          display: grid;
-          align-content: center;
-          padding: 36px clamp(28px, 4vw, 48px);
-          border: 1px solid rgba(255, 233, 184, .22);
-          border-radius: 8px;
-          background:
-            linear-gradient(90deg, rgba(255, 238, 177, .08), transparent 18%),
-            linear-gradient(135deg, rgba(11, 33, 39, .94), rgba(17, 20, 21, .98));
-          box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
-          animation-delay: .16s;
-        }
-
-        .project-briefing__section-label {
-          margin-bottom: 18px;
-          color: color-mix(in srgb, var(--project-color) 70%, #fff2b5);
-          font: 900 .72rem/1 "Courier New", monospace;
-          letter-spacing: .26em;
-          text-transform: uppercase;
-        }
-
-        .project-briefing__brief p {
-          margin: 0;
-          color: rgba(255, 242, 204, .92);
-          font: 700 1.55rem/1.45 Georgia, "Times New Roman", serif;
-        }
-
-        .project-briefing__intel {
-          grid-area: intel;
-          display: grid;
-          grid-template-columns: minmax(210px, .78fr) minmax(0, 1fr);
-          gap: 14px;
-          animation-delay: .24s;
-        }
-
-        .project-briefing__bounty {
-          display: grid;
-          align-content: center;
-          gap: 8px;
-          min-height: 156px;
-          padding: 22px;
-          border: 1px solid rgba(255, 233, 184, .18);
-          border-radius: 8px;
-          background:
-            radial-gradient(circle at 84% 18%, color-mix(in srgb, var(--project-color) 28%, transparent), transparent 32%),
-            linear-gradient(180deg, rgba(64, 20, 11, .96), rgba(22, 9, 7, .98));
-          box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
-        }
-
-        .project-briefing__bounty span,
-        .project-briefing__bounty em {
-          color: rgba(255,235,181,.66);
-          font: 900 .65rem/1 "Courier New", monospace;
-          letter-spacing: .22em;
-          text-transform: uppercase;
-          font-style: normal;
-        }
-
-        .project-briefing__bounty strong {
-          color: var(--project-color);
-          font: 900 2.7rem/.9 Georgia, "Times New Roman", serif;
-          letter-spacing: .03em;
-          text-shadow: 0 0 18px color-mix(in srgb, var(--project-color) 55%, transparent);
-          overflow-wrap: anywhere;
-        }
-
-        .project-briefing__stack {
-          display: flex;
-          flex-wrap: wrap;
-          align-content: center;
-          gap: 10px;
-          min-height: 156px;
-          padding: 22px;
-          border: 1px dashed rgba(255, 233, 184, .23);
-          border-radius: 8px;
-          background:
-            linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px),
-            rgba(6, 18, 22, .76);
-          background-size: 22px 22px;
-        }
-
-        .project-briefing__stack b {
-          display: inline-flex;
-          align-items: center;
-          min-height: 38px;
-          padding: 0 14px;
-          border: 1px solid color-mix(in srgb, var(--project-color) 52%, rgba(255,255,255,.22));
-          border-radius: 999px;
-          background: rgba(255, 244, 202, .08);
-          color: rgba(255, 245, 215, .9);
-          font: 900 .75rem/1 "Courier New", monospace;
-          letter-spacing: .08em;
-          box-shadow: 0 0 16px color-mix(in srgb, var(--project-color) 16%, transparent);
-          opacity: 0;
-          transform: translateY(8px);
-          animation: project-briefing-tag-in .26s ease both;
-          animation-delay: var(--tag-delay);
-        }
-
-        .project-briefing__footer {
-          grid-area: footer;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 16px;
-          padding: 16px 18px 0;
-          color: rgba(255, 235, 181, .55);
-          font: 900 .68rem/1.4 "Courier New", monospace;
-          letter-spacing: .2em;
-          text-transform: uppercase;
-          animation-delay: .31s;
-        }
-
-        .project-briefing__footer a {
-          display: inline-flex;
-          min-height: 48px;
-          align-items: center;
-          justify-content: center;
-          padding: 0 24px;
-          border: 1px solid rgba(255,255,255,.24);
-          border-radius: 999px;
-          background: var(--project-color);
-          color: #160806;
-          font: 900 .76rem/1 "Courier New", monospace;
-          letter-spacing: .14em;
-          text-decoration: none;
-          white-space: nowrap;
-          box-shadow: 0 14px 28px color-mix(in srgb, var(--project-color) 28%, transparent);
-          transition: transform .16s ease, filter .16s ease;
-        }
-
-        .project-briefing__footer a:hover {
-          filter: brightness(1.08);
-          transform: translateY(-1px);
-        }
-
-        @keyframes project-briefing-fade {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        @keyframes project-briefing-board-in {
-          from { opacity: 0; transform: translateY(26px) rotateX(10deg) scale(.98); }
-          to { opacity: 1; transform: translateY(0) rotateX(0) scale(1); }
-        }
-
-        @keyframes project-briefing-panel-in {
-          from { opacity: 0; transform: translateY(14px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes project-briefing-stamp {
-          0% { opacity: 0; transform: rotate(-24deg) scale(1.26); }
-          100% { opacity: .92; transform: rotate(-11deg) scale(1); }
-        }
-
-        @keyframes project-briefing-tag-in {
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes project-briefing-scan {
-          0% { opacity: 0; transform: translateX(0) rotate(16deg); }
-          12% { opacity: 1; }
-          100% { opacity: 0; transform: translateX(330%) rotate(16deg); }
-        }
-
-        @media (max-width: 880px) {
-          .project-briefing {
-            align-items: flex-end;
-            padding: 10px;
+        /* Responsive: stack the page into a single reading column */
+        @media (max-width: 900px) {
+          .manga-grid {
+            grid-template-columns: 1fr !important;
+            grid-template-rows: 240px auto auto auto auto !important;
           }
-
-          .project-briefing__board {
-            width: 100%;
-            max-height: 82vh;
-            grid-template-columns: 1fr;
-            grid-template-areas:
-              "wanted"
-              "brief"
-              "intel"
-              "footer";
-            padding: 14px;
-            border-radius: 12px 12px 0 0;
-          }
-
-          .project-briefing__close {
-            top: 18px;
-            right: 18px;
-            width: 48px;
-            height: 48px;
-          }
-
-          .project-briefing__wanted {
-            min-height: 320px;
-            transform: rotate(0);
-            padding: 24px 18px;
-          }
-
-          .project-briefing__wanted-label {
-            margin-top: 24px;
-            font-size: 1.1rem;
-          }
-
-          .project-briefing__wanted h2 {
-            font-size: 3rem;
-          }
-
-          .project-briefing__brief {
-            min-height: auto;
-            padding: 26px 20px;
-          }
-
-          .project-briefing__brief p {
-            font-size: 1.22rem;
-          }
-
-          .project-briefing__intel {
-            grid-template-columns: 1fr;
-          }
-
-          .project-briefing__bounty,
-          .project-briefing__stack {
-            min-height: auto;
-          }
-
-          .project-briefing__bounty strong {
-            font-size: 2.18rem;
-          }
-
-          .project-briefing__footer {
-            align-items: stretch;
-            flex-direction: column;
-            padding: 12px 4px 0;
-          }
+          .panel-cover { grid-column: 1 !important; grid-row: 1 !important; }
+          .panel-title { grid-column: 1 !important; grid-row: 2 !important; clip-path: none !important; }
+          .panel-synopsis { grid-column: 1 !important; grid-row: 3 !important; padding: 22px !important; }
+          .panel-techniques { grid-column: 1 !important; grid-row: 4 !important; }
+          .panel-cta { grid-column: 1 !important; grid-row: 5 !important; flex-wrap: wrap; gap: 12px; padding: 14px 18px !important; }
+          .bubble-tail { display: none !important; }
         }
       `}</style>
     </div>
@@ -736,14 +593,10 @@ export default function WorkSection({
 }) {
   const [mounted, setMounted] = useState(false)
   const [visible, setVisible] = useState(false)
-  const timerRef              = useRef([])
+  const timerRef = useRef([])
 
-  const clearTimers = () => {
-    timerRef.current.forEach(clearTimeout)
-    timerRef.current = []
-  }
+  const clearTimers = () => { timerRef.current.forEach(clearTimeout); timerRef.current = [] }
 
-  // Mount/unmount with clean transitions
   useEffect(() => {
     clearTimers()
     if (active) {
@@ -751,18 +604,14 @@ export default function WorkSection({
       timerRef.current.push(setTimeout(() => setVisible(true), PANEL_DELAY_MS))
     } else {
       timerRef.current.push(setTimeout(() => setVisible(false), 0))
-      // Wait for CSS transition before unmounting
       timerRef.current.push(setTimeout(() => setMounted(false), 550))
     }
     return clearTimers
   }, [active])
 
-  // ESC to close — only fires if no modal is open (modal handles its own ESC)
   useEffect(() => {
     if (!active) return
-    const fn = (e) => {
-      if (e.key === 'Escape' && !selectedProject) onClose()
-    }
+    const fn = (e) => { if (e.key === 'Escape' && !selectedProject) onClose() }
     window.addEventListener('keydown', fn)
     return () => window.removeEventListener('keydown', fn)
   }, [active, selectedProject, onClose])
@@ -771,75 +620,55 @@ export default function WorkSection({
 
   return (
     <>
-      {/* ── Soft garden tint (non-blocking, behind everything) ── */}
       <div
         aria-hidden="true"
         style={{
-          position:       'fixed',
-          inset:          0,
-          zIndex:         8800,
-          background:     'radial-gradient(ellipse at 50% 30%, rgba(130,210,80,0.08), rgba(8,24,10,0.20))',
-            /* backdrop-filter removed to disable blur for clarity */
-          opacity:        visible ? 1 : 0,
-          transition:     'opacity 0.5s ease',
-          pointerEvents:  'none',
+          position: 'fixed', inset: 0, zIndex: 8800,
+          background: `
+            radial-gradient(circle at 15% 50%, rgba(64, 169, 255, 0.05) 0%, transparent 40%),
+            radial-gradient(circle at 85% 30%, rgba(255, 77, 79, 0.03) 0%, transparent 40%)
+          `,
+          opacity: visible ? 1 : 0,
+          transition: 'opacity 0.6s ease',
+          pointerEvents: 'none',
         }}
       />
 
-      {/* ── Close button ── */}
       {!selectedProject && (
         <button
           onClick={onClose}
-          aria-label="Exit aquarium — return to ship deck"
+          aria-label="Exit Terminal"
           style={{
-            position:       'fixed',
-            top:            '20px',
-            right:          '20px',
-            zIndex:         9100,
-            width:          '44px',
-            height:         '44px',
-            borderRadius:   '50%',
-            background:     'rgba(20,45,18,0.88)',
-            border:         '1px solid rgba(174,231,89,0.42)',
-            color:          'rgba(231,255,190,0.94)',
-            fontSize:       '17px',
-            cursor:         'pointer',
-            display:        'flex',
-            alignItems:     'center',
-            justifyContent: 'center',
-            /* backdrop-filter removed to disable blur for clarity */
-            opacity:        visible ? 1 : 0,
-            transform:      visible ? 'scale(1)' : 'scale(0.8)',
-            transition:     'opacity 0.4s ease, transform 0.4s ease, background 0.18s, border-color 0.18s',
+            position: 'fixed', top: '24px', right: '24px',
+            zIndex: 9100, width: '44px', height: '44px',
+            borderRadius: '50%', background: 'rgba(10, 15, 24, 0.8)',
+            border: '1px solid rgba(64, 169, 255, 0.3)',
+            color: '#8be9fd', fontSize: '16px', cursor: 'pointer',
+            display: 'grid', placeItems: 'center',
+            opacity: visible ? 1 : 0,
+            transform: visible ? 'scale(1)' : 'scale(0.8)',
+            transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+            boxShadow: '0 0 15px rgba(64, 169, 255, 0.1)',
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background  = 'rgba(76,130,42,0.28)'
-            e.currentTarget.style.borderColor = 'rgba(210,255,140,0.72)'
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'rgba(64, 169, 255, 0.15)'
+            e.currentTarget.style.transform = 'scale(1.1) rotate(90deg)'
           }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background  = 'rgba(20,45,18,0.88)'
-            e.currentTarget.style.borderColor = 'rgba(174,231,89,0.42)'
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'rgba(10, 15, 24, 0.8)'
+            e.currentTarget.style.transform = 'scale(1) rotate(0deg)'
           }}
         >
           ✕
         </button>
       )}
 
-      {/* ── Project detail modal ── */}
       {selectedProject && (
         <ProjectModal
           project={selectedProject}
           onClose={onProjectClose}
         />
       )}
-
-      {/* Global keyframe */}
-      <style>{`
-        @keyframes workFadeIn {
-          from { opacity: 0; transform: scale(0.96) translateY(6px); }
-          to   { opacity: 1; transform: scale(1)    translateY(0); }
-        }
-      `}</style>
     </>
   )
 }
