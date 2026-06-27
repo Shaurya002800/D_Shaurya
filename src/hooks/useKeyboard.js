@@ -4,6 +4,7 @@ export function useKeyboard() {
   const keys = useRef({
   w: false, a: false, s: false, d: false,
   e: false,
+  Shift: false,
   ArrowUp: false, ArrowDown: false,
   ArrowLeft: false, ArrowRight: false,
 })

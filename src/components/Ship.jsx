@@ -1,6 +1,5 @@
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
-// Update this line at the top of your file
 import { useTexture, Text } from '@react-three/drei'
 import { RigidBody, CuboidCollider, CylinderCollider } from '@react-three/rapier'
 import * as THREE from 'three'
@@ -484,52 +483,6 @@ function LionFigurehead({ position }) {
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────
-// CROW'S NEST — top of main mast
-// ─────────────────────────────────────────────────────────────────────
-// function CrowsNest({ position }) {
-//   return (
-//     <group position={position}>
-//       {/* Floor platform */}
-//       <mesh castShadow receiveShadow>
-//         <cylinderGeometry args={[2.2, 2.4, 0.4, 22]} />
-//         <meshStandardMaterial color="#5C3A21" roughness={0.85} />
-//       </mesh>
-//       {/* Circular railing */}
-//       <mesh position={[0, 0.85, 0]} castShadow>
-//         <torusGeometry args={[2.22, 0.09, 10, 36]} />
-//         <meshStandardMaterial color="#3d2410" roughness={0.75} />
-//       </mesh>
-//       {/* Railing posts */}
-//       {Array.from({ length: 14 }, (_, i) => {
-//   const angle = (i * Math.PI * 2) / 14
-//   return (
-//     <mesh key={i}
-//       position={[Math.cos(angle) * 2.22, 0.45, Math.sin(angle) * 2.22]}
-//     >
-//             <boxGeometry args={[0.1, 0.9, 0.1]} />
-//             <meshStandardMaterial color="#3d2410" roughness={0.8} />
-//           </mesh>
-//         )
-//       })}
-//       {/* Flag pole */}
-//       <mesh position={[0, 2.5, 0]} castShadow>
-//         <cylinderGeometry args={[0.05, 0.05, 5, 8]} />
-//         <meshStandardMaterial color="#2a1505" roughness={0.8} />
-//       </mesh>
-//       {/* Straw Hat Pirates Flag */}
-//       <mesh position={[1.2, 4.5, 0]} rotation={[0, -Math.PI / 2, 0]}>
-//         <planeGeometry args={[2.4, 1.4]} />
-//         <meshStandardMaterial color="#111111" side={THREE.DoubleSide} roughness={0.9} />
-//       </mesh>
-//       {/* Flag skull */}
-//       <mesh position={[0.5, 4.7, 0.01]}>
-//         <circleGeometry args={[0.4, 20]} />
-//         <meshStandardMaterial color="#f0f0f0" side={THREE.DoubleSide} />
-//       </mesh>
-//     </group>
-//   )
-// }
 
 // ─────────────────────────────────────────────────────────────────────
 // LADDER — from deck to crow's nest

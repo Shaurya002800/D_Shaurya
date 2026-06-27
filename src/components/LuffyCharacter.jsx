@@ -48,12 +48,12 @@ const MOVE = {
 
 /** Camera feel */
 const CAM = {
-  normalDist:   8.0,
-  normalHeight:  3.2,
-  runDist:      11.0,
-  runHeight:     3.8,
-  basementDist:  7.0,
-  basementHeight: 3.0,
+  normalDist:   6.6,
+  normalHeight:  2.9,
+  runDist:       8.6,
+  runHeight:     3.35,
+  basementDist:  6.1,
+  basementHeight: 2.75,
   posLerp:       0.055,
   lookLerp:      0.08,
   lookOffset:    1.85,
@@ -62,6 +62,16 @@ const CAM = {
   fovRun:       74,
   fovBasement:  76,
   fovLerp:       0.04,
+  yawFollow:     4.8,
+}
+
+/** Mouse-drag orbit, clamped so the ship still feels like a guided space */
+const ORBIT = {
+  yawLimit: 0.72,
+  pitchMin: -0.18,
+  pitchMax: 0.34,
+  sensitivity: 0.0032,
+  easing: 9.5,
 }
 
 /** Animation crossfade durations (seconds) */
@@ -137,6 +147,22 @@ function wrapAngle(a) {
 function lerpAngle(current, target, t) {
   const diff = wrapAngle(target - current)
   return current + diff * t
+}
+
+function getMovementKeys(keys) {
+  const fwd = Boolean(keys.w || keys.W || keys.ArrowUp)
+  const bwd = Boolean(keys.s || keys.S || keys.ArrowDown)
+  const lft = Boolean(keys.a || keys.A || keys.ArrowLeft)
+  const rgt = Boolean(keys.d || keys.D || keys.ArrowRight)
+
+  return {
+    fwd,
+    bwd,
+    lft,
+    rgt,
+    moving: fwd || bwd || lft || rgt,
+    backwardOnly: bwd && !fwd,
+  }
 }
 
 const PLAYER_RADIUS = 0.52
@@ -382,16 +408,21 @@ class CameraController {
     this.currentFov = camera.fov
   }
 
-  update(camera, luffyPos, luffyRot, isRunning, dt, workActive = false) {
+  update(camera, luffyPos, luffyRot, isRunning, dt, workActive = false, orbit = null) {
     const dist   = workActive ? CAM.basementDist : (isRunning ? CAM.runDist : CAM.normalDist)
     const height = workActive ? CAM.basementHeight : (isRunning ? CAM.runHeight : CAM.normalHeight)
     const fov    = workActive ? CAM.fovBasement : (isRunning ? CAM.fovRun : CAM.fovNormal)
     const lookOffset = workActive ? CAM.basementLookOffset : CAM.lookOffset
+    const orbitYaw = orbit?.yaw ?? 0
+    const orbitPitch = orbit?.pitch ?? 0
+    const cameraRot = luffyRot + orbitYaw
+    const groundDist = dist * Math.cos(orbitPitch * 0.65)
+    const cameraHeight = height + Math.sin(orbitPitch) * dist * 0.72
 
     this._tmpVec.set(
-      luffyPos.x - Math.sin(luffyRot) * dist,
-      luffyPos.y + height,
-      luffyPos.z - Math.cos(luffyRot) * dist,
+      luffyPos.x - Math.sin(cameraRot) * groundDist,
+      luffyPos.y + cameraHeight,
+      luffyPos.z - Math.cos(cameraRot) * groundDist,
     )
 
     if (workActive) {
@@ -415,7 +446,7 @@ class CameraController {
 
     this._tmpLook.set(
       luffyPos.x,
-      luffyPos.y + lookOffset,
+      luffyPos.y + lookOffset + orbitPitch * 0.55,
       luffyPos.z,
     )
     this.lookTarget.lerp(this._tmpLook, lookLerp)
@@ -437,32 +468,40 @@ class VelocityController {
     this.speed     = 0
     this._inputDir = new THREE.Vector3()
     this._targetVel = new THREE.Vector3()
+    this._forward = new THREE.Vector3(0, 0, -1)
+    this._right = new THREE.Vector3(1, 0, 0)
   }
 
-  update(keys, shift, dt) {
-    const fwd = keys.w || keys.W || keys.ArrowUp
-    const bwd = keys.s || keys.S || keys.ArrowDown
-    const lft = keys.a || keys.A || keys.ArrowLeft
-    const rgt = keys.d || keys.D || keys.ArrowRight
-    const moving = fwd || bwd || lft || rgt
+  update(keys, shift, dt, cameraForward = null) {
+    const input = getMovementKeys(keys)
 
-    const maxSpeed = (shift && moving) ? MOVE.runSpeed : MOVE.walkSpeed
+    const maxSpeed = (shift && input.moving) ? MOVE.runSpeed : MOVE.walkSpeed
 
     this._inputDir.set(0, 0, 0)
-    if (fwd) this._inputDir.z -= 1
-    if (bwd) this._inputDir.z += 1
-    if (lft) this._inputDir.x -= 1
-    if (rgt) this._inputDir.x += 1
+    if (cameraForward && cameraForward.lengthSq() > 0.0001) {
+      this._forward.copy(cameraForward).setY(0).normalize()
+      this._right.set(-this._forward.z, 0, this._forward.x).normalize()
+
+      if (input.fwd) this._inputDir.add(this._forward)
+      if (input.bwd) this._inputDir.sub(this._forward)
+      if (input.lft) this._inputDir.sub(this._right)
+      if (input.rgt) this._inputDir.add(this._right)
+    } else {
+      if (input.fwd) this._inputDir.z -= 1
+      if (input.bwd) this._inputDir.z += 1
+      if (input.lft) this._inputDir.x -= 1
+      if (input.rgt) this._inputDir.x += 1
+    }
 
     if (this._inputDir.length() > 0) {
       this._inputDir.normalize()
     }
 
-    this._targetVel.copy(this._inputDir).multiplyScalar(moving ? maxSpeed : 0)
-    const response = 1 - Math.exp(-(moving ? MOVE.accel : MOVE.friction) * dt)
+    this._targetVel.copy(this._inputDir).multiplyScalar(input.moving ? maxSpeed : 0)
+    const response = 1 - Math.exp(-(input.moving ? MOVE.accel : MOVE.friction) * dt)
     this.vel.lerp(this._targetVel, response)
 
-    if (!moving && this.vel.length() < MOVE.stopThresh) {
+    if (!input.moving && this.vel.length() < MOVE.stopThresh) {
       this.vel.set(0, 0, 0)
     }
 
@@ -860,6 +899,19 @@ function Luffy3D({
     startPosition: new THREE.Vector3(),
     startRotation: 0,
   })
+  const orbitRef = useRef({
+    dragging: false,
+    pointerId: null,
+    lastX: 0,
+    lastY: 0,
+    yaw: 0,
+    targetYaw: 0,
+    pitch: 0.08,
+    targetPitch: 0.08,
+  })
+  const cameraForwardRef = useRef(new THREE.Vector3(0, 0, -1))
+  const cameraYawRef = useRef(null)
+  const orbitBlockedRef = useRef(false)
   const climbCameraPosition = useRef(new THREE.Vector3())
   const climbCameraTarget = useRef(new THREE.Vector3())
 
@@ -873,8 +925,16 @@ function Luffy3D({
   const wasCameraLocked = useRef(cameraLocked)
 
   const keys = useKeyboard()
-  const { camera, scene } = useThree()
+  const { camera, scene, gl } = useThree()
   const { scene: glbScene } = useGLTF('/models/monkey_d_luffy.glb')
+
+  useEffect(() => {
+    orbitBlockedRef.current = freeCam || aboutActive || skillsActive || cameraLocked
+    if (orbitBlockedRef.current) {
+      orbitRef.current.dragging = false
+      orbitRef.current.pointerId = null
+    }
+  }, [aboutActive, cameraLocked, freeCam, skillsActive])
 
   const setClimbAnimation = useCallback((stateName, loop = true, timeScale = 1) => {
     const action = animSM.current.actions[stateName]
@@ -957,6 +1017,74 @@ function Luffy3D({
       window.removeEventListener('portfolio-interact', handleVirtualInteraction)
     }
   }, [triggerInteraction])
+
+  useEffect(() => {
+    const canvas = gl?.domElement
+    if (!canvas) return undefined
+
+    const beginDrag = (event) => {
+      if (orbitBlockedRef.current || window.__PORTFOLIO_CHAT_ACTIVE__) return
+      if (event.button !== undefined && event.button !== 0) return
+
+      orbitRef.current.dragging = true
+      orbitRef.current.pointerId = event.pointerId
+      orbitRef.current.lastX = event.clientX
+      orbitRef.current.lastY = event.clientY
+
+      try {
+        canvas.setPointerCapture(event.pointerId)
+      } catch {
+        // Some browsers skip capture for synthetic events; dragging still works.
+      }
+    }
+
+    const drag = (event) => {
+      const orbit = orbitRef.current
+      if (!orbit.dragging || orbit.pointerId !== event.pointerId) return
+
+      const dx = event.clientX - orbit.lastX
+      const dy = event.clientY - orbit.lastY
+      orbit.lastX = event.clientX
+      orbit.lastY = event.clientY
+
+      orbit.targetYaw = clamp(
+        orbit.targetYaw - dx * ORBIT.sensitivity,
+        -ORBIT.yawLimit,
+        ORBIT.yawLimit,
+      )
+      orbit.targetPitch = clamp(
+        orbit.targetPitch + dy * ORBIT.sensitivity,
+        ORBIT.pitchMin,
+        ORBIT.pitchMax,
+      )
+      event.preventDefault()
+    }
+
+    const endDrag = (event) => {
+      const orbit = orbitRef.current
+      if (orbit.pointerId !== event.pointerId) return
+
+      orbit.dragging = false
+      orbit.pointerId = null
+      try {
+        canvas.releasePointerCapture(event.pointerId)
+      } catch {
+        // Capture may already be released if the pointer left the canvas.
+      }
+    }
+
+    canvas.addEventListener('pointerdown', beginDrag)
+    canvas.addEventListener('pointermove', drag)
+    canvas.addEventListener('pointerup', endDrag)
+    canvas.addEventListener('pointercancel', endDrag)
+
+    return () => {
+      canvas.removeEventListener('pointerdown', beginDrag)
+      canvas.removeEventListener('pointermove', drag)
+      canvas.removeEventListener('pointerup', endDrag)
+      canvas.removeEventListener('pointercancel', endDrag)
+    }
+  }, [gl])
 
   useEffect(() => {
     if (!glbScene || !groupRef.current) return
@@ -1194,12 +1322,21 @@ function Luffy3D({
     wasCameraLocked.current = false
 
     const currentKeys = keys?.current || keys || {}
+    const movementKeys = getMovementKeys(currentKeys)
     const shift = currentKeys.Shift || currentKeys.ShiftLeft || currentKeys.ShiftRight || false
+    camera.getWorldDirection(cameraForwardRef.current)
+    cameraForwardRef.current.y = 0
+    if (cameraForwardRef.current.lengthSq() < 0.0001) {
+      cameraForwardRef.current.set(0, 0, -1)
+    } else {
+      cameraForwardRef.current.normalize()
+    }
 
     const { moving, running, speed } = velCtrl.current.update(
       currentKeys,
       shift,
       safeDt,
+      cameraForwardRef.current,
     )
 
     if (workActive) {
@@ -1215,6 +1352,18 @@ function Luffy3D({
         safeDt,
       )
       groupRef.current.rotation.y = targetAngle
+    }
+
+    if (cameraYawRef.current === null) {
+      cameraYawRef.current = groupRef.current.rotation.y
+    }
+
+    if (movementKeys.moving && !movementKeys.backwardOnly) {
+      cameraYawRef.current = lerpAngle(
+        cameraYawRef.current,
+        groupRef.current.rotation.y,
+        1 - Math.exp(-CAM.yawFollow * safeDt),
+      )
     }
 
     animSM.current.updateLocomotion({ moving, running })
@@ -1254,13 +1403,19 @@ function Luffy3D({
     // Let the camera follow Luffy in the basement too; fixed POV made the
     // room unreadable from several entry angles.
     if (!freeCam) {
+      const orbit = orbitRef.current
+      const orbitEase = 1 - Math.exp(-ORBIT.easing * safeDt)
+      orbit.yaw += (orbit.targetYaw - orbit.yaw) * orbitEase
+      orbit.pitch += (orbit.targetPitch - orbit.pitch) * orbitEase
+
       camCtrl.current.update(
         camera,
         groupRef.current.position,
-        groupRef.current.rotation.y,
+        cameraYawRef.current ?? groupRef.current.rotation.y,
         running,
         safeDt,
         workActive,
+        orbit,
       )
     }
 
