@@ -25,8 +25,10 @@ export default function PortfolioIntro({
   onEnter,
   onViewProjects,
   onShowSkills,
+  onShowExperience,
   onShowResume,
   onContact,
+  onOpenMap,
 }) {
   const [showOnboarding, setShowOnboarding] = useState(false)
 
@@ -55,6 +57,11 @@ export default function PortfolioIntro({
     onShowSkills()
   }
 
+  const jumpToExperience = () => {
+    closeOnboarding()
+    onShowExperience()
+  }
+
   const jumpToResume = () => {
     closeOnboarding()
     onShowResume()
@@ -63,6 +70,11 @@ export default function PortfolioIntro({
   const jumpToContact = () => {
     closeOnboarding()
     onContact()
+  }
+
+  const openMap = () => {
+    closeOnboarding()
+    onOpenMap()
   }
 
   if (!visible && !showOnboarding) return null
@@ -87,17 +99,11 @@ export default function PortfolioIntro({
             </div>
 
             <div className="portfolio-intro__actions">
-              <button type="button" className="portfolio-intro__primary" onClick={jumpToProjects}>
-                View Projects
+              <button type="button" className="portfolio-intro__primary" onClick={handleEnter}>
+                Start Voyage
               </button>
-              <button type="button" onClick={jumpToResume}>
-                Resume
-              </button>
-              <button type="button" onClick={jumpToContact}>
-                Contact
-              </button>
-              <button type="button" className="portfolio-intro__ghost" onClick={handleEnter}>
-                Enter Grand Line
+              <button type="button" className="portfolio-intro__ghost" onClick={openMap}>
+                Open Map
               </button>
             </div>
           </div>
@@ -116,18 +122,40 @@ export default function PortfolioIntro({
               x
             </button>
             <p className="portfolio-onboarding__eyebrow">Before you board</p>
-            <h2 id="portfolio-onboarding-title">Welcome to my interactive portfolio.</h2>
+            <h2 id="portfolio-onboarding-title">Welcome aboard.</h2>
             <p>
-              Use WASD or touch controls to explore. Press E near glowing objects to interact, or use the menu to jump directly to Projects, Skills, Resume, or Contact.
+              Explore the ship using WASD or touch controls. Press E near glowing
+              objects to interact.
             </p>
-            <div className="portfolio-onboarding__shortcuts" aria-label="Portfolio shortcuts">
-              <button type="button" onClick={jumpToProjects}>Projects</button>
-              <button type="button" onClick={jumpToSkills}>Skills</button>
-              <button type="button" onClick={jumpToResume}>Resume</button>
-              <button type="button" onClick={jumpToContact}>Contact</button>
+
+            <div className="portfolio-onboarding__routes" aria-label="Ship object guide">
+              <button type="button" onClick={jumpToResume}>
+                <span>Treasure Chest</span>
+                <strong>Resume</strong>
+              </button>
+              <button type="button" onClick={jumpToProjects}>
+                <span>Wanted Posters</span>
+                <strong>Projects</strong>
+              </button>
+              <button type="button" onClick={jumpToSkills}>
+                <span>Sword Deck</span>
+                <strong>Skills</strong>
+              </button>
+              <button type="button" onClick={jumpToExperience}>
+                <span>Captain Log</span>
+                <strong>Experience</strong>
+              </button>
+              <button type="button" onClick={jumpToContact}>
+                <span>Den Den Mushi</span>
+                <strong>Contact</strong>
+              </button>
             </div>
+
+            <button type="button" className="portfolio-onboarding__map" onClick={openMap}>
+              Open Map
+            </button>
             <button type="button" className="portfolio-onboarding__primary" onClick={handleEnter}>
-              Let's go
+              Start Voyage
             </button>
           </div>
         </div>

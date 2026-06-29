@@ -4,6 +4,7 @@ import ControlsOverlay from './components/ControlsOverlay'
 import NavWheels from './components/NavWheels'
 import DevilFruitChat from './components/DevilFruitChat.jsx'
 import ArtifactDossier from './components/ArtifactDossier.jsx'
+import GrandLineMap from './components/GrandLineMap.jsx'
 import MobileControls from './components/MobileControls.jsx'
 import OceanMusic from './components/OceanMusic.jsx'
 import PortfolioIntro from './components/PortfolioIntro.jsx'
@@ -32,6 +33,7 @@ function App() {
   const [workActive,      setWorkActive]      = useState(false)
   const [selectedProject, setSelectedProject] = useState(null)
   const [selectedArtifact, setSelectedArtifact] = useState(null)
+  const [mapOpen,         setMapOpen]         = useState(false)
   const [introDismissed,  setIntroDismissed]  = useState(false)
   const [skillsDirection, setSkillsDirection] = useState('north')
   const [hintLabel,       setHintLabel]       = useState(null)
@@ -94,6 +96,7 @@ function App() {
 
   // ── Section navigation ────────────────────────────────────────────
   const handleNavigate = useCallback((section) => {
+    setMapOpen(false)
     setIntroDismissed(true)
     setActiveSection(section)
     setAboutActive(section === 'about')
@@ -115,12 +118,18 @@ function App() {
     handleNavigate('skills')
   }, [handleNavigate])
 
+  const handleShowExperience = useCallback(() => {
+    handleNavigate('about')
+  }, [handleNavigate])
+
   const handleShowResume = useCallback(() => {
+    setMapOpen(false)
     setIntroDismissed(true)
     window.open('/resume.pdf', '_blank', 'noopener,noreferrer')
   }, [])
 
   const handleContact = useCallback(() => {
+    setMapOpen(false)
     setIntroDismissed(true)
     window.location.href = 'mailto:kunwarshaurya28@gmail.com'
   }, [])
@@ -146,7 +155,18 @@ function App() {
 
       {loaded && (
         <>
-          <OceanMusic visible={loaded} />
+          <OceanMusic visible={loaded && !introVisible && !sectionActive && !selectedArtifact && !mapOpen} />
+
+          <GrandLineMap
+            visible={loaded && !introVisible && !sectionActive && !selectedArtifact}
+            open={mapOpen}
+            onOpenChange={setMapOpen}
+            onProjects={handleViewProjects}
+            onResume={handleShowResume}
+            onSkills={handleShowSkills}
+            onExperience={handleShowExperience}
+            onContact={handleContact}
+          />
 
           {!sectionActive && (
             <>
@@ -184,8 +204,10 @@ function App() {
         onEnter={handleEnterGrandLine}
         onViewProjects={handleViewProjects}
         onShowSkills={handleShowSkills}
+        onShowExperience={handleShowExperience}
         onShowResume={handleShowResume}
         onContact={handleContact}
+        onOpenMap={() => setMapOpen(true)}
       />
 
       {/* ── Section overlays ── */}

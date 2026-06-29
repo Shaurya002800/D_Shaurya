@@ -87,8 +87,7 @@
   backdrop-filter: blur(10px);
 }
 
-.portfolio-intro__actions,
-.portfolio-onboarding__shortcuts {
+.portfolio-intro__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
@@ -126,6 +125,11 @@
 
 .portfolio-intro__ghost {
   background: rgba(3, 8, 16, .52) !important;
+}
+
+.portfolio-intro__actions .portfolio-intro__primary,
+.portfolio-intro__actions .portfolio-intro__ghost {
+  min-width: 160px;
 }
 
 .portfolio-onboarding {
@@ -182,19 +186,56 @@
   line-height: 1.6;
 }
 
-.portfolio-onboarding__shortcuts {
+.portfolio-onboarding__routes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
   margin-top: 24px;
 }
 
-.portfolio-onboarding__shortcuts button {
+.portfolio-onboarding__routes button {
+  min-height: 72px;
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 7px;
   border-color: rgba(74, 43, 24, .2);
   background: rgba(74, 43, 24, .08);
   color: #3a210f;
+  text-align: left;
+}
+
+.portfolio-onboarding__routes button:nth-child(5) {
+  grid-column: 1 / -1;
+}
+
+.portfolio-onboarding__routes span {
+  color: #9f5a13;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .12em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.portfolio-onboarding__routes strong {
+  color: #241203;
+  font-size: 17px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.portfolio-onboarding__map {
+  width: 100%;
+  margin-top: 16px;
+  border-color: rgba(74, 43, 24, .24) !important;
+  background: rgba(74, 43, 24, .09) !important;
+  color: #3a210f !important;
 }
 
 .portfolio-onboarding__primary {
   width: 100%;
-  margin-top: 26px;
+  margin-top: 12px;
   font-size: 15px !important;
 }
 
@@ -268,9 +309,17 @@
     font-size: 15px;
   }
 
-  .portfolio-onboarding__shortcuts {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+  .portfolio-onboarding__routes {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .portfolio-onboarding__routes button {
+    min-height: 58px;
+  }
+
+  .portfolio-onboarding__routes button:nth-child(5) {
+    grid-column: auto;
   }
 }
 
