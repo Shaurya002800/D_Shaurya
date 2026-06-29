@@ -6,6 +6,7 @@ import DevilFruitChat from './components/DevilFruitChat.jsx'
 import ArtifactDossier from './components/ArtifactDossier.jsx'
 import MobileControls from './components/MobileControls.jsx'
 import OceanMusic from './components/OceanMusic.jsx'
+import PortfolioIntro from './components/PortfolioIntro.jsx'
 import SwordCursor from './components/SwordCursor.jsx'
 import AboutSection, {
   AboutTransitionOverlay,
@@ -31,6 +32,7 @@ function App() {
   const [workActive,      setWorkActive]      = useState(false)
   const [selectedProject, setSelectedProject] = useState(null)
   const [selectedArtifact, setSelectedArtifact] = useState(null)
+  const [introDismissed,  setIntroDismissed]  = useState(false)
   const [skillsDirection, setSkillsDirection] = useState('north')
   const [hintLabel,       setHintLabel]       = useState(null)
   const [charState,       setCharState]       = useState('idle')
@@ -38,6 +40,7 @@ function App() {
   const debugRef   = useRef(null)
   const loaded = loaderComplete && worldReady
   const sectionActive = aboutActive || skillsActive || skillsClimbing || workActive
+  const introVisible = loaded && !sectionActive && !introDismissed && !selectedArtifact
 
   // ── Close handlers ────────────────────────────────────────────────
   const handleAboutClose = useCallback(() => {
@@ -91,12 +94,35 @@ function App() {
 
   // ── Section navigation ────────────────────────────────────────────
   const handleNavigate = useCallback((section) => {
+    setIntroDismissed(true)
     setActiveSection(section)
     setAboutActive(section === 'about')
     setSkillsActive(section === 'skills')
     setWorkActive(section === 'work')
     if (section !== 'work') setSelectedProject(null)
     setSelectedArtifact(null)
+  }, [])
+
+  const handleEnterGrandLine = useCallback(() => {
+    setIntroDismissed(true)
+  }, [])
+
+  const handleViewProjects = useCallback(() => {
+    handleNavigate('work')
+  }, [handleNavigate])
+
+  const handleShowSkills = useCallback(() => {
+    handleNavigate('skills')
+  }, [handleNavigate])
+
+  const handleShowResume = useCallback(() => {
+    setIntroDismissed(true)
+    window.open('/resume.pdf', '_blank', 'noopener,noreferrer')
+  }, [])
+
+  const handleContact = useCallback(() => {
+    setIntroDismissed(true)
+    window.location.href = 'mailto:kunwarshaurya28@gmail.com'
   }, [])
 
   return (
@@ -152,6 +178,15 @@ function App() {
           )}
         </>
       )}
+
+      <PortfolioIntro
+        visible={introVisible}
+        onEnter={handleEnterGrandLine}
+        onViewProjects={handleViewProjects}
+        onShowSkills={handleShowSkills}
+        onShowResume={handleShowResume}
+        onContact={handleContact}
+      />
 
       {/* ── Section overlays ── */}
       <AboutSection active={aboutActive} onClose={handleAboutClose} />
