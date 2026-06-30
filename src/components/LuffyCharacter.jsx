@@ -12,6 +12,7 @@ import {
   SHIP_DECK_CIRCLE_OBSTACLES,
   SHIP_STAIRS,
 } from '../data/shipLayout.js'
+import './LuffyCharacter.css'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS — tune these to perfect the feel
@@ -828,13 +829,6 @@ function InteractionHint({ label }) {
       }}
     >
       {label}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Pirata+One&display=swap');
-        @keyframes hintPulse {
-          0%,100% { opacity:0.85; }
-          50%      { opacity:1.0;  }
-        }
-      `}</style>
     </div>
   )
 }
@@ -843,22 +837,21 @@ function InteractionHint({ label }) {
 // SPEED INDICATOR
 // ─────────────────────────────────────────────────────────────────────────────
 
+function isDebugHudEnabled() {
+  if (!import.meta.env.DEV || typeof window === 'undefined') return false
+
+  try {
+    return window.localStorage.getItem('grand-line-debug-hud') === 'true'
+  } catch {
+    return false
+  }
+}
+
 function SpeedIndicator({ speed, state }) {
-  if (import.meta.env.PROD) return null
+  if (!isDebugHudEnabled()) return null
+
   return (
-    <div style={{
-      position: 'fixed',
-      top: '16px',
-      right: '16px',
-      zIndex: 999,
-      fontFamily: 'monospace',
-      fontSize: '12px',
-      color: '#fff',
-      background: 'rgba(0,0,0,0.5)',
-      padding: '6px 12px',
-      borderRadius: '6px',
-      pointerEvents: 'none',
-    }}>
+    <div className="luffy-debug-hud" aria-label="Developer movement debug">
       <div>state: <span style={{ color: '#f0c040' }}>{state}</span></div>
       <div>speed: <span style={{ color: '#44ffaa' }}>{speed.toFixed(2)}</span></div>
     </div>
