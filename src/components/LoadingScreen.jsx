@@ -5,17 +5,22 @@ export default function LoadingScreen({ onComplete }) {
   const [exit, setExit] = useState(false);
 
   useEffect(() => {
-    const totalDuration = 5200;
+    const totalDuration = 1800;
+    const exitDuration = 620;
+    let completionTimer;
 
     const timer = setTimeout(() => {
       setExit(true);
 
-      setTimeout(() => {
+      completionTimer = setTimeout(() => {
         onComplete();
-      }, 1100);
+      }, exitDuration);
     }, totalDuration);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(completionTimer);
+    };
   }, [onComplete]);
 
   // Layered fiery smoke particles and fierce crimson embers
@@ -33,9 +38,9 @@ export default function LoadingScreen({ onComplete }) {
           exit={{
             opacity: 0,
             scale: 1.02,
-            filter: "blur(20px)",
+            filter: "blur(14px)",
             transition: {
-              duration: 1.1,
+              duration: 0.62,
               ease: [0.76, 0, 0.24, 1], // Deep cinematic exit curve
             },
           }}
@@ -203,7 +208,7 @@ export default function LoadingScreen({ onComplete }) {
                   initial={{ pathLength: 0, opacity: 0 }}
                   animate={{ pathLength: 1, opacity: 1 }}
                   transition={{
-                    duration: 1.2,
+                    duration: 0.72,
                     ease: premiumEase,
                   }}
                 />
@@ -217,8 +222,8 @@ export default function LoadingScreen({ onComplete }) {
                   initial={{ pathLength: 0, opacity: 0 }}
                   animate={{ pathLength: 1, opacity: 1 }}
                   transition={{
-                    duration: 1.2,
-                    delay: 0.25,
+                    duration: 0.72,
+                    delay: 0.12,
                     ease: premiumEase,
                   }}
                 />
@@ -232,8 +237,8 @@ export default function LoadingScreen({ onComplete }) {
                   initial={{ pathLength: 0, opacity: 0 }}
                   animate={{ pathLength: 1, opacity: 1 }}
                   transition={{
-                    duration: 1.3,
-                    delay: 0.55,
+                    duration: 0.76,
+                    delay: 0.24,
                     ease: premiumEase,
                   }}
                 />
@@ -246,8 +251,8 @@ export default function LoadingScreen({ onComplete }) {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{
-                      duration: 0.7,
-                      delay: 1.2,
+                      duration: 0.42,
+                      delay: 0.54,
                       ease: "easeOut"
                     }}
                   />
@@ -258,8 +263,8 @@ export default function LoadingScreen({ onComplete }) {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{
-                      duration: 0.7,
-                      delay: 1.45,
+                      duration: 0.42,
+                      delay: 0.64,
                       ease: "easeOut"
                     }}
                   />
@@ -279,8 +284,8 @@ export default function LoadingScreen({ onComplete }) {
                   }}
                   transition={{
                     pathLength: {
-                      duration: 0.9,
-                      delay: 1.8,
+                      duration: 0.46,
+                      delay: 0.78,
                     },
                     opacity: {
                       duration: 3,
@@ -306,8 +311,8 @@ export default function LoadingScreen({ onComplete }) {
                       y: 0
                     }}
                     transition={{
-                      duration: 1.1,
-                      delay: 2.15,
+                      duration: 0.6,
+                      delay: 0.96,
                       ease: [0.34, 1.56, 0.64, 1], // Dynamic overshoot ease
                     }}
                   />
@@ -320,8 +325,8 @@ export default function LoadingScreen({ onComplete }) {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 0.15 }}
                     transition={{
-                      delay: 2.5,
-                      duration: 0.6,
+                      delay: 1.22,
+                      duration: 0.34,
                     }}
                   />
                 </g>
@@ -354,8 +359,8 @@ export default function LoadingScreen({ onComplete }) {
                   y: 0 
                 }}
                 transition={{
-                  duration: 1.5,
-                  delay: 2.6 + index * 0.08,
+                  duration: 0.7,
+                  delay: 1.08 + index * 0.035,
                   ease: "easeOut"
                 }}
               >

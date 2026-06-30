@@ -22,6 +22,7 @@ function markOnboardingSeen() {
 
 export default function PortfolioIntro({
   visible,
+  worldReady = true,
   onEnter,
   onViewProjects,
   onShowSkills,
@@ -43,6 +44,7 @@ export default function PortfolioIntro({
   }
 
   const handleEnter = () => {
+    if (!worldReady) return
     closeOnboarding()
     onEnter()
   }
@@ -73,6 +75,7 @@ export default function PortfolioIntro({
   }
 
   const openMap = () => {
+    if (!worldReady) return
     closeOnboarding()
     onOpenMap()
   }
@@ -99,10 +102,22 @@ export default function PortfolioIntro({
             </div>
 
             <div className="portfolio-intro__actions">
-              <button type="button" className="portfolio-intro__primary" onClick={handleEnter}>
+              <button
+                type="button"
+                className="portfolio-intro__primary"
+                onClick={handleEnter}
+                disabled={!worldReady}
+                aria-disabled={!worldReady}
+              >
                 Start Voyage
               </button>
-              <button type="button" className="portfolio-intro__ghost" onClick={openMap}>
+              <button
+                type="button"
+                className="portfolio-intro__ghost"
+                onClick={openMap}
+                disabled={!worldReady}
+                aria-disabled={!worldReady}
+              >
                 Open Map
               </button>
             </div>
@@ -151,10 +166,22 @@ export default function PortfolioIntro({
               </button>
             </div>
 
-            <button type="button" className="portfolio-onboarding__map" onClick={openMap}>
+            <button
+              type="button"
+              className="portfolio-onboarding__map"
+              onClick={openMap}
+              disabled={!worldReady}
+              aria-disabled={!worldReady}
+            >
               Open Map
             </button>
-            <button type="button" className="portfolio-onboarding__primary" onClick={handleEnter}>
+            <button
+              type="button"
+              className="portfolio-onboarding__primary"
+              onClick={handleEnter}
+              disabled={!worldReady}
+              aria-disabled={!worldReady}
+            >
               Start Voyage
             </button>
           </div>

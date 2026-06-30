@@ -45,7 +45,7 @@ function App() {
   const debugRef   = useRef(null)
   const loaded = loaderComplete && worldReady
   const sectionActive = aboutActive || skillsActive || skillsClimbing || workActive
-  const introVisible = loaded && !sectionActive && !introDismissed && !selectedArtifact
+  const introVisible = loaderComplete && !sectionActive && !introDismissed && !selectedArtifact
 
   // ── Close handlers ────────────────────────────────────────────────
   const handleAboutClose = useCallback(() => {
@@ -233,6 +233,7 @@ function App() {
 
       <PortfolioIntro
         visible={introVisible}
+        worldReady={worldReady}
         onEnter={handleEnterGrandLine}
         onViewProjects={handleViewProjects}
         onShowSkills={handleShowSkills}
@@ -268,7 +269,7 @@ function App() {
       <AboutTransitionOverlay active={aboutActive} />
       <SectionTransitionLabel active={aboutActive} label="ABOUT" />
 
-      {!loaded && (
+      {!loaderComplete && (
         <LoadingScreen onComplete={() => setLoaderComplete(true)} />
       )}
 
