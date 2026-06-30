@@ -293,18 +293,19 @@
 
 .skill-panel__header span {
   display: block;
-  margin-bottom: 2px;
-  color: rgba(255,255,255,.54);
-  font-size: clamp(8px, .68vw, 11px);
-  letter-spacing: .17em;
+  margin-bottom: 5px;
+  color: rgba(255, 226, 154, .82);
+  font: 900 clamp(8px, .68vw, 11px)/1 Inter, system-ui, sans-serif;
+  letter-spacing: .14em;
   text-transform: uppercase;
 }
 
 .skill-panel__header h2 {
   margin: 0;
-  color: var(--accent);
-  font: 400 clamp(17px, 1.65vw, 28px)/1.15 "Pirata One", cursive;
-  letter-spacing: .15em;
+  color: #fff8e8;
+  font: 900 clamp(18px, 1.65vw, 28px)/1.1 Inter, system-ui, sans-serif;
+  letter-spacing: .06em;
+  text-transform: uppercase;
   text-shadow: 0 0 18px color-mix(in srgb, var(--accent) 58%, transparent);
 }
 

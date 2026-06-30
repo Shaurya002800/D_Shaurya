@@ -1,95 +1,115 @@
-import { useState } from 'react';
+import './NavWheels.css'
 
 const sections = [
-  { id: 'explore', label: 'EXPLORE', imgSrc: '/image 49.png' },
-  { id: 'about',   label: 'ABOUT',   imgSrc: '/image 50.png' },
-  { id: 'work',    label: 'WORK',    imgSrc: '/image 51.png' },
-  { id: 'skills',  label: 'SKILLS',  imgSrc: '/image 52.png' },
-];
+  {
+    id: 'explore',
+    label: 'Deck',
+    title: 'Explore Ship Deck',
+    description: 'Return to the 3D portfolio world.',
+    hint: 'Free roam',
+    mark: 'N',
+    imgSrc: '/image 49.png',
+  },
+  {
+    id: 'about',
+    label: 'Profile',
+    title: 'Captain Profile',
+    description: 'About, education, and career route.',
+    hint: 'Who I am',
+    mark: 'E',
+    imgSrc: '/image 50.png',
+  },
+  {
+    id: 'work',
+    label: 'Projects',
+    title: 'Wanted Poster Archive',
+    description: 'Case studies, demos, and shipped proof.',
+    hint: 'What I built',
+    mark: 'S',
+    imgSrc: '/image 51.png',
+  },
+  {
+    id: 'skills',
+    label: 'Skills',
+    title: 'Sword Arsenal',
+    description: 'Languages, frontend, tools, AI/ML.',
+    hint: 'What I use',
+    mark: 'W',
+    imgSrc: '/image 52.png',
+  },
+]
 
-export default function NavWheels({ activeSection, onNavigate }) {
-  const [hovered, setHovered] = useState(null);
-
+export default function NavWheels({
+  activeSection,
+  onNavigate,
+  onResume,
+  onContact,
+}) {
   return (
-    <div style={{
-      position: 'fixed',
-      left: '32px', // Moved slightly right so it breathes better against the screen edge
-      top: '38%',   // Shifted upwards from 50% for better visual hierarchy
-      transform: 'translateY(-50%)',
-      zIndex: 100,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '36px',  // Increased gap to give the larger wheels more breathing room
-      alignItems: 'center',
-    }}>
-      {sections.map(({ id, label, imgSrc }) => {
-        const isActive  = activeSection === id;
-        const isHovered = hovered === id;
+    <nav
+      className="nav-wheels"
+      aria-label="Grand Line portfolio routes"
+    >
+      <div className="nav-wheels__bar">
+        <div className="nav-wheels__brand" aria-hidden="true">
+          <span className="nav-wheels__brand-orbit" />
+          <span>
+            <span>Grand</span>
+            <strong>Route</strong>
+          </span>
+        </div>
 
-        return (
-          <div
-            key={id}
-            onClick={() => onNavigate(id)}
-            onMouseEnter={() => setHovered(id)}
-            onMouseLeave={() => setHovered(null)}
-            style={{
-              position: 'relative',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-            }}
+        <div className="nav-wheels__routes">
+          {sections.map(({ id, label, title, description, hint, mark, imgSrc }) => {
+            const isActive = activeSection === id
+
+            return (
+              <button
+                type="button"
+                key={id}
+                onClick={() => onNavigate(id)}
+                onPointerUp={(event) => event.currentTarget.blur()}
+                className={`nav-wheel${isActive ? ' nav-wheel--active' : ''}`}
+                aria-label={`${label}: ${title}. ${description}`}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                <span className="nav-wheel__mark">{mark}</span>
+                <span className="nav-wheel__image-wrap" aria-hidden="true">
+                  <img
+                    src={imgSrc}
+                    alt=""
+                    className="nav-wheel__image"
+                  />
+                </span>
+
+                <span className="nav-wheel__copy">
+                  <span className="nav-wheel__eyebrow">{label}</span>
+                  <span className="nav-wheel__title">{title}</span>
+                  <span className="nav-wheel__description">{description}</span>
+                  <span className="nav-wheel__hint">{hint}</span>
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        <div className="nav-wheels__actions" aria-label="Recruiter shortcuts">
+          <button
+            type="button"
+            className="nav-wheels__action"
+            onClick={onResume}
           >
-            {/* Custom Image Asset Integration */}
-            <img 
-              src={imgSrc}
-              alt={`${label} Nav Wheel`}
-              style={{
-                // Increased all dimensions significantly for better visibility
-                width:  isActive ? '110px' : isHovered ? '95px' : '85px',
-                height: isActive ? '110px' : isHovered ? '95px' : '85px',
-                transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                filter: isActive
-                  ? 'drop-shadow(0 0 10px rgba(240,192,64,0.8)) brightness(1.2)'
-                  : isHovered
-                    ? 'drop-shadow(0 0 6px rgba(240,192,64,0.5)) brightness(1.1)'
-                    : 'brightness(0.85)',
-                animation: isActive ? 'wheelSpin 8s linear infinite' : 'none',
-              }}
-            />
-
-            {/* External Label — shows on hover or active */}
-            <div style={{
-              position: 'absolute',
-              left: 'calc(100% + 20px)', // Pushed further out to clear the larger images
-              whiteSpace: 'nowrap',
-              fontFamily: '"Pirata One", cursive',
-              fontSize: '22px', // Bumped font size to match the larger wheels
-              color: isActive ? '#f0c040' : 'rgba(255,255,255,0.75)',
-              letterSpacing: '0.1em',
-              opacity: isActive || isHovered ? 1 : 0,
-              transform: isHovered || isActive
-                ? 'translateX(0)'
-                : 'translateX(-10px)',
-              transition: 'all 0.25s ease',
-              pointerEvents: 'none',
-              textShadow: isActive
-                ? '0 0 12px rgba(240,192,64,0.8)'
-                : '0 1px 4px rgba(0,0,0,0.8)',
-            }}>
-              {label}
-            </div>
-          </div>
-        );
-      })}
-
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Pirata+One&display=swap');
-        @keyframes wheelSpin {
-          from { transform: rotate(0deg);   }
-          to   { transform: rotate(360deg); }
-        }
-      `}</style>
-    </div>
-  );
+            Resume
+          </button>
+          <button
+            type="button"
+            className="nav-wheels__action nav-wheels__action--primary"
+            onClick={onContact}
+          >
+            Contact
+          </button>
+        </div>
+      </div>
+    </nav>
+  )
 }

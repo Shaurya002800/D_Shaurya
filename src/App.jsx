@@ -168,11 +168,13 @@ function App() {
             onContact={handleContact}
           />
 
-          {!sectionActive && (
+          {!sectionActive && !introVisible && (
             <>
               <NavWheels
                 activeSection={activeSection}
                 onNavigate={handleNavigate}
+                onResume={handleShowResume}
+                onContact={handleContact}
               />
               <ControlsOverlay />
               <LuffyUI
@@ -185,7 +187,7 @@ function App() {
             </>
           )}
 
-          {!sectionActive && (
+          {!sectionActive && !introVisible && (
             <div className="chat-dock" style={{
               position:      'fixed',
               bottom:        '30px',

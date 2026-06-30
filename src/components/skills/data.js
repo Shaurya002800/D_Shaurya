@@ -30,7 +30,7 @@ export const SKILL_DATA = {
   [DIRECTIONS.NORTH]: {
     character: 'ZORO',
     title: 'PROGRAMMING LANGUAGES',
-    subtitle: "The Swordsman's Arsenal",
+    subtitle: 'SKILLS · ZORO ARSENAL',
     bearing: 'NORTH BLUE',
     symbol: '三',
     characterImg: '/characters/zoro.png',
@@ -52,7 +52,7 @@ export const SKILL_DATA = {
   [DIRECTIONS.EAST]: {
     character: 'SANJI',
     title: 'FRONTEND & DESIGN',
-    subtitle: "The Chef's Craft",
+    subtitle: 'SKILLS · SANJI CRAFT',
     bearing: 'EAST BLUE',
     symbol: '火',
     characterImg: '/characters/sanji.png',
@@ -73,8 +73,8 @@ export const SKILL_DATA = {
   },
   [DIRECTIONS.SOUTH]: {
     character: 'BOA HANCOCK',
-    title: 'DEV TOOLS & INTEGRATION',
-    subtitle: "The Empress's Domain",
+    title: 'DEV TOOLS & APIS',
+    subtitle: 'SKILLS · BOA TOOLKIT',
     bearing: 'CALM BELT',
     symbol: '心',
     characterImg: '/characters/boa.png',
@@ -96,7 +96,7 @@ export const SKILL_DATA = {
   [DIRECTIONS.WEST]: {
     character: 'SHANKS',
     title: 'AI / ML & BLOCKCHAIN',
-    subtitle: "The Emperor's Power",
+    subtitle: 'SKILLS · SHANKS POWER',
     bearing: 'NEW WORLD',
     symbol: '覇',
     characterImg: '/characters/shanks.png',

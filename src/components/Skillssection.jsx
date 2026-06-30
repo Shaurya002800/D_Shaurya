@@ -20,7 +20,7 @@ const SKILL_DATA = {
   [DIRECTIONS.NORTH]: {
     character: 'ZORO',
     title: 'PROGRAMMING LANGUAGES',
-    subtitle: "The Swordsman's Arsenal",
+    subtitle: 'SKILLS · ZORO ARSENAL',
     bearing: 'NORTH BLUE',
     symbol: '三',
     characterImg: '/characters/zoro.png',
@@ -42,7 +42,7 @@ const SKILL_DATA = {
   [DIRECTIONS.EAST]: {
     character: 'SANJI',
     title: 'FRONTEND & DESIGN',
-    subtitle: "The Chef's Craft",
+    subtitle: 'SKILLS · SANJI CRAFT',
     bearing: 'EAST BLUE',
     symbol: '火',
     characterImg: '/characters/sanji.png',
@@ -63,8 +63,8 @@ const SKILL_DATA = {
   },
   [DIRECTIONS.SOUTH]: {
     character: 'BOA HANCOCK',
-    title: 'DEV TOOLS & INTEGRATION',
-    subtitle: "The Empress's Domain",
+    title: 'DEV TOOLS & APIS',
+    subtitle: 'SKILLS · BOA TOOLKIT',
     bearing: 'CALM BELT',
     symbol: '心',
     characterImg: '/characters/boa.png',
@@ -86,7 +86,7 @@ const SKILL_DATA = {
   [DIRECTIONS.WEST]: {
     character: 'SHANKS',
     title: 'AI / ML & BLOCKCHAIN',
-    subtitle: "The Emperor's Power",
+    subtitle: 'SKILLS · SHANKS POWER',
     bearing: 'NEW WORLD',
     symbol: '覇',
     characterImg: '/characters/shanks.png',
@@ -764,18 +764,19 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
 
         .skill-panel__header span {
           display: block;
-          margin-bottom: 2px;
-          color: rgba(255,255,255,.54);
-          font-size: clamp(8px, .68vw, 11px);
-          letter-spacing: .17em;
+          margin-bottom: 5px;
+          color: rgba(255, 226, 154, .82);
+          font: 900 clamp(8px, .68vw, 11px)/1 Inter, system-ui, sans-serif;
+          letter-spacing: .14em;
           text-transform: uppercase;
         }
 
         .skill-panel__header h2 {
           margin: 0;
-          color: var(--accent);
-          font: 400 clamp(17px, 1.65vw, 28px)/1.15 "Pirata One", cursive;
-          letter-spacing: .15em;
+          color: #fff8e8;
+          font: 900 clamp(18px, 1.65vw, 28px)/1.1 Inter, system-ui, sans-serif;
+          letter-spacing: .06em;
+          text-transform: uppercase;
           text-shadow: 0 0 18px color-mix(in srgb, var(--accent) 58%, transparent);
         }
 

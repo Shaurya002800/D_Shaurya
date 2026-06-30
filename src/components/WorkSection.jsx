@@ -83,19 +83,33 @@ export function WorkSectionLabel({ active }) {
     >
       <div style={{
         marginTop: '24px',
-        padding: '8px 32px',
+        display: 'grid',
+        gap: '3px',
+        justifyItems: 'center',
+        padding: '8px 28px 10px',
         background: 'rgba(10, 15, 24, 0.85)',
         backdropFilter: 'blur(8px)',
-        border: '1px solid rgba(64, 169, 255, 0.3)',
-        borderRadius: '4px',
+        border: '1px solid rgba(242, 200, 97, 0.28)',
+        borderRadius: '8px',
         fontFamily: '"Courier New", Courier, monospace',
-        fontSize: '11px',
-        letterSpacing: '6px',
-        color: '#8be9fd',
         textTransform: 'uppercase',
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(64, 169, 255, 0.1)',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(242, 200, 97, 0.08)',
       }}>
-        PACIFISTA INTEL DATABASE
+        <span style={{
+          color: 'rgba(255, 248, 226, 0.72)',
+          fontSize: '8px',
+          fontWeight: 800,
+          letterSpacing: '3px',
+        }}>
+          Projects
+        </span>
+        <strong style={{
+          color: '#f2c861',
+          fontSize: '12px',
+          letterSpacing: '4px',
+        }}>
+          Wanted Poster Archive
+        </strong>
       </div>
     </div>
   )
