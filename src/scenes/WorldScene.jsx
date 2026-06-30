@@ -43,6 +43,38 @@ const CROWS_NEST_CAMERA = {
   },
 }
 
+const VOYAGE_TOUR_DURATION_MS = 5200
+const VOYAGE_TOUR_STEPS = [
+  {
+    id: 'resume',
+    at: 0,
+    position: new THREE.Vector3(8.2, 3.2, 9.2),
+    target: new THREE.Vector3(4.85, 0.75, 5.85),
+    fov: 48,
+  },
+  {
+    id: 'projects',
+    at: 0.31,
+    position: new THREE.Vector3(-4.4, 4.1, 10.6),
+    target: new THREE.Vector3(0, 0.35, 5.05),
+    fov: 50,
+  },
+  {
+    id: 'skills',
+    at: 0.62,
+    position: new THREE.Vector3(6.6, 6.1, 1.4),
+    target: new THREE.Vector3(2.2, 5.2, -1.55),
+    fov: 52,
+  },
+  {
+    id: 'interact',
+    at: 0.84,
+    position: new THREE.Vector3(0, 5.1, 11.2),
+    target: new THREE.Vector3(0, 0.9, 4.8),
+    fov: 58,
+  },
+]
+
 const WEATHER_DURATION_MS = 180000
 const WEATHER_SEQUENCE = [
   {
@@ -183,6 +215,86 @@ export function SkillsCameraTransition({
       }
     } else {
       setCameraLocked(false)
+    }
+  })
+
+  return null
+}
+
+function GuidedVoyageCamera({
+  active,
+  blocked = false,
+  onCameraLockChange,
+  onStepChange,
+  onComplete,
+}) {
+  const startedAt = useRef(null)
+  const currentTarget = useRef(new THREE.Vector3(0, 1.5, 0))
+  const activeStep = useRef(null)
+  const completed = useRef(false)
+
+  useEffect(() => {
+    if (active) {
+      startedAt.current = null
+      activeStep.current = null
+      completed.current = false
+      onCameraLockChange?.(true)
+      onStepChange?.(VOYAGE_TOUR_STEPS[0]?.id ?? null)
+    } else {
+      startedAt.current = null
+      activeStep.current = null
+      completed.current = false
+      onCameraLockChange?.(false)
+      onStepChange?.(null)
+    }
+
+    return () => {
+      onCameraLockChange?.(false)
+      onStepChange?.(null)
+    }
+  }, [active, onCameraLockChange, onStepChange])
+
+  useFrame((state, delta) => {
+    if (!active || blocked) return
+
+    if (startedAt.current === null) {
+      startedAt.current = state.clock.elapsedTime
+      currentTarget.current.copy(VOYAGE_TOUR_STEPS[0].target)
+    }
+
+    const elapsedMs = (state.clock.elapsedTime - startedAt.current) * 1000
+    const progress = Math.min(elapsedMs / VOYAGE_TOUR_DURATION_MS, 1)
+    const stepIndex = VOYAGE_TOUR_STEPS.reduce((current, step, index) => (
+      progress >= step.at ? index : current
+    ), 0)
+    const step = VOYAGE_TOUR_STEPS[stepIndex]
+    const nextStep = VOYAGE_TOUR_STEPS[stepIndex + 1] ?? step
+    const localStart = step.at
+    const localEnd = nextStep.at
+    const localProgress = localEnd === localStart
+      ? 1
+      : THREE.MathUtils.clamp((progress - localStart) / (localEnd - localStart), 0, 1)
+    const eased = localProgress * localProgress * (3 - 2 * localProgress)
+    const desiredPosition = step.position.clone().lerp(nextStep.position, eased)
+    const desiredTarget = step.target.clone().lerp(nextStep.target, eased)
+    const desiredFov = THREE.MathUtils.lerp(step.fov, nextStep.fov, eased)
+    const speed = 1 - Math.exp(-delta * 3.2)
+
+    if (activeStep.current !== step.id) {
+      activeStep.current = step.id
+      onStepChange?.(step.id)
+    }
+
+    onCameraLockChange?.(true)
+    state.camera.position.lerp(desiredPosition, speed)
+    currentTarget.current.lerp(desiredTarget, speed)
+    state.camera.lookAt(currentTarget.current)
+    state.camera.fov = THREE.MathUtils.lerp(state.camera.fov, desiredFov, speed)
+    state.camera.updateProjectionMatrix()
+
+    if (progress >= 1 && !completed.current) {
+      completed.current = true
+      onComplete?.()
     }
   })
 
@@ -549,9 +661,13 @@ export default function WorldScene({
   onSkillsClimbingChange,
   skillsDirection = 'north',
   workActive = false,
+  guidedTourActive = false,
+  onGuidedTourStepChange,
+  onGuidedTourComplete,
   onReady,
 }) {
   const [skillsCameraLocked, setSkillsCameraLocked] = useState(false)
+  const [tourCameraLocked, setTourCameraLocked] = useState(false)
   const [weatherIndex, setWeatherIndex] = useState(getInitialWeatherIndex)
   const weather = WEATHER_SEQUENCE[weatherIndex]
   const effectsEnabled = useMemo(() => {
@@ -578,12 +694,13 @@ export default function WorldScene({
     const handleKeyDown = (e) => {
       // Pressing 'o' or 'O' toggles the free camera mode
       if (e.key.toLowerCase() === 'o') {
+        if (guidedTourActive) return
         setFreeCam((prev) => !prev)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [guidedTourActive])
 
   return (
     <div style={{
@@ -605,10 +722,17 @@ export default function WorldScene({
   {!freeCam && (
     <>
       <AboutCameraController active={aboutActive} />
+      <GuidedVoyageCamera
+        active={guidedTourActive}
+        blocked={aboutActive || skillsActive || workActive}
+        onCameraLockChange={setTourCameraLocked}
+        onStepChange={onGuidedTourStepChange}
+        onComplete={onGuidedTourComplete}
+      />
       <SkillsCameraTransition
         active={skillsActive}
         direction={skillsDirection}
-        cameraClaimedByOtherSection={aboutActive || workActive}
+        cameraClaimedByOtherSection={aboutActive || workActive || guidedTourActive}
         onCameraLockChange={setSkillsCameraLocked}
       />
     </>
@@ -648,7 +772,7 @@ export default function WorldScene({
         debugRef={debugRef}
         aboutActive={aboutActive}
         skillsActive={skillsActive}
-        cameraLocked={skillsCameraLocked}
+        cameraLocked={skillsCameraLocked || tourCameraLocked}
         onSkillsClimbingChange={onSkillsClimbingChange}
         skillsDirection={skillsDirection}
         workActive={workActive}

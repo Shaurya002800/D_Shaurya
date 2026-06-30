@@ -5,6 +5,7 @@ import NavWheels from './components/NavWheels'
 import DevilFruitChat from './components/DevilFruitChat.jsx'
 import ArtifactDossier from './components/ArtifactDossier.jsx'
 import GrandLineMap from './components/GrandLineMap.jsx'
+import GuidedVoyageOverlay from './components/GuidedVoyageOverlay.jsx'
 import MobileControls from './components/MobileControls.jsx'
 import OceanMusic from './components/OceanMusic.jsx'
 import PortfolioIntro from './components/PortfolioIntro.jsx'
@@ -35,6 +36,8 @@ function App() {
   const [selectedArtifact, setSelectedArtifact] = useState(null)
   const [mapOpen,         setMapOpen]         = useState(false)
   const [introDismissed,  setIntroDismissed]  = useState(false)
+  const [guidedTourActive, setGuidedTourActive] = useState(false)
+  const [guidedTourStep,  setGuidedTourStep]  = useState(null)
   const [skillsDirection, setSkillsDirection] = useState('north')
   const [hintLabel,       setHintLabel]       = useState(null)
   const [charState,       setCharState]       = useState('idle')
@@ -97,6 +100,7 @@ function App() {
   // ── Section navigation ────────────────────────────────────────────
   const handleNavigate = useCallback((section) => {
     setMapOpen(false)
+    setGuidedTourActive(false)
     setIntroDismissed(true)
     setActiveSection(section)
     setAboutActive(section === 'about')
@@ -108,6 +112,20 @@ function App() {
 
   const handleEnterGrandLine = useCallback(() => {
     setIntroDismissed(true)
+    setGuidedTourStep('resume')
+    setGuidedTourActive(() => {
+      if (typeof window === 'undefined') return true
+      return !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    })
+  }, [])
+
+  const handleSkipGuidedTour = useCallback(() => {
+    setGuidedTourActive(false)
+  }, [])
+
+  const handleGuidedOpenMap = useCallback(() => {
+    setGuidedTourActive(false)
+    setMapOpen(true)
   }, [])
 
   const handleViewProjects = useCallback(() => {
@@ -124,12 +142,14 @@ function App() {
 
   const handleShowResume = useCallback(() => {
     setMapOpen(false)
+    setGuidedTourActive(false)
     setIntroDismissed(true)
     window.open('/resume.pdf', '_blank', 'noopener,noreferrer')
   }, [])
 
   const handleContact = useCallback(() => {
     setMapOpen(false)
+    setGuidedTourActive(false)
     setIntroDismissed(true)
     window.location.href = 'mailto:kunwarshaurya28@gmail.com'
   }, [])
@@ -147,6 +167,9 @@ function App() {
           onSkillsClimbingChange={setSkillsClimbing}
           skillsDirection={skillsDirection}
           workActive={workActive}
+          guidedTourActive={guidedTourActive}
+          onGuidedTourStepChange={setGuidedTourStep}
+          onGuidedTourComplete={() => setGuidedTourActive(false)}
           onProjectSelect={setSelectedProject}
           onArtifactOpen={setSelectedArtifact}
           onReady={handleWorldReady}
@@ -155,10 +178,10 @@ function App() {
 
       {loaded && (
         <>
-          <OceanMusic visible={loaded && !introVisible && !sectionActive && !selectedArtifact && !mapOpen} />
+          <OceanMusic visible={loaded && !introVisible && !guidedTourActive && !sectionActive && !selectedArtifact && !mapOpen} />
 
           <GrandLineMap
-            visible={loaded && !introVisible && !sectionActive && !selectedArtifact}
+            visible={loaded && !introVisible && !guidedTourActive && !sectionActive && !selectedArtifact}
             open={mapOpen}
             onOpenChange={setMapOpen}
             onProjects={handleViewProjects}
@@ -168,7 +191,7 @@ function App() {
             onContact={handleContact}
           />
 
-          {!sectionActive && !introVisible && (
+          {!sectionActive && !introVisible && !guidedTourActive && (
             <>
               <NavWheels
                 activeSection={activeSection}
@@ -187,7 +210,7 @@ function App() {
             </>
           )}
 
-          {!sectionActive && !introVisible && (
+          {!sectionActive && !introVisible && !guidedTourActive && (
             <div className="chat-dock" style={{
               position:      'fixed',
               bottom:        '30px',
@@ -200,6 +223,13 @@ function App() {
           )}
         </>
       )}
+
+      <GuidedVoyageOverlay
+        active={loaded && guidedTourActive && !introVisible && !sectionActive && !selectedArtifact}
+        step={guidedTourStep}
+        onSkip={handleSkipGuidedTour}
+        onOpenMap={handleGuidedOpenMap}
+      />
 
       <PortfolioIntro
         visible={introVisible}
