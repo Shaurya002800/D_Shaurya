@@ -45,7 +45,7 @@ function App() {
   const debugRef   = useRef(null)
   const loaded = loaderComplete && worldReady
   const sectionActive = aboutActive || skillsActive || skillsClimbing || workActive
-  const introVisible = loaderComplete && !sectionActive && !introDismissed && !selectedArtifact
+  const introVisible = !sectionActive && !introDismissed && !selectedArtifact
 
   // ── Close handlers ────────────────────────────────────────────────
   const handleAboutClose = useCallback(() => {
@@ -76,6 +76,7 @@ function App() {
   // Stable callback so WorkSection doesn't re-render on every project change
   const handleProjectClose = useCallback(() => setSelectedProject(null), [])
   const handleWorldReady = useCallback(() => setWorldReady(true), [])
+  const handleLoaderComplete = useCallback(() => setLoaderComplete(true), [])
 
   // ── Speed polling for Luffy UI ────────────────────────────────────
   useEffect(() => {
@@ -271,7 +272,7 @@ function App() {
       <SectionTransitionLabel active={aboutActive} label="ABOUT" />
 
       {!loaderComplete && (
-        <LoadingScreen onComplete={() => setLoaderComplete(true)} />
+        <LoadingScreen onComplete={handleLoaderComplete} />
       )}
 
       <SwordCursor />

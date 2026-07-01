@@ -5,8 +5,8 @@ export default function LoadingScreen({ onComplete }) {
   const [exit, setExit] = useState(false);
 
   useEffect(() => {
-    const totalDuration = 720;
-    const exitDuration = 360;
+    const totalDuration = 1250;
+    const exitDuration = 520;
     let completionTimer;
 
     const timer = setTimeout(() => {
@@ -24,8 +24,8 @@ export default function LoadingScreen({ onComplete }) {
   }, [onComplete]);
 
   // Layered fiery smoke particles and fierce crimson embers
-  const smokeParticles = Array.from({ length: 8 });
-  const emberParticles = Array.from({ length: 14 }); // Slightly more sparks for intense vibe
+  const smokeParticles = Array.from({ length: 6 });
+  const emberParticles = Array.from({ length: 10 });
 
   // Custom premium easing curve for ultra-smooth lines
   const premiumEase = [0.16, 1, 0.3, 1];
@@ -40,7 +40,7 @@ export default function LoadingScreen({ onComplete }) {
             scale: 1.02,
             filter: "blur(14px)",
             transition: {
-              duration: 0.36,
+              duration: 0.52,
               ease: [0.76, 0, 0.24, 1], // Deep cinematic exit curve
             },
           }}
