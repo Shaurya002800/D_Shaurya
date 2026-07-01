@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { PROJECTS } from '../data/projects.js'
+import './WorkSection.css'
 
 // ─────────────────────────────────────────────────────────────────────
 // TIMING CONSTANTS
@@ -596,6 +598,478 @@ function ProjectModal({ project, onClose }) {
   )
 }
 
+function ProjectMangaCarouselPage({ project, onClose }) {
+  const [coverHover, setCoverHover] = useState(false)
+
+  const ink = '#15120f'
+  const paper = '#f3eee2'
+  const hanko = '#c1272d'
+  const inkSoft = '#3c352a'
+  const tone = '#b9b19c'
+
+  const year = project.year || new Date().getFullYear()
+  const isLive = project.url && project.url !== '#'
+
+  const fileId = String(
+    Math.abs((project.name || '').split('').reduce((a, c) => a * 31 + c.charCodeAt(0), 17) % 99999)
+  ).padStart(5, '0')
+  const seed = parseInt(fileId, 10)
+  const chapterNo = String((seed % 180) + 1).padStart(3, '0')
+  const pageNo = String((seed % 80) + 10).padStart(3, '0')
+
+  const halftone = {
+    backgroundImage: `radial-gradient(${tone} 1px, transparent 1.6px)`,
+    backgroundSize: '8px 8px',
+  }
+  const grain = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E")`
+
+  return (
+    <div
+      className="manga-page project-carousel__manga-page"
+      style={{
+        width: 'min(1080px, 100%)',
+        maxHeight: 'min(78vh, 760px)',
+        display: 'flex', flexDirection: 'column',
+        background: paper,
+        border: `5px solid ${ink}`,
+        borderRadius: '2px',
+        position: 'relative',
+        overflow: 'hidden',
+        boxShadow: '0 30px 60px -15px rgba(0,0,0,0.65), 0 0 0 1px rgba(0,0,0,0.4)',
+        animation: 'pageSlam 0.45s cubic-bezier(0.16, 1, 0.3, 1) both',
+      }}
+    >
+      <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
+        <filter id="inkRough">
+          <feTurbulence type="fractalNoise" baseFrequency="0.045 0.09" numOctaves="2" seed="4" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.2" />
+        </filter>
+      </svg>
+
+      <div aria-hidden="true" style={{ position: 'absolute', inset: 0, backgroundImage: grain, pointerEvents: 'none', zIndex: 0 }} />
+
+      <button
+        onClick={onClose} aria-label="Exit projects"
+        style={{
+          position: 'absolute', top: '14px', right: '14px', zIndex: 20,
+          width: '34px', height: '34px',
+          background: paper, border: `2.5px solid ${ink}`,
+          color: ink, fontSize: '15px', fontWeight: 900, cursor: 'pointer',
+          display: 'grid', placeItems: 'center',
+          transform: 'rotate(-6deg)',
+          transition: 'all 0.2s',
+          boxShadow: `2px 2px 0 ${ink}`,
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.background = ink
+          e.currentTarget.style.color = paper
+          e.currentTarget.style.transform = 'rotate(0deg) scale(1.08)'
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.background = paper
+          e.currentTarget.style.color = ink
+          e.currentTarget.style.transform = 'rotate(-6deg) scale(1)'
+        }}
+      >
+        ✕
+      </button>
+
+      <div
+        className="manga-grid"
+        style={{
+          flex: 1,
+          position: 'relative', zIndex: 1,
+          display: 'grid',
+          gridTemplateColumns: '320px minmax(0, 1fr)',
+          gridTemplateRows: '78px auto auto 70px',
+          gap: '6px',
+          padding: '6px',
+          background: ink,
+          overflowY: 'auto',
+        }}
+      >
+        <div
+          className="panel-cover"
+          onMouseEnter={() => setCoverHover(true)}
+          onMouseLeave={() => setCoverHover(false)}
+          style={{
+            gridColumn: 1, gridRow: '1 / span 4',
+            background: paper, ...halftone,
+            padding: '26px 20px 20px',
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            position: 'relative',
+            transform: coverHover ? 'scale(1.01)' : 'scale(1)',
+            transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+            animation: 'panelIn 0.4s ease 0.05s both',
+          }}
+        >
+          <div style={{
+            fontFamily: '"Courier New", monospace', fontSize: '10px',
+            fontWeight: 700, letterSpacing: '0.25em', color: inkSoft,
+            textTransform: 'uppercase', marginBottom: '14px',
+          }}>
+            ※ Featured Series
+          </div>
+
+          <div style={{
+            width: '100%', height: '188px',
+            background: `repeating-linear-gradient(45deg, ${ink} 0px, ${ink} 1.5px, transparent 1.5px, transparent 7px)`,
+            backgroundColor: '#e7e0cd',
+            border: `3px solid ${ink}`,
+            marginBottom: '18px',
+            position: 'relative',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            overflow: 'hidden',
+          }}>
+            <span style={{
+              fontFamily: '"Courier New", monospace', color: paper, background: ink,
+              fontSize: '11px', letterSpacing: '1.5px', textTransform: 'uppercase',
+              padding: '4px 10px', border: `1px solid ${paper}`,
+            }}>
+              panel still inking
+            </span>
+          </div>
+
+          <div style={{
+            fontFamily: '"Anton", Georgia, sans-serif',
+            fontSize: 'clamp(1.6rem, 3.4vw, 2.5rem)',
+            color: ink, textAlign: 'center', lineHeight: 1.04,
+            textTransform: 'uppercase', marginBottom: '10px',
+          }}>
+            {project.name}
+          </div>
+
+          <div style={{ width: '46px', height: '4px', background: hanko, marginBottom: '18px' }} />
+
+          <HypeCounter value={project.bounty} />
+
+          <div style={{
+            position: 'absolute', bottom: '18px', right: '14px',
+            width: '88px', height: '88px', borderRadius: '50%',
+            border: `4px solid ${hanko}`,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            color: hanko, fontWeight: 900, transform: 'rotate(-12deg)',
+            animation: 'stampDown 0.5s cubic-bezier(0.2, 2, 0.3, 1) 0.7s both',
+            filter: 'url(#inkRough)', opacity: 0.9, pointerEvents: 'none',
+          }}>
+            <div style={{ position: 'absolute', inset: '4px', border: `1px solid rgba(193,39,45,0.5)`, borderRadius: '50%' }} />
+            <span style={{ fontFamily: '"Anton", Georgia, sans-serif', fontSize: '13px', letterSpacing: '1px' }}>EDITOR'S</span>
+            <span style={{ fontFamily: '"Anton", Georgia, sans-serif', fontSize: '13px', letterSpacing: '1px' }}>PICK</span>
+          </div>
+        </div>
+
+        <div
+          className="panel-title"
+          style={{
+            gridColumn: 2, gridRow: 1,
+            background: ink,
+            backgroundImage: 'repeating-conic-gradient(from 0deg at 0% 0%, rgba(255,255,255,0.07) 0deg 1.6deg, transparent 1.6deg 6deg)',
+            clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 86%)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '0 22px', position: 'relative', overflow: 'hidden',
+            animation: 'panelIn 0.4s ease 0.1s both',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px' }}>
+            <span style={{ fontFamily: '"Anton", Georgia, sans-serif', fontSize: '1.8rem', color: paper, letterSpacing: '0.02em' }}>
+              CH. {chapterNo}
+            </span>
+            <span style={{ fontFamily: '"Courier New", monospace', fontSize: '10px', color: 'rgba(243,238,226,0.55)', letterSpacing: '2px', textTransform: 'uppercase' }}>
+              vol. {year}
+            </span>
+          </div>
+
+          <div style={{
+            position: 'relative',
+            fontFamily: '"Bangers", "Anton", cursive', fontSize: '11px',
+            color: ink, background: hanko,
+            padding: '6px 14px', transform: 'rotate(6deg)',
+            clipPath: 'polygon(8% 0%, 92% 5%, 100% 50%, 94% 100%, 6% 95%, 0% 50%)',
+            letterSpacing: '0.5px', textTransform: 'uppercase',
+            animation: 'burstPop 0.45s cubic-bezier(0.2, 2, 0.3, 1) 0.35s both',
+            boxShadow: '2px 2px 0 rgba(0,0,0,0.5)',
+          }}>
+            {isLive ? 'on sale now' : 'work in progress'}
+          </div>
+        </div>
+
+        <div
+          className="panel-synopsis"
+          style={{
+            gridColumn: 2, gridRow: 2,
+            background: paper, position: 'relative',
+            padding: '24px 28px',
+            animation: 'panelIn 0.4s ease 0.18s both',
+          }}
+        >
+          <div className="bubble-tail" aria-hidden="true" style={{ position: 'absolute', left: '-16px', top: '26px', width: 0, height: 0, borderTop: '10px solid transparent', borderBottom: '10px solid transparent', borderRight: `16px solid ${ink}` }} />
+          <div className="bubble-tail" aria-hidden="true" style={{ position: 'absolute', left: '-12px', top: '29px', width: 0, height: 0, borderTop: '7px solid transparent', borderBottom: '7px solid transparent', borderRight: `12px solid ${paper}` }} />
+
+          <div style={{ fontFamily: '"Courier New", monospace', fontSize: '10px', color: hanko, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px', fontWeight: 700 }}>
+            [ Synopsis ]
+          </div>
+          <p style={{
+            color: inkSoft, fontSize: '1.02rem', lineHeight: 1.75,
+            margin: 0, fontFamily: 'system-ui, -apple-system, sans-serif', fontWeight: 400,
+          }}>
+            {project.desc}
+          </p>
+        </div>
+
+        <div
+          className="panel-techniques"
+          style={{
+            gridColumn: 2, gridRow: 3,
+            background: paper, padding: '22px 28px',
+            animation: 'panelIn 0.4s ease 0.26s both',
+          }}
+        >
+          <div style={{ fontFamily: '"Courier New", monospace', fontSize: '10px', color: hanko, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '14px', fontWeight: 700 }}>
+            [ Techniques Unlocked ]
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+            {project.stack?.map((item, i) => (
+              <span
+                key={item}
+                style={{
+                  '--chip-rot': `${i % 2 === 0 ? -2.5 : 2.5}deg`,
+                  padding: '7px 14px',
+                  background: paper,
+                  border: `2.5px solid ${ink}`,
+                  color: ink,
+                  fontFamily: '"Anton", Georgia, sans-serif',
+                  fontSize: '11.5px', letterSpacing: '0.5px',
+                  textTransform: 'uppercase',
+                  clipPath: 'polygon(4% 0, 100% 0, 96% 100%, 0% 100%)',
+                  animation: `chipFade 0.4s ease ${0.4 + i * 0.07}s both`,
+                  cursor: 'default',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = ink
+                  e.currentTarget.style.color = paper
+                  e.currentTarget.style.transform = 'rotate(0deg) scale(1.07)'
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = paper
+                  e.currentTarget.style.color = ink
+                  e.currentTarget.style.transform = 'rotate(var(--chip-rot)) scale(1)'
+                }}
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div
+          className="panel-cta"
+          style={{
+            gridColumn: 2, gridRow: 4,
+            background: paper,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '0 24px',
+            animation: 'panelIn 0.4s ease 0.34s both',
+          }}
+        >
+          <span style={{
+            fontFamily: '"Courier New", monospace', fontSize: '10px',
+            color: inkSoft, letterSpacing: '1.5px', textTransform: 'uppercase',
+            display: 'flex', alignItems: 'center', gap: '8px',
+          }}>
+            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: isLive ? hanko : '#999', display: 'inline-block' }} />
+            {isLive ? 'serialization · ongoing' : 'unscanned · draft only'}
+          </span>
+
+          {isLive ? (
+            <a
+              href={project.url}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '8px',
+                background: ink, color: paper,
+                padding: '9px 18px',
+                border: `2px solid ${ink}`,
+                fontFamily: '"Anton", Georgia, sans-serif',
+                fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase',
+                textDecoration: 'none',
+                transition: 'all 0.25s',
+              }}
+            >
+              turn the page ▶
+            </a>
+          ) : (
+            <span style={{
+              fontFamily: '"Anton", Georgia, sans-serif', fontSize: '11px', letterSpacing: '1px',
+              color: '#9a9282', padding: '9px 16px',
+              border: `2px dashed ${tone}`, textTransform: 'uppercase',
+            }}>
+              pages not yet scanned
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div style={{
+        position: 'relative', zIndex: 1,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '6px 16px',
+        borderTop: `2px solid ${ink}`,
+        background: paper,
+        fontFamily: '"Courier New", monospace', fontSize: '10px',
+        color: inkSoft, letterSpacing: '1px',
+      }}>
+        <span>FILE №{fileId}</span>
+        <span>— {pageNo} —</span>
+      </div>
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Anton&family=Bangers&display=swap');
+        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes pageSlam {
+          0% { opacity: 0; transform: scale(0.86) rotate(-2deg); }
+          60% { opacity: 1; transform: scale(1.015) rotate(0.4deg); }
+          100% { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+        @keyframes panelIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes burstPop {
+          0% { opacity: 0; transform: rotate(-25deg) scale(0); }
+          60% { opacity: 1; transform: rotate(10deg) scale(1.15); }
+          100% { opacity: 1; transform: rotate(6deg) scale(1); }
+        }
+        @keyframes stampDown {
+          0% { opacity: 0; transform: rotate(-30deg) scale(2.4); }
+          55% { opacity: 1; transform: rotate(-6deg) scale(0.92); }
+          100% { opacity: 0.9; transform: rotate(-12deg) scale(1); }
+        }
+        @keyframes chipFade {
+          from { opacity: 0; transform: translateY(8px) rotate(0deg); }
+          to { opacity: 1; transform: translateY(0) rotate(var(--chip-rot, 0deg)); }
+        }
+        @media (max-width: 900px) {
+          .manga-grid {
+            grid-template-columns: 1fr !important;
+            grid-template-rows: 240px auto auto auto auto !important;
+          }
+          .panel-cover { grid-column: 1 !important; grid-row: 1 !important; }
+          .panel-title { grid-column: 1 !important; grid-row: 2 !important; clip-path: none !important; }
+          .panel-synopsis { grid-column: 1 !important; grid-row: 3 !important; padding: 22px !important; }
+          .panel-techniques { grid-column: 1 !important; grid-row: 4 !important; }
+          .panel-cta { grid-column: 1 !important; grid-row: 5 !important; flex-wrap: wrap; gap: 12px; padding: 14px 18px !important; }
+          .bubble-tail { display: none !important; }
+        }
+      `}</style>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// PROJECT CAROUSEL — quick manga-page browser before free exploration
+// ─────────────────────────────────────────────────────────────────────
+function ProjectCarousel({
+  visible,
+  activeIndex,
+  onActiveIndexChange,
+  onExplore,
+  onClose,
+}) {
+  const activeProject = PROJECTS[activeIndex] || PROJECTS[0]
+  const previousIndex = (activeIndex - 1 + PROJECTS.length) % PROJECTS.length
+  const nextIndex = (activeIndex + 1) % PROJECTS.length
+
+  const goTo = useCallback((nextIndexValue) => {
+    onActiveIndexChange((nextIndexValue + PROJECTS.length) % PROJECTS.length)
+  }, [onActiveIndexChange])
+
+  useEffect(() => {
+    if (!visible) return
+    const handleKey = (event) => {
+      if (event.key === 'ArrowLeft') goTo(activeIndex - 1)
+      if (event.key === 'ArrowRight') goTo(activeIndex + 1)
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [activeIndex, goTo, visible])
+
+  if (!visible || !activeProject) return null
+
+  return (
+    <section
+      className="project-carousel"
+      aria-labelledby="project-carousel-title"
+    >
+      <h2 id="project-carousel-title" className="project-carousel__sr-title">
+        Project Manga Pages
+      </h2>
+
+      <div className="project-carousel__command-bar">
+        <div>
+          <span>Wanted Poster Archive</span>
+          <strong>{activeProject.name}</strong>
+        </div>
+
+        <button type="button" className="project-carousel__explore" onClick={onExplore}>
+          <span>Free Roam</span>
+          <strong>Explore Posters</strong>
+        </button>
+      </div>
+
+      <div className="project-carousel__stage">
+        <button
+          type="button"
+          className="project-carousel__arrow"
+          onClick={() => goTo(previousIndex)}
+          aria-label="Previous project"
+        >
+          &lt;
+        </button>
+
+        <ProjectMangaCarouselPage project={activeProject} onClose={onClose} />
+
+        <button
+          type="button"
+          className="project-carousel__arrow"
+          onClick={() => goTo(nextIndex)}
+          aria-label="Next project"
+        >
+          &gt;
+        </button>
+      </div>
+
+      <div className="project-carousel__rail" aria-label="Project pages">
+        {PROJECTS.map((project, index) => (
+          <button
+            key={project.name}
+            type="button"
+            className={index === activeIndex ? 'is-active' : ''}
+            style={{ '--accent': project.color }}
+            onClick={() => goTo(index)}
+          >
+            <span>{String(index + 1).padStart(2, '0')}</span>
+            <strong>{project.name}</strong>
+          </button>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function ReopenProjectCarouselButton({ visible, onClick }) {
+  if (!visible) return null
+
+  return (
+    <button
+      type="button"
+      className="project-carousel-reopen"
+      onClick={onClick}
+    >
+      <span>Projects</span>
+      <strong>Manga Pages</strong>
+    </button>
+  )
+}
+
 // ─────────────────────────────────────────────────────────────────────
 // MAIN WORK SECTION
 // ─────────────────────────────────────────────────────────────────────
@@ -607,7 +1081,10 @@ export default function WorkSection({
 }) {
   const [mounted, setMounted] = useState(false)
   const [visible, setVisible] = useState(false)
+  const [carouselOpen, setCarouselOpen] = useState(true)
+  const [carouselIndex, setCarouselIndex] = useState(0)
   const timerRef = useRef([])
+  const activeProject = selectedProject
 
   const clearTimers = () => { timerRef.current.forEach(clearTimeout); timerRef.current = [] }
 
@@ -616,6 +1093,7 @@ export default function WorkSection({
     if (active) {
       timerRef.current.push(setTimeout(() => setMounted(true), 0))
       timerRef.current.push(setTimeout(() => setVisible(true), PANEL_DELAY_MS))
+      setCarouselOpen(true)
     } else {
       timerRef.current.push(setTimeout(() => setVisible(false), 0))
       timerRef.current.push(setTimeout(() => setMounted(false), 550))
@@ -625,10 +1103,21 @@ export default function WorkSection({
 
   useEffect(() => {
     if (!active) return
-    const fn = (e) => { if (e.key === 'Escape' && !selectedProject) onClose() }
+    const fn = (e) => {
+      if (e.key !== 'Escape') return
+      if (carouselOpen) {
+        setCarouselOpen(false)
+        return
+      }
+      if (!selectedProject) onClose()
+    }
     window.addEventListener('keydown', fn)
     return () => window.removeEventListener('keydown', fn)
-  }, [active, selectedProject, onClose])
+  }, [active, carouselOpen, selectedProject, onClose])
+
+  const handleProjectClose = useCallback(() => {
+    onProjectClose()
+  }, [onProjectClose])
 
   if (!mounted) return null
 
@@ -648,7 +1137,7 @@ export default function WorkSection({
         }}
       />
 
-      {!selectedProject && (
+      {!activeProject && !carouselOpen && (
         <button
           onClick={onClose}
           aria-label="Exit Terminal"
@@ -677,10 +1166,23 @@ export default function WorkSection({
         </button>
       )}
 
-      {selectedProject && (
+      <ProjectCarousel
+        visible={visible && carouselOpen && !activeProject}
+        activeIndex={carouselIndex}
+        onActiveIndexChange={setCarouselIndex}
+        onExplore={() => setCarouselOpen(false)}
+        onClose={onClose}
+      />
+
+      <ReopenProjectCarouselButton
+        visible={visible && !carouselOpen && !activeProject}
+        onClick={() => setCarouselOpen(true)}
+      />
+
+      {activeProject && (
         <ProjectModal
-          project={selectedProject}
-          onClose={onProjectClose}
+          project={activeProject}
+          onClose={handleProjectClose}
         />
       )}
     </>
