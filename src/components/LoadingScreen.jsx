@@ -5,8 +5,8 @@ export default function LoadingScreen({ onComplete }) {
   const [exit, setExit] = useState(false);
 
   useEffect(() => {
-    const totalDuration = 1800;
-    const exitDuration = 620;
+    const totalDuration = 720;
+    const exitDuration = 360;
     let completionTimer;
 
     const timer = setTimeout(() => {
@@ -40,7 +40,7 @@ export default function LoadingScreen({ onComplete }) {
             scale: 1.02,
             filter: "blur(14px)",
             transition: {
-              duration: 0.62,
+              duration: 0.36,
               ease: [0.76, 0, 0.24, 1], // Deep cinematic exit curve
             },
           }}

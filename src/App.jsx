@@ -234,6 +234,7 @@ function App() {
       <PortfolioIntro
         visible={introVisible}
         worldReady={worldReady}
+        worldLoaded={loaded}
         onEnter={handleEnterGrandLine}
         onViewProjects={handleViewProjects}
         onShowSkills={handleShowSkills}

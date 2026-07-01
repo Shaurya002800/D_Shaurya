@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { PROFILE } from '../data/profile.js'
+import { PROJECTS } from '../data/projects.js'
 import './PortfolioIntro.css'
 
 const STORAGE_KEY = 'grand-line-onboarding-seen'
@@ -23,6 +24,7 @@ function markOnboardingSeen() {
 export default function PortfolioIntro({
   visible,
   worldReady = true,
+  worldLoaded = worldReady,
   onEnter,
   onViewProjects,
   onShowSkills,
@@ -34,8 +36,7 @@ export default function PortfolioIntro({
   const [showOnboarding, setShowOnboarding] = useState(false)
 
   useEffect(() => {
-    if (!visible || hasSeenOnboarding()) return
-    setShowOnboarding(true)
+    if (!visible) setShowOnboarding(false)
   }, [visible])
 
   const closeOnboarding = () => {
@@ -45,6 +46,10 @@ export default function PortfolioIntro({
 
   const handleEnter = () => {
     if (!worldReady) return
+    if (!hasSeenOnboarding() && !showOnboarding) {
+      setShowOnboarding(true)
+      return
+    }
     closeOnboarding()
     onEnter()
   }
@@ -96,24 +101,51 @@ export default function PortfolioIntro({
             </p>
 
             <div className="portfolio-intro__proof" aria-label="Profile highlights">
-              <span>VIT CSE AI & Data Engineering</span>
-              <span>9.02 CGPA</span>
-              <span>Seeking software and AI internships</span>
+              <span>{PROJECTS.length} shipped project dossiers</span>
+              <span>AI/ML + full-stack + Web3 systems</span>
+              <span>Live demos, GitHub proof, resume-ready details</span>
             </div>
 
             <div className="portfolio-intro__actions">
               <button
                 type="button"
                 className="portfolio-intro__primary"
-                onClick={handleEnter}
-                disabled={!worldReady}
-                aria-disabled={!worldReady}
+                onClick={jumpToProjects}
               >
-                Start Voyage
+                View Projects
               </button>
               <button
                 type="button"
                 className="portfolio-intro__ghost"
+                onClick={jumpToResume}
+              >
+                Resume
+              </button>
+              <button
+                type="button"
+                className="portfolio-intro__ghost"
+                onClick={jumpToContact}
+              >
+                Contact
+              </button>
+            </div>
+
+            <div className="portfolio-intro__voyage">
+              <p className="portfolio-intro__status">
+                {worldLoaded ? 'Ship deck ready.' : '3D Grand Line loading quietly in the background.'}
+              </p>
+              <button
+                type="button"
+                className="portfolio-intro__voyage-button"
+                onClick={handleEnter}
+                disabled={!worldReady}
+                aria-disabled={!worldReady}
+              >
+                Enter Grand Line
+              </button>
+              <button
+                type="button"
+                className="portfolio-intro__map-button"
                 onClick={openMap}
                 disabled={!worldReady}
                 aria-disabled={!worldReady}
