@@ -272,10 +272,10 @@
 
 .portfolio-intro__voyage {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   gap: 8px;
-  max-width: 640px;
+  max-width: 320px;
   margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid rgba(45, 29, 14, .2);
@@ -337,19 +337,13 @@
   background: rgba(255, 246, 222, .38) !important;
 }
 
-.portfolio-intro__voyage-button,
-.portfolio-intro__map-button {
+.portfolio-intro__voyage-button {
   min-width: 0;
   background: rgba(255, 246, 222, .38) !important;
 }
 
 .portfolio-intro__voyage-button {
   border-color: rgba(31, 21, 13, .72) !important;
-}
-
-.portfolio-intro__map-button {
-  border-color: rgba(39, 25, 12, .28) !important;
-  color: rgba(33, 23, 13, .78) !important;
 }
 
 .portfolio-intro__actions .portfolio-intro__primary,
@@ -811,17 +805,9 @@
   line-height: 1;
 }
 
-.portfolio-onboarding__map {
-  width: 100%;
-  margin-top: 16px;
-  border-color: rgba(74, 43, 24, .24) !important;
-  background: rgba(74, 43, 24, .09) !important;
-  color: #3a210f !important;
-}
-
 .portfolio-onboarding__primary {
   width: 100%;
-  margin-top: 12px;
+  margin-top: 16px;
   font-size: 15px !important;
 }
 
@@ -902,7 +888,7 @@
 
   .portfolio-intro__voyage {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     max-width: min(100%, 340px);
     margin-top: 14px;
     padding-top: 14px;

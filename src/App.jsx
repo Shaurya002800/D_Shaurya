@@ -242,7 +242,6 @@ function App() {
         onShowExperience={handleShowExperience}
         onShowResume={handleShowResume}
         onContact={handleContact}
-        onOpenMap={() => setMapOpen(true)}
       />
 
       {/* ── Section overlays ── */}

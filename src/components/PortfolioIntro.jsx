@@ -39,7 +39,6 @@ export default function PortfolioIntro({
   onShowExperience,
   onShowResume,
   onContact,
-  onOpenMap,
 }) {
   const [showOnboarding, setShowOnboarding] = useState(false)
 
@@ -85,12 +84,6 @@ export default function PortfolioIntro({
   const jumpToContact = () => {
     closeOnboarding()
     onContact()
-  }
-
-  const openMap = () => {
-    if (!worldReady) return
-    closeOnboarding()
-    onOpenMap()
   }
 
   const routeActions = {
@@ -200,15 +193,6 @@ export default function PortfolioIntro({
                 >
                   Enter Grand Line
                 </button>
-                <button
-                  type="button"
-                  className="portfolio-intro__map-button"
-                  onClick={openMap}
-                  disabled={!worldReady}
-                  aria-disabled={!worldReady}
-                >
-                  Open Map
-                </button>
               </div>
             </div>
 
@@ -299,15 +283,6 @@ export default function PortfolioIntro({
               </button>
             </div>
 
-            <button
-              type="button"
-              className="portfolio-onboarding__map"
-              onClick={openMap}
-              disabled={!worldReady}
-              aria-disabled={!worldReady}
-            >
-              Open Map
-            </button>
             <button
               type="button"
               className="portfolio-onboarding__primary"

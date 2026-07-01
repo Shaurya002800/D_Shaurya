@@ -5,8 +5,8 @@ export default function LoadingScreen({ onComplete }) {
   const [exit, setExit] = useState(false);
 
   useEffect(() => {
-    const totalDuration = 1250;
-    const exitDuration = 520;
+    const totalDuration = 2200;
+    const exitDuration = 650;
     let completionTimer;
 
     const timer = setTimeout(() => {
