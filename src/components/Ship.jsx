@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react'
+import { useRef, useEffect, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useTexture, Text } from '@react-three/drei'
 import { RigidBody, CuboidCollider, CylinderCollider } from '@react-three/rapier'
@@ -12,32 +12,31 @@ import {
 } from '../data/shipLayout.js'
 
 // ─────────────────────────────────────────────────────────────────────
-// PBR TEXTURE HELPER
-// Loads full PBR set from ambientcg folders
+// Lightweight PBR texture helper for the live deck.
+// Color + roughness keeps the material readable without a heavy texture burst.
 // ─────────────────────────────────────────────────────────────────────
 function usePBR(folder, repeat = [1, 1]) {
   const maps = useTexture({
     map:          `/textures/${folder}/${folder}_Color.jpg`,
-    normalMap:    `/textures/${folder}/${folder}_NormalGL.jpg`,
     roughnessMap: `/textures/${folder}/${folder}_Roughness.jpg`,
-    aoMap:        `/textures/${folder}/${folder}_AmbientOcclusion.jpg`,
   })
-  useMemo(() => {
+  const [repeatX, repeatY] = repeat
+
+  useEffect(() => {
     Object.values(maps).forEach(t => {
       if (t?.isTexture) {
         t.wrapS = t.wrapT = THREE.RepeatWrapping
-        t.repeat.set(...repeat)
+        t.repeat.set(repeatX, repeatY)
         t.needsUpdate = true
       }
     })
-  }, [repeat[0], repeat[1]])
+  }, [maps, repeatX, repeatY])
+
   return maps
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// WOOD PLANK MATERIAL — deck floor
-const NORMAL_SCALE_DECK = new THREE.Vector2(1.2, 1.2)
-const NORMAL_SCALE_WOOD = new THREE.Vector2(1.5, 1.5)
+// Ship footprint constants.
 const BASEMENT_MIN_Z = -23
 const BASEMENT_MAX_Z = 17
 const BASEMENT_HALF_WIDTH = 8.5
@@ -234,8 +233,6 @@ function DeckMaterial({ repeat = [3, 8] }) {
       {...maps}
       roughness={0.82}
       metalness={0.0}
-      aoMapIntensity={1.2}
-      normalScale={NORMAL_SCALE_DECK}   // ← stable reference
     />
   )
 }
@@ -247,8 +244,6 @@ function WoodMaterial({ repeat = [2, 2], roughness = 0.88 }) {
       {...maps}
       roughness={roughness}
       metalness={0.0}
-      aoMapIntensity={1.3}
-      normalScale={NORMAL_SCALE_WOOD}   // ← stable reference
     />
   )
 }
@@ -268,20 +263,6 @@ function GrassMaterial() {
 // ─────────────────────────────────────────────────────────────────────
 // SAIL FABRIC MATERIAL
 // ─────────────────────────────────────────────────────────────────────
-function SailMaterial({ repeat = [2, 1.5], color = '#fdfdfd' }) {
-  const maps = usePBR('Carpet016_1K-JPG', repeat)
-  return (
-    <meshStandardMaterial
-      {...maps}
-      color={color}
-      roughness={0.95}
-      metalness={0.0}
-      side={THREE.DoubleSide}
-      aoMapIntensity={0.8}
-    />
-  )
-}
-
 // ─────────────────────────────────────────────────────────────────────
 // ROPE MATERIAL — rigging
 // ─────────────────────────────────────────────────────────────────────
@@ -642,74 +623,9 @@ function CrowsNestBaseOnly({ position = [0, 31.5, -3] }) {
 // ─────────────────────────────────────────────────────────────────────
 // JOLLY ROGER ON SAIL — Straw Hat Pirates emblem
 // ─────────────────────────────────────────────────────────────────────
-function JollyRoger({ position }) {
-  return (
-    <group position={position}>
-      {/* Skull head */}
-      <mesh>
-        <sphereGeometry args={[2.5, 24, 24]} />
-        <meshStandardMaterial color="#1a1a1a" side={THREE.DoubleSide} roughness={0.8} />
-      </mesh>
-      {/* Left eye socket */}
-      <mesh position={[-0.85, 0.5, -2.4]}>
-        <sphereGeometry args={[0.55, 14, 14]} />
-        <meshStandardMaterial color="#f5e6cc" side={THREE.DoubleSide} roughness={0.4} />
-      </mesh>
-      {/* Right eye socket */}
-      <mesh position={[0.85, 0.5, -2.4]}>
-        <sphereGeometry args={[0.55, 14, 14]} />
-        <meshStandardMaterial color="#f5e6cc" side={THREE.DoubleSide} roughness={0.4} />
-      </mesh>
-      {/* Straw hat on skull */}
-      <mesh position={[0, 2.0, 0]} rotation={[0.15, 0, 0]}>
-        <torusGeometry args={[2.8, 0.35, 10, 32]} />
-        <meshStandardMaterial color="#c8a020" roughness={0.85} />
-      </mesh>
-      <mesh position={[0, 2.4, -0.3]} rotation={[0.15, 0, 0]}>
-        <cylinderGeometry args={[1.3, 2.1, 1.1, 24]} />
-        <meshStandardMaterial color="#d4a820" roughness={0.85} />
-      </mesh>
-      {/* Hat band */}
-      <mesh position={[0, 2.0, -0.2]} rotation={[0.15, 0, 0]}>
-        <torusGeometry args={[1.9, 0.18, 8, 28]} />
-        <meshStandardMaterial color="#8B1a1a" roughness={0.7} />
-      </mesh>
-      {/* Crossbones left */}
-      <mesh position={[-1.8, -1.5, -2.2]} rotation={[0, 0, 0.7]} castShadow>
-        <capsuleGeometry args={[0.18, 3.5, 8, 12]} />
-        <meshStandardMaterial color="#1a1a1a" roughness={0.8} />
-      </mesh>
-      {/* Crossbones right */}
-      <mesh position={[1.8, -1.5, -2.2]} rotation={[0, 0, -0.7]} castShadow>
-        <capsuleGeometry args={[0.18, 3.5, 8, 12]} />
-        <meshStandardMaterial color="#1a1a1a" roughness={0.8} />
-      </mesh>
-    </group>
-  )
-}
-
 // ─────────────────────────────────────────────────────────────────────
 // MAIN SAIL PANEL
 // ─────────────────────────────────────────────────────────────────────
-function MainSail({ position }) {
-  return (
-    <group position={position}>
-      {/* Main white sail surface */}
-      <mesh castShadow>
-        <planeGeometry args={[22, 17, 10, 10]} />
-        <SailMaterial repeat={[3, 2]} color="#fafaf8" />
-      </mesh>
-      {/* Red horizontal stripes */}
-      {[-5, 0, 5].map((y, i) => (
-        <mesh key={i} position={[0, y, 0.05]}>
-          <planeGeometry args={[22, 1.2]} />
-          <meshStandardMaterial color="#c0392b" roughness={0.9} side={THREE.DoubleSide} />
-        </mesh>
-      ))}
-    </group>
-  )
-}
-
 // ─────────────────────────────────────────────────────────────────────
 // BASEMENT HATCH — entry to aquarium room
 // ─────────────────────────────────────────────────────────────────────
@@ -750,35 +666,6 @@ function BasementHatch({ position }) {
 // ─────────────────────────────────────────────────────────────────────
 // CANNON — decorative, one per side
 // ─────────────────────────────────────────────────────────────────────
-function Cannon({ position, rotation = [0, 0, 0] }) {
-  return (
-    <group position={position} rotation={rotation}>
-      {/* Barrel */}
-      <mesh castShadow>
-        <cylinderGeometry args={[0.22, 0.28, 2.2, 14]} rotation={[Math.PI / 2, 0, 0]} />
-        <meshStandardMaterial color="#2a2a2a" roughness={0.55} metalness={0.5} />
-      </mesh>
-      {/* Barrel rings */}
-      {[-0.6, 0, 0.5].map((z, i) => (
-        <mesh key={i} position={[0, 0, z]} castShadow>
-          <torusGeometry args={[0.25, 0.04, 8, 18]} rotation={[Math.PI / 2, 0, 0]} />
-          <meshStandardMaterial color="#1a1a1a" roughness={0.5} metalness={0.6} />
-        </mesh>
-      ))}
-      {/* Cannon wheel left */}
-      <mesh position={[-0.55, -0.32, 0]} castShadow>
-        <cylinderGeometry args={[0.32, 0.32, 0.12, 14]} rotation={[0, 0, Math.PI / 2]} />
-        <meshStandardMaterial color="#5C3A21" roughness={0.85} />
-      </mesh>
-      {/* Cannon wheel right */}
-      <mesh position={[0.55, -0.32, 0]} castShadow>
-        <cylinderGeometry args={[0.32, 0.32, 0.12, 14]} rotation={[0, 0, Math.PI / 2]} />
-        <meshStandardMaterial color="#5C3A21" roughness={0.85} />
-      </mesh>
-    </group>
-  )
-}
-
 // ─────────────────────────────────────────────────────────────────────
 // ANCHOR — decorative on bow
 // ─────────────────────────────────────────────────────────────────────
@@ -1480,93 +1367,9 @@ function MikanTree({ position, scale = 1 }) {
 // ─────────────────────────────────────────────────────────────────────
 // SLIDE & SWING (FIXED PHYSICS)
 // ─────────────────────────────────────────────────────────────────────
-function SlideAndSwing() {
-  return (
-    <group>
-      {/* ═ THE SWING ═ */}
-      <group position={[2.5, 2, -3]}> 
-        <mesh position={[-0.6, 2, 0]} castShadow>
-          <cylinderGeometry args={[0.03, 0.03, 4]} />
-          <meshStandardMaterial color="#d4a373" roughness={1} />
-        </mesh>
-        <mesh position={[0.6, 2, 0]} castShadow>
-          <cylinderGeometry args={[0.03, 0.03, 4]} />
-          <meshStandardMaterial color="#d4a373" roughness={1} />
-        </mesh>
-        
-        {/* Swing Seat */}
-        <mesh position={[0, 0, 0]} castShadow>
-          <boxGeometry args={[1.6, 0.1, 0.6]} />
-          {/* Note: If WoodMaterial gives an error, use meshStandardMaterial here */}
-          <meshStandardMaterial color="#8b5a2b" roughness={0.9} />
-        </mesh>
-        <CuboidCollider args={[0.8, 0.05, 0.3]} position={[0, 0, 0]} />
-      </group>
-
-      {/* ═ THE SLIDE ═ */}
-      <group position={[-3, 1.6, 12]} rotation={[-0.6, 0, 0]}>
-        {/* Slide Body */}
-        <mesh castShadow receiveShadow>
-          <boxGeometry args={[1.5, 0.2, 6]} />
-          <meshStandardMaterial color="#8b5a2b" roughness={0.8} />
-        </mesh>
-        {/* Left Railing */}
-        <mesh position={[-0.7, 0.2, 0]} castShadow>
-          <boxGeometry args={[0.1, 0.4, 6]} />
-          <meshStandardMaterial color="#5c4033" roughness={0.9} />
-        </mesh>
-        {/* Right Railing */}
-        <mesh position={[0.7, 0.2, 0]} castShadow>
-          <boxGeometry args={[0.1, 0.4, 6]} />
-          <meshStandardMaterial color="#5c4033" roughness={0.9} />
-        </mesh>
-        
-        {/* THE FIX: The collider rotates perfectly with the group */}
-        <CuboidCollider args={[0.75, 0.1, 3]} position={[0, 0, 0]} />
-      </group>
-    </group>
-  )
-}
-
 // ─────────────────────────────────────────────────────────────────────
 // SOLDIER DOCK SYSTEM HATCHES
 // ─────────────────────────────────────────────────────────────────────
-function SoldierDockHatches() {
-  return (
-    <group>
-      {/* Channel 1: Port Side (Left) - Waver */}
-      <group position={[-8.1, 1.5, 0]} rotation={[0, -Math.PI / 2, 0]}>
-        <mesh castShadow>
-          <cylinderGeometry args={[2.5, 2.5, 0.2, 32]} />
-          <meshStandardMaterial color="#f5f5f5" roughness={0.6} />
-        </mesh>
-        {/* The Giant Number 1 */}
-        <Text position={[0, 0, 0.15]} fontSize={3} color="#d32f2f" outlineWidth={0.05} outlineColor="#000">
-          1
-        </Text>
-      </group>
-
-      {/* Channel 3: Starboard Side (Right) - Shark Submerge */}
-      <group position={[8.1, 1.5, 0]} rotation={[0, Math.PI / 2, 0]}>
-        <mesh castShadow>
-          <cylinderGeometry args={[2.5, 2.5, 0.2, 32]} />
-          <meshStandardMaterial color="#f5f5f5" roughness={0.6} />
-        </mesh>
-        {/* The Giant Number 3 */}
-        <Text position={[0, 0, 0.15]} fontSize={3} color="#1976d2" outlineWidth={0.05} outlineColor="#000">
-          3
-        </Text>
-      </group>
-    </group>
-  )
-}
-
-
-
-
-
-
-
 // ─────────────────────────────────────────────────────────────────────
 // COUP DE BURST EXHAUST ENGINE
 // ─────────────────────────────────────────────────────────────────────
@@ -1642,134 +1445,12 @@ function AquariumSkylight({ position }) {
 
 
 
-function LibrarySurveyRoom({ position }) {
-  return (
-    <group position={position}>
-      {/* 1. EXPANDED FLOOR (Red Carpet) */}
-      <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[14.5, 7.5]} /> {/* Increased from 11.6, 5.6 */}
-        <meshStandardMaterial color="#3d2410" /> 
-      </mesh>
-      <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <circleGeometry args={[3.2, 32]} /> {/* Increased size */}
-        <meshStandardMaterial color="#8a1c1c" roughness={0.7} /> 
-      </mesh>
-
-      {/* 2. EXPANDED WALLS */}
-      {/* Back Wall with Large Window */}
-      <mesh position={[0, 2.5, 3.8]} castShadow>
-        <boxGeometry args={[14.5, 5, 0.2]} />
-        <meshStandardMaterial color="#f0ead6" />
-      </mesh>
-
-      {/* Side Walls */}
-      <mesh position={[-7.25, 2.5, 0]} castShadow>
-        <boxGeometry args={[0.2, 5, 7.5]} />
-        <meshStandardMaterial color="#f0ead6" />
-      </mesh>
-      <mesh position={[7.25, 2.5, 0]} castShadow>
-        <boxGeometry args={[0.2, 5, 7.5]} />
-        <meshStandardMaterial color="#f0ead6" />
-      </mesh>
-
-      {/* 3. INTERIOR PROPS - "FILLED" LOOK */}
-      
-      {/* Robin's Bookshelf (Multiple units) */}
-      {[-5.5, -4, 4, 5.5].map((x, i) => (
-        <mesh key={i} position={[x, 1.5, -2]} castShadow>
-          <boxGeometry args={[1.2, 3, 0.5]} />
-          <meshStandardMaterial color="#3d2410" />
-        </mesh>
-      ))}
-
-      {/* Nami's Large Survey Table (Center) */}
-      <group position={[0, 0, 1]}>
-        <mesh position={[0, 1.3, 0]} castShadow>
-          <boxGeometry args={[4.5, 0.2, 2.5]} />
-          <meshStandardMaterial color="#8b5a2b" />
-        </mesh>
-        {/* Telescope on a stand */}
-        <mesh position={[2, 2.2, 0]} rotation={[0, 0, Math.PI / 4]} castShadow>
-          <cylinderGeometry args={[0.2, 0.2, 1.5]} />
-          <meshStandardMaterial color="#444" metalness={0.8} />
-        </mesh>
-      </group>
-
-      {/* Globe Stand */}
-      <mesh position={[5, 1, 2]} castShadow>
-        <sphereGeometry args={[0.8, 16, 16]} />
-        <meshStandardMaterial color="#d4c4a8" />
-      </mesh>
-      
-      {/* 4. ROOF (Pergola style maintained for camera) */}
-      <group position={[0, 5, 0]}>
-        {[-4, -2, 0, 2, 4].map((x, i) => (
-          <mesh key={i} position={[x, 0, 0]} castShadow>
-            <boxGeometry args={[0.3, 0.2, 8]} />
-            <meshStandardMaterial color="#2c1a0c" />
-          </mesh>
-        ))}
-      </group>
-    </group>
-  )
-}
 // ─────────────────────────────────────────────────────────────────────
 // FISH — animated fish swimming in the aquarium
 // ─────────────────────────────────────────────────────────────────────
-function Fish({ color = '#ff6b35', startPos = [0,0,0], speed = 0.4, radius = 3, yOffset = 0 }) {
-  const ref = useRef()
-  const phase = useMemo(() => Math.random() * Math.PI * 2, [])
-  const yWave = useMemo(() => 0.5 + Math.random() * 0.5, [])
-
-  useFrame(({ clock }) => {
-    const t = clock.getElapsedTime() * speed + phase
-    if (!ref.current) return
-    ref.current.position.x = startPos[0] + Math.cos(t) * radius
-    ref.current.position.y = startPos[1] + Math.sin(t * 0.5) * yWave + yOffset
-    ref.current.position.z = startPos[2] + Math.sin(t) * radius * 0.6
-    ref.current.rotation.y = -t + Math.PI / 2
-  })
-
-  return (
-    <group ref={ref}>
-      <mesh>
-        <sphereGeometry args={[0.22, 6, 5]} />
-        <meshStandardMaterial color={color} roughness={0.3} emissive={color} emissiveIntensity={0.2} />
-      </mesh>
-      <mesh position={[0.25, 0, 0]}>
-        <coneGeometry args={[0.10, 0.24, 5]} rotation={[0,0,Math.PI/2]} />
-        <meshStandardMaterial color={color} roughness={0.4} />
-      </mesh>
-    </group>
-  )
-}
-
 // ─────────────────────────────────────────────────────────────────────
 // BUBBLE — rising bubble in water
 // ─────────────────────────────────────────────────────────────────────
-function Bubble({ startPos, speed = 0.35 }) {
-  const ref = useRef()
-  const phase = useMemo(() => Math.random() * Math.PI * 2, [])
-  const xWobble = useMemo(() => (Math.random() - 0.5) * 0.5, [])
-  const frameCount = useRef(0)
-
-  useFrame(({ clock }) => {
-    frameCount.current++
-    if (frameCount.current % 3 !== 0) return  // ← only run every 3rd frame
-    if (!ref.current) return
-    const t = clock.getElapsedTime() * speed + phase
-    ref.current.position.y = startPos[1] + ((t * 1.0) % 7)
-    ref.current.position.x = startPos[0] + Math.sin(t * 2) * xWobble
-  })
-
-  return (
-    <mesh ref={ref} position={startPos}>
-      <sphereGeometry args={[0.04 + Math.random() * 0.04, 5, 5]} />
-      <meshStandardMaterial color="#88ddff" transparent opacity={0.3} emissive="#44aaff" emissiveIntensity={0.1} />
-    </mesh>
-  )
-}
-
 // ─────────────────────────────────────────────────────────────────────
 // PROJECT CARD — 3D panel inside aquarium with project info
 // ─────────────────────────────────────────────────────────────────────
@@ -1777,298 +1458,13 @@ function Bubble({ startPos, speed = 0.35 }) {
 // DIGITAL SCREEN — animated canvas texture that updates every frame
 // Renders scanlines, typing cursor, live "data" readouts per project
 // ─────────────────────────────────────────────────────────────────────
-function useDigitalScreenTexture(project) {
-  const canvasRef   = useRef(null)
-  const texRef      = useRef(null)
-  const staticRef   = useRef(null)   // baked background — drawn once
-  const frameRef    = useRef(0)
-  const cursorOn    = useRef(true)
-  const cursorTick  = useRef(0)
-  const scrollRef   = useRef(0)
-  const initRef     = useRef(false)
- 
-  // ── Create canvas + texture once ──────────────────────────────────
-  if (!canvasRef.current) {
-    const c = document.createElement('canvas')
-    c.width = 1024; c.height = 640
-    canvasRef.current = c
-    texRef.current = new THREE.CanvasTexture(c)
-  }
- 
-  // ── Bake static background once ───────────────────────────────────
-  // Called on first useFrame; builds the grid + scanlines into staticRef
-  // so per-frame drawing only needs a single drawImage call for the base.
-  const bakeStatic = () => {
-    const s = document.createElement('canvas')
-    s.width = 1024; s.height = 640
-    const sx = s.getContext('2d')
-    const W = s.width, H = s.height
- 
-    // Background — brighter so the canvas is visible in the dark basement
-    sx.fillStyle = '#061828'
-    sx.fillRect(0, 0, W, H)
- 
-    // Grid — drawn once into static canvas
-    sx.strokeStyle = 'rgba(0,180,255,0.04)'
-    sx.lineWidth = 1
-    for (let x = 0; x < W; x += 40) {
-      sx.beginPath(); sx.moveTo(x, 0); sx.lineTo(x, H); sx.stroke()
-    }
-    for (let y = 0; y < H; y += 40) {
-      sx.beginPath(); sx.moveTo(0, y); sx.lineTo(W, y); sx.stroke()
-    }
- 
-    // Scanlines — drawn once
-    sx.fillStyle = 'rgba(0,0,0,0.10)'
-    for (let y = 0; y < H; y += 4) {
-      sx.fillRect(0, y, W, 2)
-    }
- 
-    // Inner border (static, no glow)
-    sx.strokeStyle = 'rgba(255,255,255,0.06)'
-    sx.lineWidth = 1
-    sx.strokeRect(18, 18, W - 36, H - 36)
- 
-    staticRef.current = s
-  }
- 
-  useFrame(({ clock }) => {
-    // ✨ FIX 1: Run the initial draw BEFORE checking workActive
-    if (!initRef.current) { 
-      bakeStatic(); 
-      if (texRef.current) texRef.current.needsUpdate = true // ✨ CRITICAL: Tells the GPU to pull the new canvas data
-      initRef.current = true; 
-    }
- 
-    const canvas = canvasRef.current
-    const tex    = texRef.current
-    if (!canvas || !tex || !staticRef.current) return
- 
-    const t   = clock.getElapsedTime()
-    const ctx = canvas.getContext('2d')
-    const W   = canvas.width, H = canvas.height
- 
-    frameRef.current++
- 
-    // ── Base: stamp baked background ──
-    ctx.drawImage(staticRef.current, 0, 0)
- 
-    // ── Outer border — pulsing glow (only this uses shadowBlur) ──
-    const pulse = 0.5 + 0.5 * Math.sin(t * 2.0)
-    ctx.save()
-    ctx.shadowColor = project.color
-    ctx.shadowBlur  = 12 * pulse
-    ctx.strokeStyle = project.color
-    ctx.lineWidth   = 2.5
-    ctx.strokeRect(10, 10, W - 20, H - 20)
-    ctx.restore()
- 
-    // Top accent bar
-    ctx.fillStyle   = project.color
-    ctx.globalAlpha = 0.8
-    ctx.fillRect(10, 10, W - 20, 4)
-    ctx.globalAlpha = 1
- 
-    // ── Project name ──
-    ctx.font      = 'bold 62px "Courier New", monospace'
-    ctx.fillStyle = '#ffffff'
-    ctx.fillText(project.name, 38, 102)
- 
-    // Year badge
-    ctx.font      = 'bold 20px "Courier New", monospace'
-    ctx.fillStyle = project.color
-    ctx.fillText(`[ ${project.year} ]`, 38, 136)
- 
-    // Separator
-    ctx.strokeStyle  = project.color
-    ctx.lineWidth    = 1
-    ctx.globalAlpha  = 0.35
-    ctx.beginPath(); ctx.moveTo(38, 152); ctx.lineTo(W - 38, 152); ctx.stroke()
-    ctx.globalAlpha  = 1
- 
-    // ── Description — word-wrap, slow scroll ──
-    ctx.font      = '26px "Courier New", monospace'
-    ctx.fillStyle = 'rgba(170,215,255,0.9)'
-    const words = project.desc.split(' ')
-    let line = '', lines = []
-    words.forEach(w => {
-      const test = line + w + ' '
-      if (ctx.measureText(test).width > W - 76 && line) {
-        lines.push(line.trimEnd()); line = w + ' '
-      } else line = test
-    })
-    lines.push(line.trimEnd())
-    // Advance one line every 100 frames only if desc overflows 3 lines
-    if (lines.length > 3 && frameRef.current % 100 === 0)
-      scrollRef.current = (scrollRef.current + 1) % lines.length
-    const vis = [...lines, ...lines].slice(scrollRef.current, scrollRef.current + 3)
-    vis.forEach((l, i) => ctx.fillText(l, 38, 196 + i * 40))
- 
-    // Blinking cursor
-    cursorTick.current++
-    if (cursorTick.current % 30 === 0) cursorOn.current = !cursorOn.current
-    if (cursorOn.current) {
-      ctx.fillStyle = project.color
-      ctx.fillText('▌', 38, 196 + Math.min(vis.length, 3) * 40)
-    }
- 
-    // ── Stack chips ──
-    let cx = 38
-    const chipY = 362
-    ctx.font = 'bold 19px "Courier New", monospace'
-    project.stack.slice(0, 5).forEach(tag => {
-      const tw = ctx.measureText(tag).width + 24
-      ctx.fillStyle   = 'rgba(255,255,255,0.06)'
-      ctx.fillRect(cx, chipY, tw, 30)
-      ctx.strokeStyle = project.color + '55'
-      ctx.lineWidth   = 1
-      ctx.strokeRect(cx, chipY, tw, 30)
-      ctx.fillStyle   = project.color
-      ctx.fillText(tag, cx + 12, chipY + 21)
-      cx += tw + 8
-    })
- 
-    // ── Animated bar graph ── (4 bars, no shadowBlur)
-    const dataY = 416
-    ctx.fillStyle   = 'rgba(0,160,255,0.05)'
-    ctx.fillRect(38, dataY, W - 76, 128)
-    ctx.strokeStyle = 'rgba(0,160,255,0.15)'
-    ctx.lineWidth   = 1
-    ctx.strokeRect(38, dataY, W - 76, 128)
- 
-    const bars = [
-      { label: 'PERF',  val: 0.82 + 0.08 * Math.sin(t * 1.1) },
-      { label: 'SCALE', val: 0.70 + 0.10 * Math.sin(t * 0.9 + 1) },
-      { label: 'UX',    val: 0.91 + 0.05 * Math.sin(t * 1.3 + 2) },
-      { label: 'CODE',  val: 0.76 + 0.09 * Math.sin(t * 0.7 + 3) },
-    ]
-    bars.forEach((bar, i) => {
-      const bx = 54 + i * 232, bw = 200
-      // Track
-      ctx.fillStyle = 'rgba(255,255,255,0.05)'
-      ctx.fillRect(bx, dataY + 18, bw, 12)
-      // Fill
-      ctx.fillStyle   = project.color
-      ctx.globalAlpha = 0.7
-      ctx.fillRect(bx, dataY + 18, bw * bar.val, 12)
-      ctx.globalAlpha = 1
-      // Labels
-      ctx.font      = 'bold 16px "Courier New", monospace'
-      ctx.fillStyle = 'rgba(190,225,255,0.65)'
-      ctx.fillText(bar.label, bx, dataY + 50)
-      ctx.fillStyle = project.color
-      ctx.fillText(`${Math.round(bar.val * 100)}%`, bx, dataY + 68)
-    })
- 
-    // ── Live pill ──
-    const pp = 0.35 + 0.65 * Math.abs(Math.sin(t * 1.5))
-    ctx.fillStyle   = project.color
-    ctx.globalAlpha = pp * 0.2
-    ctx.fillRect(38, H - 84, 280, 44)
-    ctx.globalAlpha = 1
-    ctx.font        = 'bold 23px "Courier New", monospace'
-    ctx.fillStyle   = project.color
-    ctx.fillText('⬡  LIVE PROJECT', 62, H - 54)
- 
-    // ── Corner markers ──
-    const cLen = 16
-    ;[[10,10,1,1],[W-10,10,-1,1],[10,H-10,1,-1],[W-10,H-10,-1,-1]].forEach(([cx2,cy2,sx2,sy2]) => {
-      ctx.strokeStyle  = project.color
-      ctx.lineWidth    = 2
-      ctx.globalAlpha  = 0.75
-      ctx.beginPath()
-      ctx.moveTo(cx2, cy2); ctx.lineTo(cx2 + sx2 * cLen, cy2)
-      ctx.moveTo(cx2, cy2); ctx.lineTo(cx2, cy2 + sy2 * cLen)
-      ctx.stroke()
-      ctx.globalAlpha  = 1
-    })
- 
-    tex.needsUpdate = true
-  })
- 
-  return texRef.current
-}
-
 // Wrapper mesh — drop this inside ProjectTank instead of the old card group
 // ─────────────────────────────────────────────────────────────────────
 // DIGITAL SCREEN — Shrunk and Optimized for Tank Space
 // ─────────────────────────────────────────────────────────────────────
-function DigitalScreen({ project, facingRight, workActive }) {
-  const tex = useDigitalScreenTexture(project, workActive)
-
-  // ── ROTATION FIX ────────────────────────────────────────────────────
-  // Camera looks along the Z axis from the aisle. Screen must face Z.
-  // planeGeometry default normal = +Z, so:
-  //   Left-wall  tank (facingRight=true):  rotY=Math.PI → normal faces -Z toward aisle ✓
-  //   Right-wall tank (facingRight=false): rotY=0       → normal faces +Z toward aisle ✓
-  const rotY = facingRight ? Math.PI : 0
-
-  // Push screen toward the aisle (front glass side) so it's visible.
-  // Left-wall tanks:  front glass at local X=+3.05 → push screen to X=+1.8
-  // Right-wall tanks: front glass at local X=-3.05 → push screen to X=-1.8
-  const screenX = facingRight ? 2.95 : -2.95
-
-  return (
-    <>
-      {/* Screen plane — faces the aisle, full colour */}
-      <mesh position={[screenX, 0, 0]} rotation={[0, facingRight ? Math.PI : 0, 0]}>
-        <planeGeometry args={[3.8, 2.6]} />
-        <meshBasicMaterial
-          map={tex}
-          color="#ffffff"
-          transparent
-          opacity={0.98}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
-
-      {/* Bezel — sits just behind the screen plane */}
-      <mesh position={[facingRight ? screenX - 0.05 : screenX + 0.05, 0, 0]}>
-        <boxGeometry args={[0.06, 2.8, 4.0]} />
-        <meshStandardMaterial color="#060e1a" roughness={0.5} metalness={0.7} />
-      </mesh>
-
-      {/* Glow halo — in front of screen toward the aisle */}
-      <mesh position={[facingRight ? screenX + 0.06 : screenX - 0.06, 0, 0]} rotation={[0, rotY, 0]}>
-        <planeGeometry args={[4.2, 3.0]} />
-        <meshBasicMaterial
-          color={project.color}
-          transparent
-          opacity={0.14}
-          side={THREE.DoubleSide}
-          depthWrite={false}
-        />
-      </mesh>
-    </>
-  )
-}
-
-
-
 // ─────────────────────────────────────────────────────────────────────
 // CAUSTIC LIGHT PANEL — animated underwater light shimmer on floor
 // ─────────────────────────────────────────────────────────────────────
-function CausticFloor({ position }) {
-  const ref = useRef()
-  useFrame(({ clock }) => {
-    if (ref.current?.material) {
-      ref.current.material.emissiveIntensity = 0.08 + Math.sin(clock.getElapsedTime() * 1.2) * 0.05
-    }
-  })
-  return (
-    <mesh ref={ref} position={position} rotation={[-Math.PI/2, 0, 0]} receiveShadow>
-      <planeGeometry args={[22, 16, 1, 1]} />
-      <meshStandardMaterial
-        color="#021830"
-        emissive="#0a4a8a"
-        emissiveIntensity={0.08}
-        roughness={0.95}
-      />
-    </mesh>
-  )
-}
-
-
 function ArchiveHullDetails() {
   const ribZ = [-18, -11.5, -3, 5.5, 13]
 
@@ -2322,129 +1718,12 @@ function AquariumBasement({ position = [0, -14, 2], onProjectSelect }) {
 }
  
 
-function SternBalcony({ position }) {
-  return (
-    <group position={position}>
-      {/* Balcony floor */}
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[18, 0.28, 3.5]} />
-        <meshStandardMaterial color="#5C3A21" roughness={0.85} />
-      </mesh>
-      {/* Back railing */}
-      <mesh position={[0, 0.7, 1.8]} castShadow>
-        <boxGeometry args={[18, 1.2, 0.2]} />
-        <meshStandardMaterial color="#c0392b" roughness={0.6} />
-      </mesh>
-      {/* Balusters */}
-      {Array.from({ length: 11 }, (_, i) => (
-        <mesh key={i} position={[-8.2 + i * 1.64, 0.5, 1.75]} castShadow>
-          <boxGeometry args={[0.15, 1.0, 0.15]} />
-          <meshStandardMaterial color="#f5f5f5" roughness={0.8} />
-        </mesh>
-      ))}
-      {/* Decorative stern lanterns */}
-      <Lantern position={[-8, 1.8, 0]} />
-      <Lantern position={[8, 1.8, 0]} />
-      {/* Decorative carved sun panels on stern face */}
-      {[-5, 0, 5].map((x, i) => (
-        <mesh key={i} position={[x, 0, -0.15]} castShadow>
-          <cylinderGeometry args={[0.55, 0.55, 0.12, 6]} rotation={[Math.PI/2, 0, 0]} />
-          <meshStandardMaterial color="#8B6914" roughness={0.5} metalness={0.2} />
-        </mesh>
-      ))}
-    </group>
-  )
-}
-
 // ─────────────────────────────────────────────────────────────────────
 // CHICKEN VOYAGE PADDLE WHEELS — Sunny's emergency propulsion  
 // ─────────────────────────────────────────────────────────────────────
-function PaddleWheel({ position, side = 1 }) {
-  return (
-    <group position={position}>
-      {/* Main wheel hub */}
-      <mesh rotation={[0, 0, Math.PI/2]} castShadow>
-        <cylinderGeometry args={[2.2, 2.2, 0.5, 20]} />
-        <meshStandardMaterial color="#4a2e15" roughness={0.85} />
-      </mesh>
-      {/* Hub center */}
-      <mesh rotation={[0, 0, Math.PI/2]} castShadow>
-        <cylinderGeometry args={[0.45, 0.45, 0.6, 12]} />
-        <meshStandardMaterial color="#333" roughness={0.5} metalness={0.5} />
-      </mesh>
-      {/* Paddle blades — 8 of them */}
-      {Array.from({ length: 8 }, (_, i) => {
-        const angle = (i * Math.PI * 2) / 8
-        return (
-          <mesh
-            key={i}
-            position={[0, Math.sin(angle) * 1.6, Math.cos(angle) * 1.6]}
-            rotation={[angle, 0, 0]}
-            castShadow
-          >
-            <boxGeometry args={[0.55, 0.25, 0.85]} />
-            <meshStandardMaterial color="#c0392b" roughness={0.7} />
-          </mesh>
-        )
-      })}
-      {/* Spokes */}
-      {Array.from({ length: 4 }, (_, i) => {
-        const angle = (i * Math.PI) / 4 - Math.PI/8
-        return (
-          <mesh key={i} rotation={[angle, 0, 0]} castShadow>
-            <boxGeometry args={[0.55, 4.4, 0.18]} />
-            <meshStandardMaterial color="#5C3A21" roughness={0.85} />
-          </mesh>
-        )
-      })}
-      {/* Housing box */}
-      <mesh position={[side * 0.35, 0, 0]} castShadow>
-        <boxGeometry args={[0.8, 4.8, 4.8]} />
-        <meshStandardMaterial color="#4a2e15" roughness={0.85} transparent opacity={0.5} />
-      </mesh>
-    </group>
-  )
-}
-
 // ─────────────────────────────────────────────────────────────────────
 // TREASURE CHEST — for atmosphere on deck
 // ─────────────────────────────────────────────────────────────────────
-function TreasureChest({ position, rotation = [0, 0, 0] }) {
-  return (
-    <group position={position} rotation={rotation}>
-      {/* Chest body */}
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[0.9, 0.55, 0.6]} />
-        <meshStandardMaterial color="#5C3A21" roughness={0.85} />
-      </mesh>
-      {/* Domed lid */}
-      <mesh position={[0, 0.32, 0]} castShadow>
-        <cylinderGeometry args={[0.46, 0.46, 0.28, 20, 1, false, 0, Math.PI]} rotation={[0, 0, Math.PI/2]} />
-        <meshStandardMaterial color="#4a2e15" roughness={0.85} />
-      </mesh>
-      {/* Metal corner banding */}
-      {[[-0.45,0,0],[0.45,0,0],[0,0,-0.3],[0,0,0.3]].map(([x,y,z],i) => (
-        <mesh key={i} position={[x, y, z]} castShadow>
-          <boxGeometry args={i < 2 ? [0.06, 0.58, 0.62] : [0.92, 0.58, 0.06]} />
-          <meshStandardMaterial color="#888" roughness={0.4} metalness={0.6} />
-        </mesh>
-      ))}
-      {/* Front lock */}
-      <mesh position={[0, 0.08, -0.32]} castShadow>
-        <boxGeometry args={[0.2, 0.18, 0.06]} />
-        <meshStandardMaterial color="#c8a020" roughness={0.3} metalness={0.8} />
-      </mesh>
-      {/* Gold keyhole */}
-      <mesh position={[0, 0.08, -0.36]}>
-        <circleGeometry args={[0.04, 8]} />
-        <meshStandardMaterial color="#050505" />
-      </mesh>
-    </group>
-  )
-}
-
-
-
 // ─────────────────────────────────────────────────────────────────────
 // CROW'S NEST — Observation basket & invisible ladder collision
 // ─────────────────────────────────────────────────────────────────────
@@ -2506,268 +1785,9 @@ export function CrowsNest({ position = [0, 31.5, -3], rotation = [0, 0, 0], ...p
 // ─────────────────────────────────────────────────────────────────────
 // SANJI'S KITCHEN + DINING HALL — restaurant-style, stern second floor
 // ─────────────────────────────────────────────────────────────────────
-function KitchenDiningHall({ position }) {
-  return (
-    <group position={position}>
-      {/* Main building shell */}
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[14, 5.5, 8]} />
-        <meshStandardMaterial color="#c8b89a" roughness={0.85} />
-      </mesh>
-
-      {/* Roof — warm dark wood */}
-      <mesh position={[0, 3.2, 0]} castShadow>
-        <boxGeometry args={[14.8, 0.4, 8.8]} />
-        <meshStandardMaterial color="#3d2410" roughness={0.85} />
-      </mesh>
-      {/* Roof ridge beam */}
-      <mesh position={[0, 4.0, 0]} castShadow>
-        <boxGeometry args={[15, 0.35, 0.35]} />
-        <meshStandardMaterial color="#2a1505" roughness={0.8} />
-      </mesh>
-      {/* Roof slope left */}
-      <mesh position={[-7.2, 3.55, 0]} rotation={[0, 0, 0.42]} castShadow>
-        <boxGeometry args={[0.3, 1.8, 8.8]} />
-        <meshStandardMaterial color="#3d2410" roughness={0.85} />
-      </mesh>
-      {/* Roof slope right */}
-      <mesh position={[7.2, 3.55, 0]} rotation={[0, 0, -0.42]} castShadow>
-        <boxGeometry args={[0.3, 1.8, 8.8]} />
-        <meshStandardMaterial color="#3d2410" roughness={0.85} />
-      </mesh>
-
-      {/* Front wall with big window opening */}
-      <mesh position={[0, 0, -4.1]} castShadow>
-        <boxGeometry args={[14, 5.5, 0.25]} />
-        <meshStandardMaterial color="#b8a88a" roughness={0.85} />
-      </mesh>
-      {/* Large front windows — 3 across */}
-      {[-4.5, 0, 4.5].map((x, i) => (
-        <mesh key={i} position={[x, 0.5, -4.18]}>
-          <boxGeometry args={[3.2, 2.8, 0.08]} />
-          <meshStandardMaterial color="#88ccdd" roughness={0.05} metalness={0.1} transparent opacity={0.55} emissive="#aaddee" emissiveIntensity={0.08} />
-        </mesh>
-      ))}
-      {/* Window frames */}
-      {[-4.5, 0, 4.5].map((x, i) => (
-        <group key={i} position={[x, 0.5, -4.12]}>
-          <mesh><boxGeometry args={[3.3, 0.12, 0.1]} /><meshStandardMaterial color="#3d2410" roughness={0.8} /></mesh>
-          <mesh position={[0, -1.5, 0]}><boxGeometry args={[3.3, 0.12, 0.1]} /><meshStandardMaterial color="#3d2410" roughness={0.8} /></mesh>
-          <mesh position={[-1.6, 0, 0]}><boxGeometry args={[0.12, 3.0, 0.1]} /><meshStandardMaterial color="#3d2410" roughness={0.8} /></mesh>
-          <mesh position={[1.6, 0, 0]}><boxGeometry args={[0.12, 3.0, 0.1]} /><meshStandardMaterial color="#3d2410" roughness={0.8} /></mesh>
-        </group>
-      ))}
-
-      {/* DINING AREA — long table */}
-      <mesh position={[0, -1.5, 1]} castShadow>
-        <boxGeometry args={[10, 0.22, 2.2]} />
-        <meshStandardMaterial color="#6b3d1e" roughness={0.7} />
-      </mesh>
-      {/* Table legs */}
-      {[[-4.2,-1],[4.2,-1],[-4.2,1],[4.2,1]].map(([x,z],i) => (
-        <mesh key={i} position={[x, -2.4, z]} castShadow>
-          <cylinderGeometry args={[0.1,0.1,1.8,8]} />
-          <meshStandardMaterial color="#4a2510" roughness={0.8} />
-        </mesh>
-      ))}
-      {/* Dining chairs — left row */}
-      {[-3.5,-1.5,0.5,2.5].map((x,i) => (
-        <group key={i} position={[x, -2.0, -1.5]}>
-          <mesh castShadow><boxGeometry args={[0.7,0.08,0.7]} /><meshStandardMaterial color="#8B1a1a" roughness={0.7} /></mesh>
-          <mesh position={[0,0.65,0.3]} castShadow><boxGeometry args={[0.7,1.3,0.08]} /><meshStandardMaterial color="#8B1a1a" roughness={0.7} /></mesh>
-        </group>
-      ))}
-      {/* Dining chairs — right row */}
-      {[-3.5,-1.5,0.5,2.5].map((x,i) => (
-        <group key={i} position={[x, -2.0, 2.5]}>
-          <mesh castShadow><boxGeometry args={[0.7,0.08,0.7]} /><meshStandardMaterial color="#8B1a1a" roughness={0.7} /></mesh>
-          <mesh position={[0,0.65,-0.3]} castShadow><boxGeometry args={[0.7,1.3,0.08]} /><meshStandardMaterial color="#8B1a1a" roughness={0.7} /></mesh>
-        </group>
-      ))}
-
-      {/* KITCHEN COUNTER — back wall */}
-      <mesh position={[0, -1.6, 3.5]} castShadow>
-        <boxGeometry args={[12, 1.8, 0.9]} />
-        <meshStandardMaterial color="#5C3A21" roughness={0.8} />
-      </mesh>
-      {/* Counter top */}
-      <mesh position={[0, -0.65, 3.5]} castShadow>
-        <boxGeometry args={[12.2, 0.12, 1.0]} />
-        <meshStandardMaterial color="#888" roughness={0.3} metalness={0.5} />
-      </mesh>
-      {/* Pots on counter */}
-      {[-4, -1.5, 1.5, 4].map((x,i) => (
-        <mesh key={i} position={[x, -0.35, 3.5]} castShadow>
-          <cylinderGeometry args={[0.28,0.22,0.45,12]} />
-          <meshStandardMaterial color={i%2===0?"#555":"#c0392b"} roughness={0.5} metalness={i%2===0?0.6:0.1} />
-        </mesh>
-      ))}
-      {/* Overhead hanging pots rack */}
-      <mesh position={[0, 1.2, 3.2]} castShadow>
-        <boxGeometry args={[10, 0.08, 0.08]} />
-        <meshStandardMaterial color="#555" roughness={0.4} metalness={0.7} />
-      </mesh>
-      {[-3.5,-1.5,0.5,2.5].map((x,i) => (
-        <group key={i} position={[x, 0.8, 3.2]}>
-          <mesh castShadow><cylinderGeometry args={[0.02,0.02,0.45,6]} /><meshStandardMaterial color="#666" roughness={0.4} metalness={0.7} /></mesh>
-          <mesh position={[0,-0.35,0]} castShadow>
-            <cylinderGeometry args={[0.18,0.14,0.32,10]} />
-            <meshStandardMaterial color="#444" roughness={0.5} metalness={0.6} />
-          </mesh>
-        </group>
-      ))}
-
-      {/* Side wall decorative wood panels */}
-      {[-6.8, 6.8].map((x,i) => (
-        <group key={i} position={[x, 0, 0]}>
-          {[-1.5, 0.5].map((z,j) => (
-            <mesh key={j} position={[0, 0.2, z]} castShadow>
-              <boxGeometry args={[0.08, 3.5, 1.8]} />
-              <meshStandardMaterial color="#8b5a2b" roughness={0.8} />
-            </mesh>
-          ))}
-        </group>
-      ))}
-
-      {/* Lanterns inside */}
-      <Lantern position={[-5, 1.8, -2]} />
-      <Lantern position={[5,  1.8, -2]} />
-      <Lantern position={[0,  1.8,  2]} />
-    </group>
-  )
-}
-
 // ─────────────────────────────────────────────────────────────────────
 // DOME CROW'S NEST — proper dome-shaped hut with gym equipment
 // ─────────────────────────────────────────────────────────────────────
-function DomeCrowsNest({ position }) {
-  return (
-    <group position={position}>
-      {/* Platform floor */}
-      <mesh castShadow receiveShadow>
-        <cylinderGeometry args={[2.6, 2.8, 0.45, 24]} />
-        <meshStandardMaterial color="#5C3A21" roughness={0.85} />
-      </mesh>
-      {/* Dome body */}
-      <mesh position={[0, 1.8, 0]} castShadow>
-        <sphereGeometry args={[2.5, 16, 12, 0, Math.PI*2, 0, Math.PI/2]} />
-        <meshStandardMaterial color="#c8b89a" roughness={0.75} side={THREE.DoubleSide} />
-      </mesh>
-      {/* Dome base ring */}
-      <mesh position={[0, 0.3, 0]} castShadow>
-        <cylinderGeometry args={[2.52, 2.52, 0.35, 24]} />
-        <meshStandardMaterial color="#b8a88a" roughness={0.8} />
-      </mesh>
-      {/* Windows — 6 around dome */}
-      {Array.from({length:6},(_,i) => {
-        const angle = (i * Math.PI*2)/6
-        return (
-          <mesh key={i}
-            position={[Math.cos(angle)*2.15, 1.2, Math.sin(angle)*2.15]}
-            rotation={[0, -angle, 0]}
-          >
-            <boxGeometry args={[0.9, 0.75, 0.08]} />
-            <meshStandardMaterial color="#88ccdd" roughness={0.05} metalness={0.1} transparent opacity={0.6} emissive="#aaddee" emissiveIntensity={0.12} />
-          </mesh>
-        )
-      })}
-      {/* Window frames */}
-      {Array.from({length:6},(_,i) => {
-        const angle = (i * Math.PI*2)/6
-        return (
-          <mesh key={i}
-            position={[Math.cos(angle)*2.12, 1.2, Math.sin(angle)*2.12]}
-            rotation={[0, -angle, 0]}
-          >
-            <boxGeometry args={[1.0, 0.88, 0.06]} />
-            <meshStandardMaterial color="#3d2410" roughness={0.8} transparent opacity={0.0} />
-          </mesh>
-        )
-      })}
-      {/* Dome top cap */}
-      <mesh position={[0, 4.0, 0]} castShadow>
-        <sphereGeometry args={[0.35, 12, 12]} />
-        <meshStandardMaterial color="#888" roughness={0.4} metalness={0.6} />
-      </mesh>
-      {/* Flag pole */}
-      <mesh position={[0, 5.5, 0]} castShadow>
-        <cylinderGeometry args={[0.05, 0.05, 3.5, 8]} />
-        <meshStandardMaterial color="#2a1505" roughness={0.8} />
-      </mesh>
-      {/* Straw Hat Jolly Roger flag */}
-      <mesh position={[1.4, 6.8, 0]} rotation={[0, -Math.PI/2, 0]}>
-        <planeGeometry args={[3.0, 1.6]} />
-        <meshStandardMaterial color="#111" side={THREE.DoubleSide} roughness={0.9} />
-      </mesh>
-      {/* Flag skull circle */}
-      <mesh position={[0.6, 6.9, 0.01]}>
-        <circleGeometry args={[0.45, 20]} />
-        <meshStandardMaterial color="#f0f0f0" side={THREE.DoubleSide} />
-      </mesh>
-      {/* Straw hat brim on flag skull */}
-      <mesh position={[0.6, 7.28, 0.02]} rotation={[0.1, 0, 0]}>
-        <torusGeometry args={[0.55, 0.1, 8, 24]} />
-        <meshStandardMaterial color="#c8a020" roughness={0.85} side={THREE.DoubleSide} />
-      </mesh>
-
-      {/* GYM EQUIPMENT inside */}
-      {/* Dumbbell rack */}
-      <mesh position={[0.8, 0.55, 0.5]} castShadow>
-        <boxGeometry args={[1.2, 0.22, 0.4]} />
-        <meshStandardMaterial color="#333" roughness={0.5} metalness={0.6} />
-      </mesh>
-      {[-0.3, 0.3].map((x,i) => (
-        <mesh key={i} position={[x+0.8, 0.78, 0.5]} castShadow>
-          <cylinderGeometry args={[0.22, 0.22, 0.18, 16]} rotation={[0,0,Math.PI/2]} />
-          <meshStandardMaterial color="#444" roughness={0.4} metalness={0.7} />
-        </mesh>
-      ))}
-      {/* Pull-up bar */}
-      <mesh position={[0, 2.8, -1.8]} castShadow>
-        <cylinderGeometry args={[0.06, 0.06, 2.4, 8]} rotation={[0,0,Math.PI/2]} />
-        <meshStandardMaterial color="#666" roughness={0.4} metalness={0.7} />
-      </mesh>
-      {/* Bench */}
-      <mesh position={[-0.8, 0.5, -0.5]} castShadow>
-        <boxGeometry args={[0.5, 0.18, 1.2]} />
-        <meshStandardMaterial color="#5C3A21" roughness={0.8} />
-      </mesh>
-
-      {/* Circular bench around edge */}
-      {Array.from({length:10},(_,i) => {
-        const angle = (i*Math.PI*2)/10
-        return (
-          <mesh key={i} position={[Math.cos(angle)*1.8, 0.42, Math.sin(angle)*1.8]} rotation={[0,-angle,0]} castShadow>
-            <boxGeometry args={[1.1, 0.22, 0.4]} />
-            <meshStandardMaterial color="#5C3A21" roughness={0.85} />
-          </mesh>
-        )
-      })}
-
-      {/* Telescopic equipment */}
-      <mesh position={[0, 1.5, 0]} rotation={[0.3, 0.5, 0]} castShadow>
-        <cylinderGeometry args={[0.12, 0.18, 1.8, 12]} />
-        <meshStandardMaterial color="#444" roughness={0.3} metalness={0.8} />
-      </mesh>
-
-      {/* Railing around platform */}
-      <mesh position={[0, 0.95, 0]} castShadow>
-        <torusGeometry args={[2.62, 0.07, 10, 36]} />
-        <meshStandardMaterial color="#c0392b" roughness={0.6} />
-      </mesh>
-      {Array.from({length:16},(_,i) => {
-        const angle = (i*Math.PI*2)/16
-        return (
-          <mesh key={i} position={[Math.cos(angle)*2.62, 0.65, Math.sin(angle)*2.62]} castShadow>
-            <boxGeometry args={[0.1, 0.85, 0.1]} />
-            <meshStandardMaterial color="#f5f5f5" roughness={0.8} />
-          </mesh>
-        )
-      })}
-    </group>
-  )
-}
-
 // ─────────────────────────────────────────────────────────────────────
 // LOG POSE PILLAR — navigation instrument behind the helm
 // ─────────────────────────────────────────────────────────────────────
@@ -2813,59 +1833,6 @@ function LogPosePillar({ position }) {
 // ─────────────────────────────────────────────────────────────────────
 // ROBIN'S FLOWER GARDEN — observation deck flowers
 // ─────────────────────────────────────────────────────────────────────
-function FlowerGarden({ position }) {
-  const flowers = [
-    { p:[0,0,0], color:'#e91e63', stemH:0.55 },
-    { p:[0.7,0,0.4], color:'#9c27b0', stemH:0.45 },
-    { p:[-0.6,0,0.5], color:'#ff5722', stemH:0.6 },
-    { p:[0.3,0,0.9], color:'#ffeb3b', stemH:0.5 },
-    { p:[-0.9,0,0.2], color:'#ff9800', stemH:0.4 },
-    { p:[1.1,0,0.7], color:'#e91e63', stemH:0.52 },
-    { p:[-0.3,0,1.1], color:'#fff176', stemH:0.48 },
-    { p:[0.8,0,-0.3], color:'#ce93d8', stemH:0.58 },
-  ]
-  return (
-    <group position={position}>
-      {/* Planter box */}
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[2.8, 0.35, 1.8]} />
-        <meshStandardMaterial color="#4a2e15" roughness={0.85} />
-      </mesh>
-      {/* Soil */}
-      <mesh position={[0, 0.2, 0]} castShadow>
-        <boxGeometry args={[2.6, 0.15, 1.6]} />
-        <meshStandardMaterial color="#2d1a08" roughness={1.0} />
-      </mesh>
-      {/* Flowers */}
-      {flowers.map(({p,color,stemH},i) => (
-        <group key={i} position={[p[0]-1.2, 0.28, p[2]-0.7]}>
-          {/* Stem */}
-          <mesh position={[0, stemH/2, 0]} castShadow>
-            <cylinderGeometry args={[0.025, 0.025, stemH, 6]} />
-            <meshStandardMaterial color="#388e3c" roughness={0.9} />
-          </mesh>
-          {/* Petals */}
-          {[0,1,2,3,4].map(pi => (
-            <mesh key={pi}
-              position={[Math.cos(pi*Math.PI*2/5)*0.1, stemH+0.04, Math.sin(pi*Math.PI*2/5)*0.1]}
-              castShadow
-            >
-              <sphereGeometry args={[0.085, 8, 8]} />
-              <meshStandardMaterial color={color} roughness={0.6} />
-            </mesh>
-          ))}
-          {/* Center */}
-          <mesh position={[0, stemH+0.06, 0]} castShadow>
-            <sphereGeometry args={[0.072, 8, 8]} />
-            <meshStandardMaterial color="#fff176" roughness={0.5} />
-          </mesh>
-        </group>
-      ))}
-    </group>
-  )
-}
-
-
 // ─────────────────────────────────────────────────────────────────────
 // THE THOUSAND SUNNY — COMPLETE SHIP
 // ─────────────────────────────────────────────────────────────────────
@@ -3114,57 +2081,6 @@ function SunnySternArchitecture() {
   )
 }
 
-function SunnyHullDetails() {
-  const portHoles = [-18, -9, 0, 9, 18]
-  const ribs = [-22, -16, -10, -4, 2, 8, 14, 20]
-
-  return (
-    <group>
-      {/* plank ribs break up the old boxy hull silhouette */}
-      {[-1, 1].map((side) => (
-        <group key={`hull-side-${side}`}>
-          {ribs.map((z) => (
-            <mesh key={`${side}-${z}`} position={[side * 9.62, -2.65, z]} castShadow>
-              <boxGeometry args={[0.18, 4.6, 0.18]} />
-              <meshStandardMaterial color="#2d190b" roughness={0.92} />
-            </mesh>
-          ))}
-
-          {portHoles.map((z) => (
-            <group key={`port-${side}-${z}`} position={[side * 9.68, -1.55, z]}>
-              <mesh rotation={[0, Math.PI / 2, 0]}>
-                <ringGeometry args={[0.34, 0.48, 24]} />
-                <meshStandardMaterial color="#f4ead2" roughness={0.55} side={THREE.DoubleSide} />
-              </mesh>
-              <mesh rotation={[0, Math.PI / 2, 0]}>
-                <circleGeometry args={[0.31, 24]} />
-                <meshStandardMaterial
-                  color="#163b4d"
-                  roughness={0.2}
-                  metalness={0.05}
-                  transparent
-                  opacity={0.78}
-                  emissive="#0e7ca1"
-                  emissiveIntensity={0.1}
-                  side={THREE.DoubleSide}
-                />
-              </mesh>
-            </group>
-          ))}
-        </group>
-      ))}
-
-      {/* stern transom trim */}
-      {[-5.8, -2.9, 0, 2.9, 5.8].map((x) => (
-        <mesh key={`stern-trim-${x}`} position={[x, -1.35, 29.28]} castShadow>
-          <boxGeometry args={[1.55, 0.28, 0.2]} />
-          <meshStandardMaterial color="#f4ead2" roughness={0.7} />
-        </mesh>
-      ))}
-    </group>
-  )
-}
-
 function SunnyLawnDetails() {
   return (
     <group>
@@ -3209,35 +2125,6 @@ function SunnySideDeckTrim() {
           ))}
           <RigLine from={[side * 8.08, 1.62, -18]} to={[side * 8.08, 1.62, 14]} thickness={0.035} />
         </group>
-      ))}
-    </group>
-  )
-}
-
-function BowPlatform({ position }) {
-  return (
-    <group position={position}>
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[10, 0.3, 4]} />
-        <meshStandardMaterial color="#5C3A21" roughness={0.85} />
-      </mesh>
-      <mesh position={[-5.1, 0.7, 0]} castShadow>
-        <boxGeometry args={[0.2, 1.2, 4]} />
-        <meshStandardMaterial color="#c0392b" roughness={0.6} />
-      </mesh>
-      <mesh position={[5.1, 0.7, 0]} castShadow>
-        <boxGeometry args={[0.2, 1.2, 4]} />
-        <meshStandardMaterial color="#c0392b" roughness={0.6} />
-      </mesh>
-      <mesh position={[0, 0.7, -2.1]} castShadow>
-        <boxGeometry args={[10, 1.2, 0.2]} />
-        <meshStandardMaterial color="#c0392b" roughness={0.6} />
-      </mesh>
-      {[-4,-2.5,-1,0,1,2.5,4].map((x, i) => (
-        <mesh key={i} position={[x, 0.5, -2]}>
-          <boxGeometry args={[0.15, 1.0, 0.15]} />
-          <meshStandardMaterial color="#f5f5f5" roughness={0.8} />
-        </mesh>
       ))}
     </group>
   )

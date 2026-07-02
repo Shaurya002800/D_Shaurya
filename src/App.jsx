@@ -1,9 +1,6 @@
 import { lazy, Suspense, useState, useRef, useEffect, useCallback } from 'react'
 import LoadingScreen from './components/LoadingScreen'
-import ControlsOverlay from './components/ControlsOverlay'
 import NavWheels from './components/NavWheels'
-import DevilFruitChat from './components/DevilFruitChat.jsx'
-import ArtifactDossier from './components/ArtifactDossier.jsx'
 import GrandLineMap from './components/GrandLineMap.jsx'
 import GuidedVoyageOverlay from './components/GuidedVoyageOverlay.jsx'
 import MobileControls from './components/MobileControls.jsx'
@@ -11,14 +8,20 @@ import OceanMusic from './components/OceanMusic.jsx'
 import PortfolioIntro from './components/PortfolioIntro.jsx'
 import SwordCursor from './components/SwordCursor.jsx'
 import LuffyUI from './components/LuffyUI.jsx'
-import SkillsSection from './components/Skillssection'
-import WorkSection, {
-  WorkTransitionOverlay,
-  WorkSectionLabel,
-} from './components/WorkSection'
 
 const WorldScene = lazy(() => import('./scenes/WorldScene'))
 const AboutSection = lazy(() => import('./components/AboutSection'))
+const ArtifactDossier = lazy(() => import('./components/ArtifactDossier.jsx'))
+const ControlsOverlay = lazy(() => import('./components/ControlsOverlay'))
+const DevilFruitChat = lazy(() => import('./components/DevilFruitChat.jsx'))
+const SkillsSection = lazy(() => import('./components/Skillssection'))
+const WorkSection = lazy(() => import('./components/WorkSection'))
+const WorkTransitionOverlay = lazy(() => (
+  import('./components/WorkSection').then((module) => ({ default: module.WorkTransitionOverlay }))
+))
+const WorkSectionLabel = lazy(() => (
+  import('./components/WorkSection').then((module) => ({ default: module.WorkSectionLabel }))
+))
 
 function AboutTransitionOverlay() { return null }
 function SectionTransitionLabel() { return null }
@@ -230,7 +233,9 @@ function App() {
                 onResume={handleShowResume}
                 onContact={handleContact}
               />
-              <ControlsOverlay />
+              <Suspense fallback={null}>
+                <ControlsOverlay />
+              </Suspense>
               <LuffyUI
                 hintLabel={hintLabel}
                 speed={speed}
@@ -249,7 +254,9 @@ function App() {
               zIndex:        9999,
               pointerEvents: 'auto',
             }}>
-              <DevilFruitChat />
+              <Suspense fallback={null}>
+                <DevilFruitChat />
+              </Suspense>
             </div>
           )}
         </>
@@ -283,25 +290,37 @@ function App() {
         </Suspense>
       )}
 
-      <SkillsSection
-        active={skillsActive}
-        onClose={handleSkillsClose}
-        onDirectionChange={setSkillsDirection}
-      />
+      {skillsActive && (
+        <Suspense fallback={null}>
+          <SkillsSection
+            active={skillsActive}
+            onClose={handleSkillsClose}
+            onDirectionChange={setSkillsDirection}
+          />
+        </Suspense>
+      )}
 
-      <WorkSection
-        active={workActive}
-        onClose={handleWorkClose}
-        selectedProject={selectedProject}
-        onProjectClose={handleProjectClose}
-      />
-      <WorkTransitionOverlay active={workActive} />
-      <WorkSectionLabel      active={workActive} />
+      {workActive && (
+        <Suspense fallback={null}>
+          <WorkSection
+            active={workActive}
+            onClose={handleWorkClose}
+            selectedProject={selectedProject}
+            onProjectClose={handleProjectClose}
+          />
+          <WorkTransitionOverlay active={workActive} />
+          <WorkSectionLabel active={workActive} />
+        </Suspense>
+      )}
 
-      <ArtifactDossier
-        artifact={selectedArtifact}
-        onClose={() => setSelectedArtifact(null)}
-      />
+      {selectedArtifact && (
+        <Suspense fallback={null}>
+          <ArtifactDossier
+            artifact={selectedArtifact}
+            onClose={() => setSelectedArtifact(null)}
+          />
+        </Suspense>
+      )}
 
       <AboutTransitionOverlay active={aboutActive} />
       <SectionTransitionLabel active={aboutActive} label="ABOUT" />

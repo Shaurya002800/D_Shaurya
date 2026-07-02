@@ -4,24 +4,9 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 import { useRef, useEffect, useState, useMemo } from 'react'
-import { useFrame, useThree } from '@react-three/fiber'
+import { useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import gsap from 'gsap'
-import { PROFILE } from '../data/profile.js'
-let _sailTexCache = null
-let _blankTexCache = null
-
-const ABOUT = {
-  title:    "I'M SHAURYA.",
-  tagline1: 'I build things that look good and work well.',
-  tagline2: 'Designer by instinct. Developer by choice. AI/ML by curiosity.',
-  photo: '/shaurya.png', 
-  links: [
-    { label: 'GitHub',   href: PROFILE.links.github   },
-    { label: 'LinkedIn', href: PROFILE.links.linkedin  },
-    { label: 'Resume',   href: PROFILE.links.resume    },
-  ],
-}
 
 // Precise camera angles for the 4:3 aspect sail layout
 const CAM_EXPLORE = { position: new THREE.Vector3(0, 8.5, 16), target: new THREE.Vector3(0, 1.5, 0), fov: 68 }
@@ -31,7 +16,12 @@ function lerpV3(out, a, b, t) {
   out.set(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t)
 }
 
-export function useAboutCamera(active) {
+function seededNoise(seed) {
+  const value = Math.sin(seed * 91.17) * 10000
+  return value - Math.floor(value)
+}
+
+function useAboutCamera(active) {
   const { camera } = useThree()
   const lookRef    = useRef(CAM_EXPLORE.target.clone())
   const tlRef      = useRef(null)
@@ -68,21 +58,6 @@ export function AboutCameraController({ active }) {
 }
 
 // Generates sail geometry with clean 3D curvature billow
-function createSailGeometry(W, H, seg) {
-  const geo = new THREE.PlaneGeometry(W, H, seg, seg)
-  const pos = geo.attributes.position
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i)
-    const y = pos.getY(i)
-    const nx = x / (W / 2)  
-    const ny = y / (H / 2)  
-    const bulge = (1 - nx * nx) * (1 - ny * ny * 0.25) * (W * 0.12)
-    pos.setZ(i, bulge)
-  }
-  geo.computeVertexNormals()
-  return geo
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // 3D SAIL COMPONENT WITH CRISP ANTI-ALIASED TEXTURE PIPELINE
 // ─────────────────────────────────────────────────────────────────────────────
@@ -293,8 +268,9 @@ export function AnimatedSail({ position = [0, 20.5, -2.5] }) {
 
   // ── Grain noise ──
   for (let i = 0; i < 14000; i++) {
-    const x = Math.random() * W, y = Math.random() * H
-    ctx.fillStyle = `rgba(70,48,18,${Math.random() * 0.035})`
+    const x = seededNoise(i + 1) * W
+    const y = seededNoise(i + 2) * H
+    ctx.fillStyle = `rgba(70,48,18,${seededNoise(i + 3) * 0.035})`
     ctx.fillRect(x, y, 1.2, 1.2)
   }
 
@@ -559,88 +535,6 @@ export function AnimatedSail({ position = [0, 20.5, -2.5] }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // TRANSPARENT CLICK OUTSIDE INTERACTION HANDLING
 // ─────────────────────────────────────────────────────────────────────────────
-function SailInteractiveOverlay({ active, onClose }) {
-  const [showUI, setShowUI] = useState(false)
-  const [hov, setHov]       = useState(null)
-
-  useEffect(() => {
-    if (active) {
-      const t = setTimeout(() => setShowUI(true), 1800)
-      return () => clearTimeout(t)
-    } else {
-      setShowUI(false)
-    }
-  }, [active])
-
-  useEffect(() => {
-    const handleEsc = (e) => { if (e.key === 'Escape' && active) onClose() }
-    window.addEventListener('keydown', handleEsc)
-    return () => window.removeEventListener('keydown', handleEsc)
-  }, [active, onClose])
-
-  if (!active) return null
-
-  return (
-    <>
-      <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 215, cursor: 'pointer' }} />
-
-      <div style={{
-        position: 'fixed', top: '9%', left: '50%', transform: 'translateX(-50%)',
-        zIndex: 220, width: 'clamp(540px, 78vw, 1100px)', height: '62vh',
-        pointerEvents: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-        paddingLeft: 'clamp(24px, 4vw, 50px)', paddingBottom: 'clamp(18px, 3vh, 38px)'
-      }}>
-        
-        <button
-          onClick={onClose}
-          style={{
-            position: 'absolute', top: '20px', right: '20px', pointerEvents: 'all', zIndex: 230,
-            width: '36px', height: '36px', borderRadius: '50%', border: '1.5px solid rgba(48,30,10,0.3)',
-            background: 'transparent', color: 'rgba(48,30,10,0.6)', fontSize: '14px', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease',
-            opacity: showUI ? 1 : 0, transform: showUI ? 'scale(1)' : 'scale(0)'
-          }}
-          onMouseEnter={(e) => { e.target.style.background = 'rgba(48,30,10,0.1)'; e.target.style.color = '#1c1004' }}
-          onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.color = 'rgba(48,30,10,0.6)' }}
-        >✕</button>
-
-        <div style={{ display: 'flex', gap: 'clamp(15px, 2.5vw, 40px)', opacity: showUI ? 1 : 0, transition: 'opacity 0.5s ease', pointerEvents: 'all' }}>
-          {ABOUT.links.map((link, i) => (
-            <a
-              key={link.label} href={link.href} target="_blank" rel="noreferrer"
-              onMouseEnter={() => setHov(i)} onMouseLeave={() => setHov(null)}
-              style={{
-                fontFamily: '"Cormorant Garamond", Georgia, serif', fontSize: 'clamp(14px, 1.2vw, 18px)',
-                fontWeight: 700, textDecoration: 'none', letterSpacing: '0.08em', textTransform: 'uppercase',
-                color: hov === i ? '#1a0f05' : 'rgba(48, 30, 10, 0.45)',
-                borderBottom: hov === i ? '1.5px solid #1a0f05' : '1.5px solid transparent',
-                transition: 'all 0.2s ease', paddingBottom: '2px',
-              }}
-            >
-              {link.label}
-            </a>
-          ))}
-        </div>
-      </div>
-
-      <div style={{
-        position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 260,
-        padding: '9px 20px', borderRadius: '999px', border: '1px solid rgba(232,206,158,0.2)',
-        background: 'rgba(18,12,6,0.65)', color: 'rgba(244,225,187,0.85)',
-        fontFamily: '"IM Fell English SC", Georgia, serif', fontSize: '11px', letterSpacing: '0.15em',
-        backdropFilter: 'blur(6px)', pointerEvents: 'none', opacity: showUI ? 1 : 0, transition: 'opacity 0.4s ease'
-      }}>
-        CLICK ANYWHERE · PRESS ESC TO RETURN
-      </div>
-    </>
-  )
-}
-
-export function AboutTransitionOverlay({ active }) { return null }
-export function SectionTransitionLabel({ active }) { return null }
-export function WindCompass({ visible }) { return null }
-
-// REPLACE the entire default export at the bottom:
 export default function AboutSection({ active, onClose }) {
   if (!active) return null
 

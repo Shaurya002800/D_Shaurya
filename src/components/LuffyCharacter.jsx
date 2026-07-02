@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback, useState } from 'react'
+import { useRef, useEffect, useCallback } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useGLTF }            from '@react-three/drei'
 import * as THREE              from 'three'
@@ -123,6 +123,11 @@ const ANIM_FILES = {
   [STATE.CLIMB_TOP]: '/animations/Climbing To Top.fbx',
   [STATE.JUMP]:    '/animations/Jumping Down.fbx',
 }
+
+const CRITICAL_ANIMATIONS = [STATE.WALK, STATE.RUN]
+const OPTIONAL_ANIMATIONS = Object.keys(ANIM_FILES).filter(
+  (stateName) => stateName !== STATE.IDLE && !CRITICAL_ANIMATIONS.includes(stateName),
+)
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
@@ -259,12 +264,11 @@ function loadAnim(loader, path, mixer, name) {
         action.setLoop(THREE.LoopRepeat)
         action.play()
         action.paused = true
-        console.log(`[Luffy] ✅ ${name} loaded — ${clip.tracks.length} tracks`)
         resolve(action)
       },
       undefined,
       (err) => {
-        console.error(`[Luffy] ❌ Failed to load ${name}:`, err)
+        console.error(`[Luffy] Failed to load ${name}:`, err)
         reject(err)
       }
     )
@@ -801,64 +805,6 @@ function getActiveProjectSpot(pos) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// INTERACTION HINT
-// ─────────────────────────────────────────────────────────────────────────────
-
-function InteractionHint({ label }) {
-  if (!label) return null
-  return (
-    <div
-      style={{
-        position:      'fixed',
-        bottom:        '38px',
-        left:          '50%',
-        transform:     'translateX(-50%)',
-        zIndex:        200,
-        fontFamily:    '"Pirata One", cursive',
-        fontSize:      '15px',
-        letterSpacing: '0.08em',
-        color:         '#f0c040',
-        background:    'rgba(0,0,0,0.52)',
-        border:        '1px solid rgba(240,192,64,0.35)',
-        borderRadius:  '8px',
-        padding:       '8px 22px',
-        pointerEvents: 'none',
-        textShadow:    '0 0 12px rgba(240,192,64,0.6)',
-        backdropFilter:'blur(6px)',
-        animation:     'hintPulse 1.8s ease-in-out infinite',
-      }}
-    >
-      {label}
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// SPEED INDICATOR
-// ─────────────────────────────────────────────────────────────────────────────
-
-function isDebugHudEnabled() {
-  if (!import.meta.env.DEV || typeof window === 'undefined') return false
-
-  try {
-    return window.localStorage.getItem('grand-line-debug-hud') === 'true'
-  } catch {
-    return false
-  }
-}
-
-function SpeedIndicator({ speed, state }) {
-  if (!isDebugHudEnabled()) return null
-
-  return (
-    <div className="luffy-debug-hud" aria-label="Developer movement debug">
-      <div>state: <span style={{ color: '#f0c040' }}>{state}</span></div>
-      <div>speed: <span style={{ color: '#44ffaa' }}>{speed.toFixed(2)}</span></div>
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // LUFFY 3D — Main Component
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1088,6 +1034,34 @@ function Luffy3D({
     let fbxMesh   = null
     let mixer     = null
     let disposed  = false
+    let optionalIdleHandle = null
+    let optionalTimer = null
+
+    const loadAndRegisterAnimations = async (animKeys) => {
+      const results = await Promise.allSettled(
+        animKeys.map(k => loadAnim(loader, ANIM_FILES[k], mixer, k))
+      )
+      if (disposed || mixerRef.current !== mixer) return
+
+      results.forEach((result, i) => {
+        if (result.status === 'fulfilled') {
+          animSM.current.register(animKeys[i], result.value)
+        }
+      })
+    }
+
+    const scheduleOptionalAnimations = () => {
+      const loadOptional = () => {
+        void loadAndRegisterAnimations(OPTIONAL_ANIMATIONS)
+      }
+
+      if ('requestIdleCallback' in window) {
+        optionalIdleHandle = window.requestIdleCallback(loadOptional, { timeout: 5000 })
+        return
+      }
+
+      optionalTimer = window.setTimeout(loadOptional, 1800)
+    }
 
     loader.load(
       ANIM_FILES[STATE.IDLE],
@@ -1118,29 +1092,23 @@ function Luffy3D({
         stateRef.current = STATE.IDLE
 
         loadedRef.current = true
-        console.log('[Luffy] ✅ Base mesh + idle ready')
-
-        const animKeys = Object.keys(ANIM_FILES).filter(k => k !== STATE.IDLE)
-        const results  = await Promise.allSettled(
-          animKeys.map(k => loadAnim(loader, ANIM_FILES[k], mixer, k))
-        )
-        if (disposed || mixerRef.current !== mixer) return
-
-        results.forEach((result, i) => {
-          if (result.status === 'fulfilled') {
-            animSM.current.register(animKeys[i], result.value)
-          }
-        })
-        console.log('[Luffy] ✅ All animations loaded')
+        await loadAndRegisterAnimations(CRITICAL_ANIMATIONS)
+        if (!disposed) scheduleOptionalAnimations()
       },
       undefined,
       (err) => {
-        if (!disposed) console.error('[Luffy] ❌ Failed to load base mesh:', err)
+        if (!disposed) console.error('[Luffy] Failed to load base mesh:', err)
       }
     )
 
     return () => {
       disposed = true
+      if (optionalIdleHandle !== null && 'cancelIdleCallback' in window) {
+        window.cancelIdleCallback(optionalIdleHandle)
+      }
+      if (optionalTimer !== null) {
+        window.clearTimeout(optionalTimer)
+      }
       if (mixer) {
         mixer.stopAllAction()
         mixer.uncacheRoot(fbxMesh)
@@ -1431,72 +1399,5 @@ function Luffy3D({
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// LUFFY CHARACTER — main export
-// ─────────────────────────────────────────────────────────────────────────────
-
-export default function LuffyCharacter({
-  position = [0, 0.15, 5],
-  onNavigate,
-  onProjectSelect,
-  onArtifactOpen,
-  aboutActive = false,
-  skillsActive = false,
-  skillsDirection = 'north',
-  workActive = false,
-}) {
-  const [hintLabel,   setHintLabel]   = useState(null)
-  const [charState,   setCharState]   = useState(STATE.IDLE)
-  const [speed,       setSpeed]       = useState(0)
-  const debugRef = useRef(null)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (debugRef.current) {
-        setSpeed(debugRef.current.speed ?? 0)
-      }
-    }, 100)
-    return () => clearInterval(interval)
-  }, [])
-
-  const handleZoneChange = useCallback((zone) => {
-    setHintLabel(zone ? zone.label : null)
-  }, [])
-
-  const handleStateChange = useCallback((state) => {
-    setCharState(state)
-  }, [])
-
-  return (
-    <>
-      <Luffy3D
-        position={position}
-        onStateChange={handleStateChange}
-        onZoneChange={handleZoneChange}
-        onNavigate={onNavigate}
-        onProjectSelect={onProjectSelect}
-        onArtifactOpen={onArtifactOpen}
-        debugRef={debugRef}
-        aboutActive={aboutActive}
-        skillsActive={skillsActive}
-        skillsDirection={skillsDirection}
-        workActive={workActive}
-      />
-      <InteractionHint label={hintLabel} />
-      <SpeedIndicator  speed={speed} state={charState} />
-    </>
-  )
-}
-
 useGLTF.preload('/models/monkey_d_luffy.glb')
 export const LuffyCharacter3D = Luffy3D
-export function LuffyUI({ hintLabel, speed, charState }) {
-  const label = typeof hintLabel === 'string' ? hintLabel : hintLabel?.label ?? null
-
-  return (
-    <>
-      <InteractionHint label={label} />
-      <SpeedIndicator speed={speed} state={charState} />
-    </>
-  )
-}
