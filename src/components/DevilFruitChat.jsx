@@ -10,22 +10,8 @@ const EMAILJS = {
   publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY || 'O2S5xMpkI3xI90ysE',
 }
 
-const GROQ_API_KEY =
-  import.meta.env.VITE_GROQ_API_KEY ||
-  import.meta.env.VITE_GROQ_KEY ||
-  ''
-const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile'
-const GEMINI_API_KEY =
-  import.meta.env.VITE_GEMINI_API_KEY ||
-  import.meta.env.VITE_GOOGLE_AI_API_KEY ||
-  import.meta.env.VITE_GOOGLE_GENAI_API_KEY ||
-  ''
-const GEMINI_MODEL = import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.0-flash'
-
 function initialAssistantStatus() {
-  if (GROQ_API_KEY) return 'Groq conversation mode'
-  if (GEMINI_API_KEY) return 'Gemini conversation mode'
-  return 'Local context mode'
+  return 'Server conversation mode'
 }
 
 const EXPERIENCE = [
@@ -417,7 +403,7 @@ ${portfolioKnowledge()}
 `.trim()
 }
 
-function messagesForGroq(history) {
+function messagesForApi(history) {
   return history
     .filter((msg) => msg.text && msg.sender !== 'system')
     .slice(-14)
@@ -427,112 +413,42 @@ function messagesForGroq(history) {
     }))
 }
 
-async function generateGroqReply(userText, history) {
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+async function generateServerReply(history) {
+  const response = await fetch('/api/chat', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${GROQ_API_KEY}`,
     },
     body: JSON.stringify({
-      model: GROQ_MODEL,
-      messages: [
-        { role: 'system', content: buildSystemInstruction() },
-        ...messagesForGroq(history),
-      ],
-      temperature: 0.82,
-      top_p: 0.95,
-      max_tokens: 430,
-      presence_penalty: 0.2,
-      frequency_penalty: 0.15,
+      provider: 'auto',
+      system: buildSystemInstruction(),
+      messages: messagesForApi(history),
     }),
   })
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => '')
-    throw new Error(`Groq request failed: ${response.status} ${errorText}`)
+    throw new Error(`Chat proxy request failed: ${response.status} ${errorText}`)
   }
 
   const data = await response.json()
-  return data?.choices?.[0]?.message?.content?.trim() || fallbackReply(userText, history)
-}
-
-async function generateGeminiReply(userText, history) {
-  const systemInstruction = buildSystemInstruction()
-
-  const contents = history
-    .filter((msg) => msg.text && msg.sender !== 'system')
-    .slice(-12)
-    .map((msg) => ({
-      role: msg.sender === 'user' ? 'user' : 'model',
-      parts: [{ text: msg.text }],
-    }))
-
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        systemInstruction: {
-          parts: [{ text: systemInstruction }],
-        },
-        contents,
-        generationConfig: {
-          temperature: 0.78,
-          topP: 0.95,
-          topK: 40,
-          maxOutputTokens: 360,
-        },
-      }),
-    },
-  )
-
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => '')
-    throw new Error(`Gemini request failed: ${response.status} ${errorText}`)
+  return {
+    text: data?.text?.trim(),
+    provider: data?.provider ? `${data.provider} server mode` : 'Server conversation mode',
   }
-
-  const data = await response.json()
-  return data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || fallbackReply(userText, history)
 }
 
 async function generateReply(userText, history) {
-  if (GROQ_API_KEY) {
-    try {
-      return {
-        text: await generateGroqReply(userText, history),
-        provider: 'Groq conversation mode',
-      }
-    } catch (err) {
-      console.error(err)
-      if (!GEMINI_API_KEY) {
-        return {
-          text: fallbackReply(userText, history),
-          provider: 'Local fallback - check Groq API',
-        }
-      }
-    }
-  }
-
-  if (GEMINI_API_KEY) {
-    try {
-      return {
-        text: await generateGeminiReply(userText, history),
-        provider: 'Gemini conversation mode',
-      }
-    } catch (err) {
-      console.error(err)
-      return {
-        text: fallbackReply(userText, history),
-        provider: 'Local fallback - check Gemini API',
-      }
-    }
+  try {
+    const reply = await generateServerReply(history)
+    if (reply.text) return reply
+  } catch (err) {
+    console.error(err)
   }
 
   return {
     text: fallbackReply(userText, history),
-    provider: 'Local context mode',
+    provider: 'Local fallback - check server API',
   }
 }
 
@@ -701,7 +617,7 @@ export default function OnePieceChatbot() {
       }
     } catch (err) {
       console.error(err)
-      setAssistantStatus(GROQ_API_KEY || GEMINI_API_KEY ? 'Local fallback - check API' : 'Local context mode')
+      setAssistantStatus('Local fallback - check server API')
       appendBot(fallbackReply(userText, chat))
     } finally {
       setIsTyping(false)

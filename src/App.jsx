@@ -10,12 +10,7 @@ import MobileControls from './components/MobileControls.jsx'
 import OceanMusic from './components/OceanMusic.jsx'
 import PortfolioIntro from './components/PortfolioIntro.jsx'
 import SwordCursor from './components/SwordCursor.jsx'
-import AboutSection, {
-  AboutTransitionOverlay,
-  SectionTransitionLabel,
-  WindCompass,
-} from './components/AboutSection'
-import { LuffyUI } from './components/LuffyCharacter'
+import LuffyUI from './components/LuffyUI.jsx'
 import SkillsSection from './components/Skillssection'
 import WorkSection, {
   WorkTransitionOverlay,
@@ -23,6 +18,11 @@ import WorkSection, {
 } from './components/WorkSection'
 
 const WorldScene = lazy(() => import('./scenes/WorldScene'))
+const AboutSection = lazy(() => import('./components/AboutSection'))
+
+function AboutTransitionOverlay() { return null }
+function SectionTransitionLabel() { return null }
+function WindCompass() { return null }
 
 function prefersMobileProofFirst() {
   if (typeof window === 'undefined') return false
@@ -277,7 +277,11 @@ function App() {
       />
 
       {/* ── Section overlays ── */}
-      <AboutSection active={aboutActive} onClose={handleAboutClose} />
+      {aboutActive && (
+        <Suspense fallback={null}>
+          <AboutSection active={aboutActive} onClose={handleAboutClose} />
+        </Suspense>
+      )}
 
       <SkillsSection
         active={skillsActive}
