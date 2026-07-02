@@ -24,9 +24,16 @@ import WorkSection, {
 
 const WorldScene = lazy(() => import('./scenes/WorldScene'))
 
+function prefersMobileProofFirst() {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia('(max-width: 760px)').matches
+}
+
 function App() {
   const [loaderComplete,  setLoaderComplete]  = useState(false)
   const [worldReady,      setWorldReady]      = useState(false)
+  const [mobileProofFirst, setMobileProofFirst] = useState(prefersMobileProofFirst)
+  const [worldRequested,  setWorldRequested]  = useState(() => !prefersMobileProofFirst())
   const [activeSection,   setActiveSection]   = useState('explore')
   const [aboutActive,     setAboutActive]     = useState(false)
   const [skillsActive,    setSkillsActive]    = useState(false)
@@ -44,6 +51,7 @@ function App() {
   const [speed,           setSpeed]           = useState(0)
   const debugRef   = useRef(null)
   const loaded = loaderComplete && worldReady
+  const shouldMountWorld = !mobileProofFirst || worldRequested
   const sectionActive = aboutActive || skillsActive || skillsClimbing || workActive
   const introVisible = !sectionActive && !introDismissed && !selectedArtifact
 
@@ -77,6 +85,22 @@ function App() {
   const handleProjectClose = useCallback(() => setSelectedProject(null), [])
   const handleWorldReady = useCallback(() => setWorldReady(true), [])
   const handleLoaderComplete = useCallback(() => setLoaderComplete(true), [])
+  const handleRequestWorld = useCallback(() => setWorldRequested(true), [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+
+    const mobileQuery = window.matchMedia('(max-width: 760px)')
+    const syncMobileMode = () => {
+      const isMobile = mobileQuery.matches
+      setMobileProofFirst(isMobile)
+      if (!isMobile) setWorldRequested(true)
+    }
+
+    syncMobileMode()
+    mobileQuery.addEventListener?.('change', syncMobileMode)
+    return () => mobileQuery.removeEventListener?.('change', syncMobileMode)
+  }, [])
 
   // ── Speed polling for Luffy UI ────────────────────────────────────
   useEffect(() => {
@@ -102,23 +126,27 @@ function App() {
   const handleNavigate = useCallback((section) => {
     setMapOpen(false)
     setGuidedTourActive(false)
-    setIntroDismissed(true)
+    setIntroDismissed(!mobileProofFirst || worldReady)
     setActiveSection(section)
     setAboutActive(section === 'about')
     setSkillsActive(section === 'skills')
     setWorkActive(section === 'work')
     if (section !== 'work') setSelectedProject(null)
     setSelectedArtifact(null)
-  }, [])
+  }, [mobileProofFirst, worldReady])
 
   const handleEnterGrandLine = useCallback(() => {
+    if (!worldRequested || !worldReady) {
+      setWorldRequested(true)
+      return
+    }
     setIntroDismissed(true)
     setGuidedTourStep('resume')
     setGuidedTourActive(() => {
       if (typeof window === 'undefined') return true
       return !window.matchMedia('(prefers-reduced-motion: reduce)').matches
     })
-  }, [])
+  }, [worldReady, worldRequested])
 
   const handleSkipGuidedTour = useCallback(() => {
     setGuidedTourActive(false)
@@ -144,38 +172,40 @@ function App() {
   const handleShowResume = useCallback(() => {
     setMapOpen(false)
     setGuidedTourActive(false)
-    setIntroDismissed(true)
+    setIntroDismissed(!mobileProofFirst || worldReady)
     window.open('/resume.pdf', '_blank', 'noopener,noreferrer')
-  }, [])
+  }, [mobileProofFirst, worldReady])
 
   const handleContact = useCallback(() => {
     setMapOpen(false)
     setGuidedTourActive(false)
-    setIntroDismissed(true)
+    setIntroDismissed(!mobileProofFirst || worldReady)
     window.location.href = 'mailto:kunwarshaurya28@gmail.com'
-  }, [])
+  }, [mobileProofFirst, worldReady])
 
   return (
     <div style={{ width: '100%', height: '100%' }}>
-      <Suspense fallback={null}>
-        <WorldScene
-          debugRef={debugRef}
-          onZoneChange={setHintLabel}
-          onStateChange={setCharState}
-          onNavigate={handleNavigate}
-          aboutActive={aboutActive}
-          skillsActive={skillsActive}
-          onSkillsClimbingChange={setSkillsClimbing}
-          skillsDirection={skillsDirection}
-          workActive={workActive}
-          guidedTourActive={guidedTourActive}
-          onGuidedTourStepChange={setGuidedTourStep}
-          onGuidedTourComplete={() => setGuidedTourActive(false)}
-          onProjectSelect={setSelectedProject}
-          onArtifactOpen={setSelectedArtifact}
-          onReady={handleWorldReady}
-        />
-      </Suspense>
+      {shouldMountWorld && (
+        <Suspense fallback={null}>
+          <WorldScene
+            debugRef={debugRef}
+            onZoneChange={setHintLabel}
+            onStateChange={setCharState}
+            onNavigate={handleNavigate}
+            aboutActive={aboutActive}
+            skillsActive={skillsActive}
+            onSkillsClimbingChange={setSkillsClimbing}
+            skillsDirection={skillsDirection}
+            workActive={workActive}
+            guidedTourActive={guidedTourActive}
+            onGuidedTourStepChange={setGuidedTourStep}
+            onGuidedTourComplete={() => setGuidedTourActive(false)}
+            onProjectSelect={setSelectedProject}
+            onArtifactOpen={setSelectedArtifact}
+            onReady={handleWorldReady}
+          />
+        </Suspense>
+      )}
 
       {loaded && (
         <>
@@ -235,7 +265,9 @@ function App() {
       <PortfolioIntro
         visible={introVisible}
         worldReady={worldReady}
-        worldLoaded={loaded}
+        worldRequested={worldRequested}
+        mobileProofFirst={mobileProofFirst}
+        onRequestWorld={handleRequestWorld}
         onEnter={handleEnterGrandLine}
         onViewProjects={handleViewProjects}
         onShowSkills={handleShowSkills}

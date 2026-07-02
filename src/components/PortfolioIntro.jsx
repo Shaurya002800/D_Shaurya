@@ -32,7 +32,9 @@ function markOnboardingSeen() {
 export default function PortfolioIntro({
   visible,
   worldReady = true,
-  worldLoaded = worldReady,
+  worldRequested = true,
+  mobileProofFirst = false,
+  onRequestWorld,
   onEnter,
   onViewProjects,
   onShowSkills,
@@ -41,6 +43,18 @@ export default function PortfolioIntro({
   onContact,
 }) {
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const worldPending = worldRequested && !worldReady
+  const worldOptional = mobileProofFirst && !worldRequested
+  const voyageStatus = worldOptional
+    ? 'Proof route ready. 3D voyage optional.'
+    : worldReady
+      ? 'Ship deck ready.'
+      : 'Preparing ship deck...'
+  const voyageLabel = worldOptional
+    ? 'Load Grand Line'
+    : worldReady
+      ? 'Enter Grand Line'
+      : 'Preparing...'
 
   useEffect(() => {
     if (!visible) setShowOnboarding(false)
@@ -52,6 +66,10 @@ export default function PortfolioIntro({
   }
 
   const handleEnter = () => {
+    if (!worldRequested) {
+      onRequestWorld?.()
+      return
+    }
     if (!worldReady) return
     if (!hasSeenOnboarding() && !showOnboarding) {
       setShowOnboarding(true)
@@ -99,7 +117,15 @@ export default function PortfolioIntro({
   return (
     <>
       {visible && (
-        <section className="portfolio-intro" aria-labelledby="portfolio-intro-title">
+        <section
+          className={[
+            'portfolio-intro',
+            worldReady ? 'is-ready' : 'is-preparing',
+            mobileProofFirst ? 'is-mobile-proof' : '',
+            worldOptional ? 'is-world-optional' : '',
+          ].filter(Boolean).join(' ')}
+          aria-labelledby="portfolio-intro-title"
+        >
           <div className="portfolio-intro__shade" aria-hidden="true" />
           <div className="portfolio-intro__layout">
             <div className="portfolio-intro__map-canvas" aria-hidden="true">
@@ -182,16 +208,16 @@ export default function PortfolioIntro({
 
               <div className="portfolio-intro__voyage">
                 <p className="portfolio-intro__status">
-                  {worldLoaded ? 'Ship deck ready.' : '3D Grand Line loading quietly in the background.'}
+                  {voyageStatus}
                 </p>
                 <button
                   type="button"
                   className="portfolio-intro__voyage-button"
                   onClick={handleEnter}
-                  disabled={!worldReady}
-                  aria-disabled={!worldReady}
+                  disabled={worldPending}
+                  aria-disabled={worldPending}
                 >
-                  Enter Grand Line
+                  {voyageLabel}
                 </button>
               </div>
             </div>
@@ -290,7 +316,7 @@ export default function PortfolioIntro({
               disabled={!worldReady}
               aria-disabled={!worldReady}
             >
-              Start Voyage
+              {worldReady ? 'Start Voyage' : 'Preparing ship deck...'}
             </button>
           </div>
         </div>
