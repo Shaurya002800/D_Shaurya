@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import { useTexture, Text } from '@react-three/drei'
 import { RigidBody, CuboidCollider, CylinderCollider } from '@react-three/rapier'
 import * as THREE from 'three'
+import { configureTextBuilder } from 'troika-three-text'
 import { AnimatedSail } from './AboutSection.jsx'
 import { PROJECTS, PROJECT_GALLERY_SPOTS } from '../data/projects.js'
 import { SHIP_ARTIFACTS } from '../data/shipArtifacts.js'
@@ -10,6 +11,8 @@ import {
   SHIP_DECK_BOX_OBSTACLES,
   SHIP_PROP_LAYOUT,
 } from '../data/shipLayout.js'
+
+configureTextBuilder({ useWorker: false })
 
 // ─────────────────────────────────────────────────────────────────────
 // Lightweight PBR texture helper for the live deck.
