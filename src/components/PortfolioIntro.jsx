@@ -13,14 +13,6 @@ const ROUTE_MARKERS = [
   { label: 'Contact', meta: 'Signal Line', className: 'is-contact' },
 ]
 
-function hasSeenOnboarding() {
-  try {
-    return window.localStorage.getItem(STORAGE_KEY) === 'true'
-  } catch {
-    return false
-  }
-}
-
 function markOnboardingSeen() {
   try {
     window.localStorage.setItem(STORAGE_KEY, 'true')
@@ -71,10 +63,6 @@ export default function PortfolioIntro({
       return
     }
     if (!worldReady) return
-    if (!hasSeenOnboarding() && !showOnboarding) {
-      setShowOnboarding(true)
-      return
-    }
     closeOnboarding()
     onEnter()
   }

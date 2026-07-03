@@ -7,6 +7,7 @@ export const PROJECTS = [
     year: '2026',
     bounty: '140,000,000',
     url: 'https://exam-chain-pi.vercel.app',
+    image: '/project-shots/examchain.png',
   },
   {
     name: 'SentinelMesh',
@@ -16,6 +17,7 @@ export const PROJECTS = [
     year: '2026',
     bounty: '132,000,000',
     url: 'https://github.com/Shaurya002800/Sentinelmesh',
+    image: '/project-shots/sentinelmesh.png',
   },
   {
     name: 'DevBoard',
@@ -25,6 +27,7 @@ export const PROJECTS = [
     year: '2026',
     bounty: '118,000,000',
     url: 'https://devboard-gamma-gilt.vercel.app',
+    image: '/project-shots/devboard.png',
   },
   {
     name: 'Serenova Engine',
@@ -33,7 +36,8 @@ export const PROJECTS = [
     color: '#9f7bff',
     year: '2026',
     bounty: '112,000,000',
-    url: 'https://github.com/Shaurya002800/AstroMl',
+    url: 'https://astroml.onrender.com/',
+    image: '/project-shots/serenova-engine.png',
   },
   {
     name: 'SpendLens',
@@ -43,6 +47,7 @@ export const PROJECTS = [
     year: '2026',
     bounty: '101,000,000',
     url: 'https://ai-spend-audit-blush.vercel.app',
+    image: '/project-shots/spendlens.png',
   },
   {
     name: 'Peblo Notes',
@@ -52,6 +57,7 @@ export const PROJECTS = [
     year: '2026',
     bounty: '94,000,000',
     url: 'https://ai-powered-learning-universe.vercel.app',
+    image: '/project-shots/peblo-notes.svg',
   },
   {
     name: 'Serenova Consult',
@@ -60,7 +66,8 @@ export const PROJECTS = [
     color: '#ff9f43',
     year: '2026',
     bounty: '88,000,000',
-    url: 'https://github.com/Shaurya002800/Consultancy',
+    url: 'https://serenova-rho.vercel.app/',
+    image: '/project-shots/serenova-consult.png',
   },
   {
     name: 'Vivayu',
@@ -70,6 +77,7 @@ export const PROJECTS = [
     year: '2026',
     bounty: '82,000,000',
     url: 'https://ml-project-6c8bzwvgvr8xibunhdsjtt.streamlit.app',
+    image: '/project-shots/vivayu.png',
   },
 ]
 

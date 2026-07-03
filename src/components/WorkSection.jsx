@@ -165,6 +165,65 @@ function HypeCounter({ value }) {
   )
 }
 
+function ProjectCoverArt({ project, ink, paper }) {
+  const hasImage = Boolean(project.image)
+
+  return (
+    <div style={{
+      width: '100%', height: '188px',
+      background: `repeating-linear-gradient(45deg, ${ink} 0px, ${ink} 1.5px, transparent 1.5px, transparent 7px)`,
+      backgroundColor: '#e7e0cd',
+      border: `3px solid ${ink}`,
+      marginBottom: '18px',
+      position: 'relative',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      overflow: 'hidden',
+    }}>
+      {hasImage && (
+        <>
+          <img
+            src={project.image}
+            alt={`${project.name} project screenshot`}
+            loading="lazy"
+            decoding="async"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'top center',
+              filter: 'contrast(1.05) saturate(0.92)',
+            }}
+          />
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(180deg, rgba(21,18,15,0.04), rgba(21,18,15,0.28))',
+            mixBlendMode: 'multiply',
+            pointerEvents: 'none',
+          }} />
+        </>
+      )}
+      <span style={{
+        position: 'relative',
+        zIndex: 1,
+        fontFamily: '"Courier New", monospace',
+        color: hasImage ? paper : paper,
+        background: hasImage ? 'rgba(21,18,15,0.86)' : ink,
+        fontSize: '11px',
+        letterSpacing: '1.5px',
+        textTransform: 'uppercase',
+        padding: '4px 10px',
+        border: `1px solid ${paper}`,
+        boxShadow: hasImage ? '0 8px 20px rgba(0,0,0,0.28)' : 'none',
+      }}>
+        {hasImage ? 'live project still' : 'project still'}
+      </span>
+    </div>
+  )
+}
+
 // ─────────────────────────────────────────────────────────────────────
 // PROJECT DETAIL MODAL — MANGA PAGE DOSSIER
 // ─────────────────────────────────────────────────────────────────────
@@ -331,25 +390,7 @@ function ProjectModal({ project, onClose }) {
               ※ Featured Series
             </div>
 
-            {/* Cover art placeholder, crosshatched like unfinished inking */}
-            <div style={{
-              width: '100%', height: '188px',
-              background: `repeating-linear-gradient(45deg, ${ink} 0px, ${ink} 1.5px, transparent 1.5px, transparent 7px)`,
-              backgroundColor: '#e7e0cd',
-              border: `3px solid ${ink}`,
-              marginBottom: '18px',
-              position: 'relative',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              overflow: 'hidden',
-            }}>
-              <span style={{
-                fontFamily: '"Courier New", monospace', color: paper, background: ink,
-                fontSize: '11px', letterSpacing: '1.5px', textTransform: 'uppercase',
-                padding: '4px 10px', border: `1px solid ${paper}`,
-              }}>
-                panel still inking
-              </span>
-            </div>
+            <ProjectCoverArt project={project} ink={ink} paper={paper} />
 
             <div style={{
               fontFamily: '"Anton", Georgia, sans-serif',
@@ -711,24 +752,7 @@ function ProjectMangaCarouselPage({ project, onClose }) {
             ※ Featured Series
           </div>
 
-          <div style={{
-            width: '100%', height: '188px',
-            background: `repeating-linear-gradient(45deg, ${ink} 0px, ${ink} 1.5px, transparent 1.5px, transparent 7px)`,
-            backgroundColor: '#e7e0cd',
-            border: `3px solid ${ink}`,
-            marginBottom: '18px',
-            position: 'relative',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            overflow: 'hidden',
-          }}>
-            <span style={{
-              fontFamily: '"Courier New", monospace', color: paper, background: ink,
-              fontSize: '11px', letterSpacing: '1.5px', textTransform: 'uppercase',
-              padding: '4px 10px', border: `1px solid ${paper}`,
-            }}>
-              panel still inking
-            </span>
-          </div>
+          <ProjectCoverArt project={project} ink={ink} paper={paper} />
 
           <div style={{
             fontFamily: '"Anton", Georgia, sans-serif',
