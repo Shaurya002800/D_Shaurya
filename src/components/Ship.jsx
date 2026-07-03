@@ -12,7 +12,10 @@ import {
   SHIP_PROP_LAYOUT,
 } from '../data/shipLayout.js'
 
-configureTextBuilder({ useWorker: false })
+configureTextBuilder({
+  defaultFontURL: '/fonts/kenpixel.ttf',
+  useWorker: false,
+})
 
 // ─────────────────────────────────────────────────────────────────────
 // Lightweight PBR texture helper for the live deck.
@@ -990,7 +993,7 @@ function MysteryPoneglyph({ artifact, onOpen }) {
         <boxGeometry args={[0.88, 1.16, 0.42]} />
         <meshStandardMaterial color="#3b285f" roughness={0.95} emissive="#4c1d95" emissiveIntensity={0.18} />
       </mesh>
-      {['◆', 'X', '≋'].map((glyph, index) => (
+      {['I', 'X', 'III'].map((glyph, index) => (
         <Text key={glyph} position={[0, 1.02 - index * 0.24, 0.23]} fontSize={0.16} color="#d8b4fe" anchorX="center" anchorY="middle">
           {glyph}
         </Text>
