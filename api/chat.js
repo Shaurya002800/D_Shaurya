@@ -6,6 +6,7 @@ const GROQ_API_KEY = process.env.GROQ_API_KEY || ''
 const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile'
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash'
+const LLM_TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS || 8000)
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -30,9 +31,28 @@ function clampMessages(messages, limit) {
     .map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content.slice(0, 4000) }))
 }
 
+async function fetchWithTimeout(url, options = {}, timeoutMs = LLM_TIMEOUT_MS) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    })
+  } catch (err) {
+    if (err?.name === 'AbortError') {
+      throw new Error(`Provider request timed out after ${timeoutMs}ms`, { cause: err })
+    }
+    throw err
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 async function callGroq({ system, messages }) {
   if (!GROQ_API_KEY) throw new Error('GROQ_API_KEY not configured')
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const response = await fetchWithTimeout('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -65,7 +85,7 @@ async function callGemini({ system, messages }) {
     role: m.role === 'assistant' ? 'model' : 'user',
     parts: [{ text: m.content }],
   }))
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
     {
       method: 'POST',
@@ -112,29 +132,36 @@ export default async function handler(event) {
 
   const preferred = provider === 'gemini' ? 'gemini' : 'groq'
 
-  try {
-    let text, usedProvider
-    if (preferred === 'groq' && GROQ_API_KEY) {
-      text = await callGroq({ system, messages })
-      usedProvider = 'groq'
-    } else if (preferred === 'gemini' && GEMINI_API_KEY) {
-      text = await callGemini({ system, messages })
-      usedProvider = 'gemini'
-    } else if (GROQ_API_KEY) {
-      text = await callGroq({ system, messages })
-      usedProvider = 'groq'
-    } else if (GEMINI_API_KEY) {
-      text = await callGemini({ system, messages })
-      usedProvider = 'gemini'
-    } else {
-      return jsonResponse(503, {
-        error: 'No LLM provider configured on server',
-        text: '',
-      })
-    }
+  const providers = preferred === 'gemini'
+    ? [
+      ['gemini', GEMINI_API_KEY, callGemini],
+      ['groq', GROQ_API_KEY, callGroq],
+    ]
+    : [
+      ['groq', GROQ_API_KEY, callGroq],
+      ['gemini', GEMINI_API_KEY, callGemini],
+    ]
+  const configuredProviders = providers.filter(([, apiKey]) => apiKey)
 
-    return jsonResponse(200, { text, provider: usedProvider })
-  } catch (err) {
-    return jsonResponse(502, { error: err?.message || 'LLM proxy error', text: '' })
+  if (configuredProviders.length === 0) {
+    return jsonResponse(503, {
+      error: 'No LLM provider configured on server',
+      text: '',
+    })
   }
+
+  const errors = []
+  for (const [name, , callProvider] of configuredProviders) {
+    try {
+      const text = await callProvider({ system, messages })
+      return jsonResponse(200, { text, provider: name })
+    } catch (err) {
+      errors.push(`${name}: ${err?.message || 'provider failed'}`)
+    }
+  }
+
+  return jsonResponse(502, {
+    error: `LLM proxy failed: ${errors.join(' | ')}`,
+    text: '',
+  })
 }

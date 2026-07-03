@@ -9,6 +9,7 @@ const EMAILJS = {
   templateId: import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'template_bu4ag6c',
   publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY || 'O2S5xMpkI3xI90ysE',
 }
+const CHAT_REQUEST_TIMEOUT_MS = 18000
 
 function initialAssistantStatus() {
   return 'Server conversation mode'
@@ -414,17 +415,31 @@ function messagesForApi(history) {
 }
 
 async function generateServerReply(history) {
-  const response = await fetch('/api/chat', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      provider: 'auto',
-      system: buildSystemInstruction(),
-      messages: messagesForApi(history),
-    }),
-  })
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), CHAT_REQUEST_TIMEOUT_MS)
+  let response
+
+  try {
+    response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        provider: 'auto',
+        system: buildSystemInstruction(),
+        messages: messagesForApi(history),
+      }),
+    })
+  } catch (err) {
+    if (err?.name === 'AbortError') {
+      throw new Error('Chat proxy request timed out', { cause: err })
+    }
+    throw err
+  } finally {
+    clearTimeout(timeout)
+  }
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => '')
