@@ -4,9 +4,24 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 import { useRef, useEffect, useState, useMemo } from 'react'
-import { useThree } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import gsap from 'gsap'
+import { PROFILE } from '../data/profile.js'
+let _sailTexCache = null
+let _blankTexCache = null
+
+const ABOUT = {
+  title:    "I'M SHAURYA.",
+  tagline1: 'I build things that look good and work well.',
+  tagline2: 'Designer by instinct. Developer by choice. AI/ML by curiosity.',
+  photo: '/shaurya.png', 
+  links: [
+    { label: 'GitHub',   href: PROFILE.links.github   },
+    { label: 'LinkedIn', href: PROFILE.links.linkedin  },
+    { label: 'Resume',   href: PROFILE.links.resume    },
+  ],
+}
 
 // Precise camera angles for the 4:3 aspect sail layout
 const CAM_EXPLORE = { position: new THREE.Vector3(0, 8.5, 16), target: new THREE.Vector3(0, 1.5, 0), fov: 68 }
@@ -16,12 +31,7 @@ function lerpV3(out, a, b, t) {
   out.set(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t)
 }
 
-function seededNoise(seed) {
-  const value = Math.sin(seed * 91.17) * 10000
-  return value - Math.floor(value)
-}
-
-function useAboutCamera(active) {
+export function useAboutCamera(active) {
   const { camera } = useThree()
   const lookRef    = useRef(CAM_EXPLORE.target.clone())
   const tlRef      = useRef(null)
@@ -268,9 +278,8 @@ export function AnimatedSail({ position = [0, 20.5, -2.5] }) {
 
   // ── Grain noise ──
   for (let i = 0; i < 14000; i++) {
-    const x = seededNoise(i + 1) * W
-    const y = seededNoise(i + 2) * H
-    ctx.fillStyle = `rgba(70,48,18,${seededNoise(i + 3) * 0.035})`
+    const x = Math.random() * W, y = Math.random() * H
+    ctx.fillStyle = `rgba(70,48,18,${Math.random() * 0.035})`
     ctx.fillRect(x, y, 1.2, 1.2)
   }
 

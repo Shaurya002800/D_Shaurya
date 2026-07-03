@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo } from 'react'
+import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useTexture, Text } from '@react-three/drei'
 import { RigidBody, CuboidCollider, CylinderCollider } from '@react-three/rapier'
@@ -20,18 +20,15 @@ function usePBR(folder, repeat = [1, 1]) {
     map:          `/textures/${folder}/${folder}_Color.jpg`,
     roughnessMap: `/textures/${folder}/${folder}_Roughness.jpg`,
   })
-  const [repeatX, repeatY] = repeat
-
-  useEffect(() => {
+  useMemo(() => {
     Object.values(maps).forEach(t => {
       if (t?.isTexture) {
         t.wrapS = t.wrapT = THREE.RepeatWrapping
-        t.repeat.set(repeatX, repeatY)
+        t.repeat.set(...repeat)
         t.needsUpdate = true
       }
     })
-  }, [maps, repeatX, repeatY])
-
+  }, [repeat[0], repeat[1]])
   return maps
 }
 
