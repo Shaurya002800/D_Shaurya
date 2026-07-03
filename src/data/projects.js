@@ -56,7 +56,7 @@ export const PROJECTS = [
     color: '#f2c94c',
     year: '2026',
     bounty: '94,000,000',
-    url: 'https://ai-powered-learning-universe.vercel.app',
+    url: 'https://github.com/Shaurya002800/AI-powered-learning-universe',
     image: '/project-shots/peblo-notes.svg',
   },
   {
