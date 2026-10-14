@@ -4,6 +4,7 @@ function InteractionHint({ label }) {
   if (!label) return null
   return (
     <div
+      className="luffy-interaction-hint"
       style={{
         position: 'fixed',
         bottom: '38px',
@@ -50,12 +51,12 @@ function SpeedIndicator({ speed, state }) {
   )
 }
 
-export default function LuffyUI({ hintLabel, speed, charState }) {
+export default function LuffyUI({ hintLabel, speed, charState, mobile = false }) {
   const label = typeof hintLabel === 'string' ? hintLabel : hintLabel?.label ?? null
 
   return (
     <>
-      <InteractionHint label={label} />
+      <InteractionHint label={mobile ? label?.replace(/^press e\s*[-–—:]?\s*/i, 'Tap OPEN — ') : label} />
       <SpeedIndicator speed={speed} state={charState} />
     </>
   )

@@ -1,191 +1,124 @@
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import './MobileControls.css'
 
-const VIRTUAL_KEY_EVENT = 'portfolio-virtual-key'
-const INTERACT_EVENT = 'portfolio-interact'
+const MOVEMENT_KEYS = ['w', 'a', 's', 'd']
 
 function setVirtualKey(key, pressed) {
-  window.dispatchEvent(new CustomEvent(VIRTUAL_KEY_EVENT, {
-    detail: { key, pressed },
-  }))
+  window.dispatchEvent(new CustomEvent('portfolio-virtual-key', { detail: { key, pressed } }))
 }
 
-function releaseAllVirtualKeys() {
-  ;['w', 'a', 's', 'd'].forEach((key) => setVirtualKey(key, false))
-}
+export default function MobileControls({ visible = true, hintLabel = null }) {
+  const pointerRef = useRef(null)
+  const padRef = useRef(null)
+  const pressedRef = useRef(new Set())
+  const [thumb, setThumb] = useState({ x: 0, y: 0 })
+  const label = typeof hintLabel === 'string' ? hintLabel : hintLabel?.label
+  const actionLabel = label?.replace(/^press e\s*[-–—:]?\s*/i, '') || 'Move near an object to interact'
 
-function HoldButton({ className = '', label, keyName }) {
-  const press = (event) => {
-    event.preventDefault()
-    setVirtualKey(keyName, true)
+  const updateKeys = (nextKeys) => {
+    const next = new Set(nextKeys)
+    MOVEMENT_KEYS.forEach(key => {
+      if (pressedRef.current.has(key) !== next.has(key)) setVirtualKey(key, next.has(key))
+    })
+    pressedRef.current = next
   }
 
-  const release = (event) => {
-    event.preventDefault()
-    setVirtualKey(keyName, false)
-  }
-
-  return (
-    <button
-      className={`mobile-helm__key ${className}`}
-      type="button"
-      aria-label={label}
-      onPointerDown={press}
-      onPointerUp={release}
-      onPointerCancel={release}
-      onPointerLeave={release}
-      onContextMenu={(event) => event.preventDefault()}
-    />
-  )
-}
-
-export default function MobileControls({ visible = true }) {
   useEffect(() => {
-    if (!visible) return undefined
-    window.addEventListener('blur', releaseAllVirtualKeys)
-    window.addEventListener('pointerup', releaseAllVirtualKeys)
-    window.addEventListener('touchend', releaseAllVirtualKeys)
+    const release = () => {
+      pressedRef.current.forEach(key => setVirtualKey(key, false))
+      pressedRef.current.clear()
+      pointerRef.current = null
+      setThumb({ x: 0, y: 0 })
+    }
+    const onVisibility = () => { if (document.hidden) release() }
+    window.addEventListener('blur', release)
+    document.addEventListener('visibilitychange', onVisibility)
     return () => {
-      releaseAllVirtualKeys()
-      window.removeEventListener('blur', releaseAllVirtualKeys)
-      window.removeEventListener('pointerup', releaseAllVirtualKeys)
-      window.removeEventListener('touchend', releaseAllVirtualKeys)
+      pressedRef.current.forEach(key => setVirtualKey(key, false))
+      pressedRef.current.clear()
+      pointerRef.current = null
+      setThumb({ x: 0, y: 0 })
+      window.removeEventListener('blur', release)
+      document.removeEventListener('visibilitychange', onVisibility)
     }
   }, [visible])
 
   if (!visible) return null
 
-  const interact = (event) => {
+  const move = (event) => {
+    if (pointerRef.current !== event.pointerId) return
+    const bounds = padRef.current.getBoundingClientRect()
+    const dx = event.clientX - bounds.left - bounds.width / 2
+    const dy = event.clientY - bounds.top - bounds.height / 2
+    const distance = Math.hypot(dx, dy)
+    const radius = bounds.width * .3
+    const scale = distance > radius ? radius / distance : 1
+    setThumb({ x: dx * scale, y: dy * scale })
+    // A dead zone prevents accidental movement; the angle allows diagonals.
+    const next = []
+    if (distance > 10) {
+      if (dy / distance < -.38) next.push('w')
+      if (dy / distance > .38) next.push('s')
+      if (dx / distance < -.38) next.push('a')
+      if (dx / distance > .38) next.push('d')
+    }
+    updateKeys(next)
     event.preventDefault()
-    window.dispatchEvent(new Event(INTERACT_EVENT))
+  }
+
+  const release = (event) => {
+    if (pointerRef.current !== event.pointerId) return
+    pointerRef.current = null
+    updateKeys([])
+    setThumb({ x: 0, y: 0 })
   }
 
   return (
     <div className="mobile-helm" aria-label="Mobile ship controls">
-      <div className="mobile-helm__pad" aria-label="Move character">
-        <HoldButton className="mobile-helm__key--up" label="Move forward" keyName="w" />
-        <HoldButton className="mobile-helm__key--left" label="Move left" keyName="a" />
-        <HoldButton className="mobile-helm__key--down" label="Move backward" keyName="s" />
-        <HoldButton className="mobile-helm__key--right" label="Move right" keyName="d" />
+      <div className="mobile-helm__movement">
+        <button
+          ref={padRef}
+          className="mobile-helm__joystick"
+          type="button"
+          aria-label="Move character: drag the joystick in any direction"
+          onPointerDown={event => {
+            if (pointerRef.current !== null) return
+            pointerRef.current = event.pointerId
+            event.currentTarget.setPointerCapture(event.pointerId)
+            move(event)
+          }}
+          onPointerMove={move}
+          onPointerUp={release}
+          onPointerCancel={release}
+          onLostPointerCapture={release}
+          onContextMenu={event => event.preventDefault()}
+          onKeyDown={event => {
+            const key = { ArrowUp: 'w', ArrowDown: 's', ArrowLeft: 'a', ArrowRight: 'd' }[event.key]
+            if (key) { event.preventDefault(); updateKeys([...pressedRef.current, key]) }
+          }}
+          onKeyUp={event => {
+            const key = { ArrowUp: 'w', ArrowDown: 's', ArrowLeft: 'a', ArrowRight: 'd' }[event.key]
+            if (key) { event.preventDefault(); updateKeys([...pressedRef.current].filter(item => item !== key)) }
+          }}
+          onBlur={() => {
+            if (pointerRef.current === null) { updateKeys([]); setThumb({ x: 0, y: 0 }) }
+          }}
+        >
+          <span className="mobile-helm__directions" aria-hidden="true">✥</span>
+          <span className="mobile-helm__thumb" style={{ transform: `translate(${thumb.x}px, ${thumb.y}px)` }} />
+        </button>
+        <small>MOVE</small>
       </div>
-
-      <button
-        className="mobile-helm__interact"
-        type="button"
-        aria-label="Interact"
-        onPointerDown={interact}
-        onContextMenu={(event) => event.preventDefault()}
-      >
-        E
-      </button>
-
-      <style>{`
-        .mobile-helm {
-          position: fixed;
-          inset: auto 0 0 0;
-          z-index: 9800;
-          display: none;
-          justify-content: space-between;
-          align-items: flex-end;
-          padding: 0 max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
-          pointer-events: none;
-          user-select: none;
-          -webkit-user-select: none;
-        }
-
-        .mobile-helm__pad {
-          position: relative;
-          width: 134px;
-          height: 134px;
-          border-radius: 50%;
-          background:
-            radial-gradient(circle, rgba(255,244,205,.16) 0 18%, transparent 19%),
-            radial-gradient(circle, rgba(18,12,7,.44), rgba(18,12,7,.14) 68%, transparent 70%);
-          border: 1px solid rgba(255,232,170,.18);
-          box-shadow: 0 16px 38px rgba(0,0,0,.32);
-          pointer-events: auto;
-          touch-action: none;
-        }
-
-        .mobile-helm__key,
-        .mobile-helm__interact {
-          border: 1px solid rgba(255,232,170,.32);
-          background: rgba(19,12,7,.64);
-          color: #ffe58f;
-          box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), 0 10px 22px rgba(0,0,0,.24);
-          backdrop-filter: blur(8px);
-          touch-action: none;
-        }
-
-        .mobile-helm__key {
-          position: absolute;
-          width: 42px;
-          height: 42px;
-          border-radius: 50%;
-        }
-
-        .mobile-helm__key::before {
-          content: "";
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          width: 0;
-          height: 0;
-          border-left: 8px solid transparent;
-          border-right: 8px solid transparent;
-          border-bottom: 12px solid #ffe58f;
-          transform: translate(-50%, -58%);
-        }
-
-        .mobile-helm__key:active,
-        .mobile-helm__interact:active {
-          transform: scale(.94);
-          background: rgba(117,68,22,.78);
-        }
-
-        .mobile-helm__key--up { left: 46px; top: 8px; }
-        .mobile-helm__key--left { left: 8px; top: 46px; }
-        .mobile-helm__key--down { left: 46px; bottom: 8px; }
-        .mobile-helm__key--right { right: 8px; top: 46px; }
-        .mobile-helm__key--left::before { transform: translate(-58%, -50%) rotate(-90deg); }
-        .mobile-helm__key--down::before { transform: translate(-50%, -42%) rotate(180deg); }
-        .mobile-helm__key--right::before { transform: translate(-42%, -50%) rotate(90deg); }
-
-        .mobile-helm__interact {
-          width: 72px;
-          height: 72px;
-          margin-bottom: 14px;
-          border-radius: 50%;
-          font: 800 22px/1 system-ui, sans-serif;
-          letter-spacing: .03em;
-          pointer-events: auto;
-        }
-
-        @media (hover: none), (pointer: coarse), (max-width: 760px) {
-          .mobile-helm { display: flex; }
-        }
-
-        @media (max-width: 420px) {
-          .mobile-helm__pad {
-            width: 118px;
-            height: 118px;
-          }
-
-          .mobile-helm__key {
-            width: 38px;
-            height: 38px;
-          }
-
-          .mobile-helm__key--up { left: 40px; top: 6px; }
-          .mobile-helm__key--left { left: 6px; top: 40px; }
-          .mobile-helm__key--down { left: 40px; bottom: 6px; }
-          .mobile-helm__key--right { right: 6px; top: 40px; }
-          .mobile-helm__interact {
-            width: 64px;
-            height: 64px;
-            margin-bottom: 10px;
-          }
-        }
-      `}</style>
+      <p className="mobile-helm__look">Swipe the ship<br />to look around</p>
+      <div className="mobile-helm__action">
+        <button
+          className={`mobile-helm__interact${label ? ' is-ready' : ''}`}
+          type="button"
+          aria-label={actionLabel}
+          disabled={!label}
+          onClick={() => window.dispatchEvent(new Event('portfolio-interact'))}
+        ><span aria-hidden="true">✦</span><small>{label ? 'OPEN' : 'INTERACT'}</small></button>
+      </div>
     </div>
   )
 }

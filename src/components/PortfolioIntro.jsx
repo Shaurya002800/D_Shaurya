@@ -40,7 +40,7 @@ export default function PortfolioIntro({
   const voyageStatus = worldOptional
     ? 'Proof route ready. 3D voyage optional.'
     : worldReady
-      ? 'Ship deck ready.'
+      ? (mobileProofFirst ? 'Drag to move · Swipe to look · Tap OPEN near objects' : 'Ship deck ready.')
       : 'Preparing ship deck...'
   const voyageLabel = worldOptional
     ? 'Load Grand Line'

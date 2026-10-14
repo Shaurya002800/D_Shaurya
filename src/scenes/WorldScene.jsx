@@ -665,6 +665,7 @@ export default function WorldScene({
   onGuidedTourStepChange,
   onGuidedTourComplete,
   onReady,
+  mobileView = false,
 }) {
   const [skillsCameraLocked, setSkillsCameraLocked] = useState(false)
   const [tourCameraLocked, setTourCameraLocked] = useState(false)
@@ -672,15 +673,15 @@ export default function WorldScene({
   const weather = WEATHER_SEQUENCE[weatherIndex]
   const effectsEnabled = useMemo(() => {
     if (typeof window === 'undefined') return true
-    return !window.matchMedia('(max-width: 760px), (prefers-reduced-motion: reduce)').matches
-  }, [])
+    return !mobileView && !window.matchMedia('(max-width: 760px), (prefers-reduced-motion: reduce)').matches
+  }, [mobileView])
   
   // ─── NEW: Global Free Camera State ───
   const [freeCam, setFreeCam] = useState(false)
 
   useEffect(() => {
-    onReady?.()
-  }, [onReady])
+    if (!mobileView) onReady?.()
+  }, [onReady, mobileView])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -703,7 +704,7 @@ export default function WorldScene({
   }, [guidedTourActive])
 
   return (
-    <div style={{
+    <div className="world-scene" style={{
       position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden',
       background: 'linear-gradient(180deg, #cfe6f5 0%, #9fc6df 46%, #6f9dbd 100%)',
     }}>
@@ -711,7 +712,7 @@ export default function WorldScene({
   shadows
   camera={{ position: [0, 8.5, 16], fov: 68, near: 0.1, far: 2000 }}
   performance={{ min: 0.5 }}
-  dpr={[0.85, 1.25]}
+  dpr={mobileView ? [0.75, 1] : [0.85, 1.25]}
   gl={{ antialias: false, powerPreference: 'high-performance', toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.84 }}
   style={{ position: 'absolute', inset: 0, zIndex: 1 }}
 >
@@ -777,6 +778,8 @@ export default function WorldScene({
         skillsDirection={skillsDirection}
         workActive={workActive}
         freeCam={freeCam}
+        mobileView={mobileView}
+        onReady={mobileView ? onReady : undefined}
       />
     </Physics>
   </Suspense>

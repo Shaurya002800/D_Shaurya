@@ -1,3 +1,4 @@
+import MobileControls from './MobileControls.jsx'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { PROJECTS } from '../data/projects.js'
 import './WorkSection.css'
@@ -1189,6 +1190,8 @@ export default function WorkSection({
           ✕
         </button>
       )}
+
+      <MobileControls visible={visible && !carouselOpen && !activeProject} />
 
       <ProjectCarousel
         visible={visible && carouselOpen && !activeProject}

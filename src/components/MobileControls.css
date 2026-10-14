@@ -1,0 +1,32 @@
+.mobile-helm { display: none; }
+@media (max-width: 760px), (max-width: 1024px) and (pointer: coarse) {
+  .mobile-helm {
+    position: fixed; inset: auto 0 0; z-index: 9800;
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 10px;
+    padding: 10px max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+    pointer-events: none; user-select: none; -webkit-user-select: none;
+    color: #ffe6a6; background: linear-gradient(transparent, rgba(8,13,22,.45));
+  }
+  .mobile-helm__movement { display: grid; justify-items: center; gap: 6px; }
+  .mobile-helm small { font: 700 10px/1.4 system-ui, sans-serif; letter-spacing: .1em; }
+  .mobile-helm__joystick {
+    position: relative; width: 112px; height: 112px; border-radius: 50%;
+    border: 1px solid rgba(255,232,170,.4); background: radial-gradient(circle, rgba(255,224,157,.12), rgba(8,13,22,.7));
+    box-shadow: inset 0 0 0 9px rgba(255,224,157,.04), 0 6px 24px rgba(0,0,0,.2);
+    pointer-events: auto; touch-action: none;
+  }
+  .mobile-helm__directions { position: absolute; inset: 0; display: grid; place-items: center; font-size: 90px; color: rgba(255,232,170,.16); }
+  .mobile-helm__thumb { position: absolute; left: calc(50% - 22px); top: calc(50% - 22px); width: 44px; height: 44px; border: 2px solid #d4ae65; border-radius: 50%; background: radial-gradient(circle at 35% 25%, #967342, #382512); box-shadow: 0 5px 12px rgba(0,0,0,.5); }
+  .mobile-helm__look { align-self: center; color: rgba(255,242,207,.78); font: 11px/1.5 system-ui, sans-serif; text-align: center; text-shadow: 0 2px 4px #000; }
+  .mobile-helm__action { align-self: center; }
+  .mobile-helm__interact { width: 76px; height: 76px; display: grid; place-content: center; gap: 4px; border: 1px solid rgba(255,232,170,.32); border-radius: 50%; background: rgba(8,13,22,.75); color: #baa984; pointer-events: auto; touch-action: manipulation; }
+  .mobile-helm__interact > span { font-size: 26px; line-height: 1; }
+  .mobile-helm__interact.is-ready { color: #ffe58f; border-color: #ffe58f; background: rgba(117,68,22,.88); box-shadow: 0 0 22px rgba(255,202,90,.3); }
+  .mobile-helm__interact:active { transform: scale(.94); }
+  .mobile-helm button:focus-visible { outline: 2px solid #ffe58f; outline-offset: 4px; }
+}
+@media (max-width: 760px) and (max-height: 480px), (max-width: 1024px) and (pointer: coarse) and (max-height: 480px) {
+  .mobile-helm__joystick { width: 92px; height: 92px; }
+  .mobile-helm__look { display: none; }
+  .mobile-helm__interact { width: 64px; height: 64px; }
+}

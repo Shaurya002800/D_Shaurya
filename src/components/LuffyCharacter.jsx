@@ -413,10 +413,11 @@ class CameraController {
     this.currentFov = camera.fov
   }
 
-  update(camera, luffyPos, luffyRot, isRunning, dt, workActive = false, orbit = null) {
+  update(camera, luffyPos, luffyRot, isRunning, dt, workActive = false, orbit = null, mobile = false) {
+    const portrait = mobile && camera.aspect < 1
     const dist   = workActive ? CAM.basementDist : (isRunning ? CAM.runDist : CAM.normalDist)
-    const height = workActive ? CAM.basementHeight : (isRunning ? CAM.runHeight : CAM.normalHeight)
-    const fov    = workActive ? CAM.fovBasement : (isRunning ? CAM.fovRun : CAM.fovNormal)
+    const height = (portrait && !workActive ? 1.55 : 1) * (workActive ? CAM.basementHeight : (isRunning ? CAM.runHeight : CAM.normalHeight))
+    const fov    = portrait ? 78 : (workActive ? CAM.fovBasement : (isRunning ? CAM.fovRun : CAM.fovNormal))
     const lookOffset = workActive ? CAM.basementLookOffset : CAM.lookOffset
     const orbitYaw = orbit?.yaw ?? 0
     const orbitPitch = orbit?.pitch ?? 0
@@ -823,6 +824,8 @@ function Luffy3D({
   skillsDirection = 'north',
   workActive = false,
   freeCam = false,
+  mobileView = false,
+  onReady,
 }) {
   const groupRef     = useRef()
   const mixerRef     = useRef(null)
@@ -1093,7 +1096,10 @@ function Luffy3D({
 
         loadedRef.current = true
         await loadAndRegisterAnimations(CRITICAL_ANIMATIONS)
-        if (!disposed) scheduleOptionalAnimations()
+        if (!disposed) {
+          onReady?.()
+          scheduleOptionalAnimations()
+        }
       },
       undefined,
       (err) => {
@@ -1124,7 +1130,7 @@ function Luffy3D({
       }
       loadedRef.current = false
     }
-  }, [glbScene])
+  }, [glbScene, onReady])
 
   useEffect(() => {
     if (!groupRef.current) return
@@ -1377,6 +1383,7 @@ function Luffy3D({
         safeDt,
         workActive,
         orbit,
+        mobileView,
       )
     }
 

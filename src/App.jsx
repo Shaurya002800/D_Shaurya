@@ -8,6 +8,7 @@ import OceanMusic from './components/OceanMusic.jsx'
 import PortfolioIntro from './components/PortfolioIntro.jsx'
 import SwordCursor from './components/SwordCursor.jsx'
 import LuffyUI from './components/LuffyUI.jsx'
+import './mobile-game.css'
 
 const WorldScene = lazy(() => import('./scenes/WorldScene'))
 const AboutSection = lazy(() => import('./components/AboutSection'))
@@ -29,14 +30,14 @@ function WindCompass() { return null }
 
 function prefersMobileProofFirst() {
   if (typeof window === 'undefined') return false
-  return window.matchMedia('(max-width: 760px)').matches
+  return window.matchMedia('(max-width: 760px), (max-width: 1024px) and (pointer: coarse)').matches
 }
 
 function App() {
   const [loaderComplete,  setLoaderComplete]  = useState(false)
   const [worldReady,      setWorldReady]      = useState(false)
   const [mobileProofFirst, setMobileProofFirst] = useState(prefersMobileProofFirst)
-  const [worldRequested,  setWorldRequested]  = useState(() => !prefersMobileProofFirst())
+  const [worldRequested,  setWorldRequested]  = useState(true)
   const [activeSection,   setActiveSection]   = useState('explore')
   const [aboutActive,     setAboutActive]     = useState(false)
   const [skillsActive,    setSkillsActive]    = useState(false)
@@ -93,7 +94,7 @@ function App() {
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
 
-    const mobileQuery = window.matchMedia('(max-width: 760px)')
+    const mobileQuery = window.matchMedia('(max-width: 760px), (max-width: 1024px) and (pointer: coarse)')
     const syncMobileMode = () => {
       const isMobile = mobileQuery.matches
       setMobileProofFirst(isMobile)
@@ -191,6 +192,7 @@ function App() {
       {shouldMountWorld && (
         <Suspense fallback={null}>
           <WorldScene
+            mobileView={mobileProofFirst}
             debugRef={debugRef}
             onZoneChange={setHintLabel}
             onStateChange={setCharState}
@@ -234,15 +236,16 @@ function App() {
                 onContact={handleContact}
               />
               <Suspense fallback={null}>
-                <ControlsOverlay />
+                {!mobileProofFirst && <ControlsOverlay />}
               </Suspense>
               <LuffyUI
                 hintLabel={hintLabel}
                 speed={speed}
                 charState={charState}
+                mobile={mobileProofFirst}
               />
               <WindCompass visible />
-              <MobileControls visible={!selectedArtifact} />
+              <MobileControls visible={!selectedArtifact && !mapOpen} hintLabel={hintLabel} />
             </>
           )}
 

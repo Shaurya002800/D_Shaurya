@@ -1,0 +1,109 @@
+/* Phone-only presentation. Desktop rules and scene composition stay intact. */
+.mobile-about-dossier { display: none; }
+@media (max-width: 760px), (max-width: 1024px) and (pointer: coarse) {
+  .world-scene { height: 100dvh !important; }
+  .world-scene canvas { touch-action: none; }
+
+  /* Keep routes above the scene and thumb controls below it. */
+  .nav-wheels { top: max(8px, env(safe-area-inset-top)); bottom: auto; width: calc(100% - 20px); }
+  .nav-wheels .nav-wheels__bar { display: grid; grid-template-columns: 1fr; gap: 5px; padding: 6px; border-radius: 14px; overflow: visible; }
+  .nav-wheels .nav-wheels__routes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+  .nav-wheels .nav-wheel { display: flex; align-items: center; justify-content: center; gap: 4px; min-width: 0; height: 44px; padding: 4px; border-radius: 8px; }
+  .nav-wheels .nav-wheel__image-wrap, .nav-wheels .nav-wheel__image { width: 22px; height: 22px; flex-shrink: 0; }
+  .nav-wheels .nav-wheel__eyebrow { font-size: 10px; letter-spacing: 0; }
+  .nav-wheels .nav-wheel__title, .nav-wheels .nav-wheel__description, .nav-wheels .nav-wheel__hint { display: none; }
+  .nav-wheels .nav-wheels__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .nav-wheels .nav-wheels__action { min-width: 0; height: 44px; min-height: 44px; padding: 4px 8px; }
+  .grand-map-trigger { top: calc(116px + env(safe-area-inset-top)); bottom: auto; left: max(10px, env(safe-area-inset-left)); width: 136px; min-height: 44px; padding: 5px 8px; gap: 6px; }
+  .grand-map-trigger small { display: none; }
+  .grand-map__panel { max-height: calc(100dvh - 28px); overflow-y: auto; }
+  .ocean-music { top: calc(116px + env(safe-area-inset-top)); right: max(10px, env(safe-area-inset-right)); width: 44px; height: 44px; min-height: 44px; display: flex; justify-content: center; padding: 8px; }
+  .ocean-music__copy, .ocean-music__bars { display: none; }
+  .chat-dock { bottom: calc(108px + env(safe-area-inset-bottom)) !important; right: max(10px, env(safe-area-inset-right)) !important; transform: scale(.8); }
+  .luffy-interaction-hint { bottom: calc(156px + env(safe-area-inset-bottom)) !important; width: max-content; max-width: calc(100vw - 28px); font: 600 12px/1.5 system-ui, sans-serif !important; padding: 8px 12px !important; text-align: center; z-index: 9700 !important; }
+
+  /* The entry card introduces the voyage without covering the entire ship. */
+  .portfolio-intro { align-items: end; padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)); backdrop-filter: none; background: linear-gradient(transparent, rgba(3,7,12,.6)); }
+  .portfolio-intro__shade { display: none; }
+  .portfolio-intro__layout { padding: 12px; gap: 0; max-width: 430px; }
+  .portfolio-intro__content { display: flex; flex-direction: column; padding: 12px; }
+  .portfolio-intro h1 { font-size: clamp(28px, 8.5vw, 38px); max-width: 100%; line-height: 1.05; }
+  .portfolio-intro__role { margin-top: 10px; font-size: 14px; }
+  .portfolio-intro__summary { font-size: 13px; }
+  .portfolio-intro__proof, .portfolio-intro__route-map { display: none; }
+  .portfolio-intro__voyage { order: 1; gap: 8px; margin-top: 12px; padding-top: 12px; }
+  .portfolio-intro__voyage-button { min-height: 48px; background: #9b3429 !important; color: #fff5d8 !important; }
+  .portfolio-intro__actions { order: 2; grid-template-columns: 1.2fr 1fr 1fr; gap: 6px; margin-top: 10px; }
+  .portfolio-intro__actions .portfolio-intro__primary { grid-column: auto; }
+  .portfolio-intro__actions button { font-size: 11px; min-height: 44px; padding-inline: 6px; }
+
+  /* Keep character artwork and wanted cards, but place the board in phone flow. */
+  .skills-overlay .character-stage { top: 68px; bottom: calc(118px + env(safe-area-inset-bottom)); width: calc(100vw - 28px); max-height: none; overflow-y: auto; overflow-x: hidden; pointer-events: auto; }
+  .skills-overlay .character-stage__art { animation: none; }
+  .skills-overlay .character-stage__art > img { height: 160px; object-fit: contain; opacity: .95; mask-image: none; }
+  .skills-overlay .character-stage__glass { position: relative; left: auto !important; top: auto !important; width: 100% !important; height: auto !important; margin-top: -8px; padding: 14px 8px; border: 1px solid var(--accent); border-radius: 12px; background: rgba(5,17,20,.88); }
+  .skills-overlay .skill-panel { height: auto; padding: 8px; }
+  .skills-overlay .skill-panel__cards { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .skills-overlay .wanted-card { width: 100%; min-width: 0; min-height: 110px; padding: 8px 4px; }
+  .skills-overlay .wanted-card strong { font-size: 12px; line-height: 1.3; }
+  .skills-overlay .wanted-card small { font-size: 8px; }
+  .skills-overlay .wanted-card__heading { font-size: 11px; }
+  .skills-overlay .skill-panel__cards.has-selection { transform: none; }
+  .skills-overlay .skill-intel { position: relative; inset: auto; width: 100%; margin-top: 16px; padding: 14px 44px 14px 14px; }
+  .skills-overlay .skill-intel__name { font-size: 20px; }
+  .skills-overlay .skill-intel p { font: 13px/1.6 system-ui, sans-serif; }
+  .skills-overlay .skill-intel__close { width: 44px; height: 44px; top: 0; right: 0; }
+  .skills-overlay .skill-intel__eyebrow, .skills-overlay .skill-intel__mastery { font-size: 10px; }
+  .skills-overlay .bearing-header { top: max(18px, env(safe-area-inset-top)); gap: 8px; }
+  .skills-overlay .bearing-header strong { font-size: 16px; letter-spacing: .1em; }
+  .skills-overlay .bearing-header__line { width: 16px; }
+  .skills-overlay .crow-compass { height: 80px; width: calc(100% - 24px); bottom: max(12px, env(safe-area-inset-bottom)); }
+  .skills-overlay .crow-compass__buttons { gap: 4px; }
+  .skills-overlay .crow-compass__buttons button { min-width: 0; min-height: 48px; padding: 6px 2px; }
+  .skills-overlay .turn-control { top: auto; bottom: calc(92px + env(safe-area-inset-bottom)); }
+  .skills-overlay .turn-control span { width: 44px; height: 44px; }
+  .skills-overlay .skills-close { width: 44px; height: 44px; }
+
+  /* A readable captain's log accompanies the sail on phones. */
+  .mobile-about-dossier { display: block; position: fixed; z-index: 9380; left: 12px; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); max-height: 43dvh; overflow-y: auto; padding: 20px; color: #241809; border: 1px solid #a78953; border-radius: 10px; background: rgba(245,229,193,.96); box-shadow: 0 12px 36px rgba(0,0,0,.3); font: 14px/1.65 system-ui, sans-serif; }
+  .mobile-about-dossier h2 { font: 28px/1.1 Georgia, serif; margin-bottom: 12px; }
+  .mobile-about-dossier p + p { margin-top: 12px; }
+  .mobile-about-dossier a { display: inline-flex; align-items: center; min-height: 44px; margin: 10px 16px 0 0; color: #813025; font-weight: 700; }
+  .about-return-hint { display: none; }
+  .project-carousel { height: 100dvh; }
+  .project-carousel .project-carousel__manga-page { max-height: calc(100dvh - 220px) !important; }
+  button.project-carousel-reopen { top: calc(78px + env(safe-area-inset-top)); bottom: auto; left: 12px; min-height: 48px; padding: 8px 12px; }
+}
+@media (max-width: 760px) and (max-height: 480px), (max-width: 1024px) and (pointer: coarse) and (max-height: 480px) {
+  .nav-wheels { width: min(500px, calc(100% - 20px)); }
+  .nav-wheels .nav-wheels__bar { grid-template-columns: 1fr auto; }
+  .nav-wheels .nav-wheels__actions { display: none; }
+  .grand-map-trigger, .ocean-music { top: max(10px, env(safe-area-inset-top)); }
+  .grand-map-trigger { width: 44px; grid-template-columns: 1fr; }
+  .grand-map-trigger strong { display: none; }
+  .luffy-interaction-hint { bottom: max(16px, env(safe-area-inset-bottom)) !important; max-width: calc(100vw - 230px); }
+  .portfolio-intro__layout { max-width: 540px; }
+  .portfolio-intro__content { display: grid; grid-template-columns: 1fr 1fr; column-gap: 18px; padding: 8px; }
+  .portfolio-intro__eyebrow { grid-column: 1 / -1; }
+  .portfolio-intro h1 { font-size: 28px; }
+  .portfolio-intro__role { grid-column: 1; font-size: 12px; }
+  .portfolio-intro__summary { display: none; }
+  .portfolio-intro__voyage { grid-column: 2; grid-row: 2 / 4; margin-top: 0; padding-top: 0; border: 0; }
+  .portfolio-intro__actions { grid-column: 1 / -1; }
+  .skills-overlay .character-stage__art > img { height: 90px; }
+  .mobile-about-dossier { left: 45%; max-height: calc(100dvh - 76px); }
+}
+@media (max-width: 760px), (max-width: 1024px) and (pointer: coarse) {
+  .world-weather .world-weather__badge { display: none; }
+  .nav-wheels .nav-wheel__image-wrap { display: none; }
+  .nav-wheels .nav-wheel__copy { width: 100%; text-align: center; }
+  .nav-wheels .nav-wheel__eyebrow { overflow: visible; text-overflow: clip; font-size: 10px; }
+}
+@media (max-width: 760px), (max-width: 1024px) and (pointer: coarse) {
+  .chat-dock { transform: none !important; }
+  .chat-dock [data-chatbot-root] { bottom: calc(108px + env(safe-area-inset-bottom)) !important; right: max(10px, env(safe-area-inset-right)) !important; }
+  .chat-dock button[aria-label="Open portfolio assistant"] { width: 56px !important; height: 56px !important; }
+  .chat-dock .portfolio-assistant-panel { position: fixed !important; left: max(10px, env(safe-area-inset-left)); right: max(10px, env(safe-area-inset-right)) !important; top: max(12px, env(safe-area-inset-top)); bottom: max(12px, env(safe-area-inset-bottom)) !important; width: auto !important; height: auto !important; }
+  .portfolio-assistant-panel button[aria-label="Close chat"] { min-width: 44px; min-height: 44px; }
+  .portfolio-assistant-panel textarea { font-size: 16px !important; }
+}

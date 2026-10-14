@@ -670,6 +670,7 @@ export default function OnePieceChatbot() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            className="portfolio-assistant-panel"
             initial={{ opacity: 0, scale: 0.92, y: 20, transformOrigin: 'bottom right' }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 15 }}

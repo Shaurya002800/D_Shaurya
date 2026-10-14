@@ -32,7 +32,11 @@ function lerpV3(out, a, b, t) {
 }
 
 export function useAboutCamera(active) {
-  const { camera } = useThree()
+  const { camera, size } = useThree()
+  const portraitAspect = size.width <= 760 ? Math.min(1, size.width / size.height) : 1
+  const aboutFov = portraitAspect < 1
+    ? THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(CAM_ABOUT.fov / 2)) * 1.333 / portraitAspect))
+    : CAM_ABOUT.fov
   const lookRef    = useRef(CAM_EXPLORE.target.clone())
   const tlRef      = useRef(null)
 
@@ -46,7 +50,7 @@ export function useAboutCamera(active) {
 
     tlRef.current = gsap.to(proxy, {
       p:        1,
-      fov:      active ? CAM_ABOUT.fov : CAM_EXPLORE.fov,
+      fov:      active ? aboutFov : CAM_EXPLORE.fov,
       duration: active ? 2.0 : 1.5,
       ease:     'power3.inOut',
       onUpdate: () => {
@@ -59,7 +63,7 @@ export function useAboutCamera(active) {
       },
     })
     return () => { if (tlRef.current) tlRef.current.kill() }
-  }, [active, camera])
+  }, [active, camera, aboutFov])
 }
 
 export function AboutCameraController({ active }) {
@@ -553,6 +557,16 @@ export default function AboutSection({ active, onClose }) {
         <span>×</span>
         <small>DECK</small>
       </button>
+
+      <section className="mobile-about-dossier" aria-label="Captain profile">
+        <h2>Captain’s log</h2>
+        <p>{PROFILE.summary}</p>
+        <p>{PROFILE.tagline}</p>
+        {PROFILE.education.map(item => <p key={item}>{item}</p>)}
+        <a href={PROFILE.links.github} target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+        <a href={PROFILE.links.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn ↗</a>
+        <a href={PROFILE.links.resume} target="_blank" rel="noopener noreferrer">Resume ↗</a>
+      </section>
 
       <div className="about-return-hint">PRESS ESC TO RETURN</div>
 
