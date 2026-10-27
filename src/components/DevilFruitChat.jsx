@@ -3,6 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { send } from '@emailjs/browser'
 import { PROJECTS } from '../data/projects.js'
 import { PROFILE } from '../data/profile.js'
+import { useDialog } from '../hooks/useDialog.js'
+import { confirmsHandoff } from '../data/contact.js'
+import { portfolioKnowledge, projectSummary, experienceSummary, findProject } from '../data/knowledge.js'
 
 const EMAILJS = {
   serviceId: import.meta.env.VITE_EMAILJS_SERVICE_ID || 'service_qeqrp17',
@@ -14,47 +17,6 @@ const CHAT_REQUEST_TIMEOUT_MS = 18000
 function initialAssistantStatus() {
   return 'Server conversation mode'
 }
-
-const EXPERIENCE = [
-  {
-    org: 'MyPerro',
-    title: 'Frontend Developer & UI/UX Designer',
-    period: 'August 2024 - Present',
-    details: [
-      'Designed product UI/UX flows, brand creatives, and launch collateral for a smart pet-tech startup across web, app, and investor-facing touchpoints.',
-      'Contributed to Shark Tank India Season 5 Campus Special preparation through branding, packaging, presentation assets, and product experience design.',
-      'Built reusable design assets and improved visual consistency across product screens, website sections, marketing creatives, and demo materials.',
-    ],
-  },
-  {
-    org: 'IEEE Computer Society - VIT',
-    title: 'Senior Core Member, Technical & Design',
-    period: 'February 2025 - Present',
-    details: [
-      'Contributes to technical and design initiatives for IEEE CS-VIT, including official chapter platforms and event/hackathon interfaces.',
-      'Helped ship platforms for events such as HackBattle, supporting participant-facing flows for 500+ users with responsive UI and clear information architecture.',
-      'Collaborates with cross-functional teams on frontend development, UI/UX design, technical execution, and junior member guidance.',
-    ],
-  },
-]
-
-const ACHIEVEMENTS = [
-  'MyPerro branding and product presentation work contributed to a Shark Tank India Season 5 Campus Special feature.',
-  'Built and contributed to IEEE CS-VIT platforms and event experiences serving 500+ participants.',
-  'Won Best UI/UX Design recognition at Yantra hackathon.',
-  'Contributed to award-winning product prototypes across AI, IoT, and product design.',
-]
-
-const INTERNSHIP_HUNT = [
-  'Seeking Software Development, Frontend, Full-Stack, and AI/ML internship roles.',
-  'Strong fit for React/Next.js product interfaces, Node/FastAPI backends, PostgreSQL/Redis data flows, and AI/ML product features.',
-  'Public GitHub profile also positions him as open to paid internships in Frontend, AI/ML, Full-stack, and GenAI product development.',
-]
-
-const EXTRA_PROJECTS = [
-  'Personal Portfolio Website: custom animated Grand Line portfolio with Three.js world navigation, resume download, chatbot assistant, and UI/UX/front-end showcases.',
-  'Hack Battle Platform: hackathon platform and interface for a 500+ participant IEEE CS-VIT event, built around React, Tailwind CSS, and Figma workflows.',
-]
 
 const QUICK_PROMPTS = [
   'Tell me about Shaurya',
@@ -79,62 +41,6 @@ function transcriptFrom(messages) {
   return messages
     .map((msg) => `${msg.sender === 'user' ? 'Visitor' : 'Portfolio Assistant'}: ${msg.text}`)
     .join('\n')
-}
-
-function portfolioKnowledge() {
-  const projectLines = PROJECTS.map((project) => (
-    `- ${project.name} (${project.year}): ${project.desc} Stack: ${project.stack.join(', ')}. Link: ${project.url || 'not provided'}.`
-  )).join('\n')
-  const experienceLines = EXPERIENCE.map((item) => (
-    `- ${item.org}, ${item.title}, ${item.period}: ${item.details.join(' ')}`
-  )).join('\n')
-
-  return `
-PROFILE
-Name: ${PROFILE.name}
-Goes by: ${PROFILE.shortName}
-Role: ${PROFILE.role}
-Summary: ${PROFILE.summary}
-Tagline: ${PROFILE.tagline}
-Email: ${PROFILE.email}
-Phone: ${PROFILE.phone}
-Location: ${PROFILE.location}
-Focus: ${PROFILE.focus.join(', ')}
-Links: Portfolio ${PROFILE.links.portfolio}; LinkedIn ${PROFILE.links.linkedin}; GitHub ${PROFILE.links.github}; Instagram ${PROFILE.links.instagram}
-
-EDUCATION
-${PROFILE.education.map((item) => `- ${item}`).join('\n')}
-
-EXPERIENCE
-${experienceLines}
-
-SKILLS
-Languages: ${PROFILE.skills.languages.join(', ')}
-Frontend and design: ${PROFILE.skills.frontend.join(', ')}
-Backend and databases: ${PROFILE.skills.backend.join(', ')}
-AI/ML: ${PROFILE.skills.aiMl.join(', ')}
-Blockchain: ${PROFILE.skills.blockchain.join(', ')}
-Tools: ${PROFILE.skills.tools.join(', ')}
-
-PROJECTS
-${projectLines}
-${EXTRA_PROJECTS.map((item) => `- ${item}`).join('\n')}
-
-ACHIEVEMENTS
-${ACHIEVEMENTS.map((item) => `- ${item}`).join('\n')}
-
-INTERNSHIP FOCUS
-${INTERNSHIP_HUNT.map((item) => `- ${item}`).join('\n')}
-
-CONTACT POLICY
-If someone wants to contact, hire, collaborate, recruit, interview, offer an internship, or asks Shaurya to call them, collect their name, any contact method, and the message. The UI sends the full transcript to Shaurya.
-UNKNOWN FACTS
-This portfolio does not provide Shaurya's age or date of birth. If asked, say age is not listed. Do not infer it from school year. For time-sensitive recruiting status, suggest contacting Shaurya because applications and availability can change.
-
-STYLE
-Be conversational and adaptive, like a smaller ChatGPT. Answer the exact question first. Use the previous chat naturally. Ask a short follow-up only when it helps. Do not sound like a static FAQ. Do not repeat the same intro.
-Do not invent internships, awards, company names, education details, ages, salaries, or private facts beyond this knowledge base.
-`.trim()
 }
 
 function wantsContact(text) {
@@ -247,10 +153,7 @@ function mergeLeadFromText(lead, text, expectedField) {
   return next
 }
 
-function projectMatch(text) {
-  const q = normalize(text)
-  return PROJECTS.find((project) => normalize(project.name).split(' ').some((part) => part && q.includes(part)))
-}
+const projectMatch = findProject
 
 function lastUserMessages(history) {
   return history
@@ -280,7 +183,7 @@ function lastPortfolioTopic(history) {
 function bestProjectForQuestion(text) {
   const q = normalize(text)
   if (q.includes('exam') || q.includes('credential') || q.includes('verifiable')) return PROJECTS.find((project) => project.name === 'ExamChain') || PROJECTS[0]
-  if (q.includes('ai') || q.includes('ml') || q.includes('rag') || q.includes('crop') || q.includes('agri')) return PROJECTS.find((project) => project.name === 'Vivayu') || PROJECTS[7]
+  if (q.includes('ai') || q.includes('ml') || q.includes('rag') || q.includes('crop') || q.includes('agri')) return PROJECTS.find((project) => project.id === 'vivayu') || PROJECTS[7]
   if (q.includes('astrology')) return PROJECTS.find((project) => project.name === 'Serenova Engine') || PROJECTS[3]
   if (q.includes('full stack') || q.includes('backend') || q.includes('marketplace')) return PROJECTS.find((project) => project.name === 'DevBoard') || PROJECTS[2]
   if (q.includes('startup') || q.includes('spend') || q.includes('saas')) return PROJECTS.find((project) => project.name === 'SpendLens') || PROJECTS[4]
@@ -289,13 +192,11 @@ function bestProjectForQuestion(text) {
   return PROJECTS.find((project) => project.name === 'ExamChain') || PROJECTS[0]
 }
 
-function projectSummary(project) {
-  return `${project.name} (${project.year}) is ${project.desc} Stack: ${project.stack.join(', ')}.${project.url && project.url !== '#' ? ` Link: ${project.url}` : ''}`
-}
+
 
 function isUnknownProfileFactQuestion(text) {
   const q = normalize(text)
-  return ['age', 'date of birth', 'dob', 'birthday', 'salary'].some((term) => q.includes(term))
+  return /\b(age|date of birth|dob|birthday|salary)\b/.test(q)
 }
 
 function asksForOpinion(text) {
@@ -314,7 +215,7 @@ function fallbackReply(text, history = []) {
   ].some((term) => q.includes(term))
 
   if (/^(hi|hello|hey|yo|sup|gm|good morning|good evening|good afternoon)\b/.test(q)) {
-    return `Hey, I'm here. Ask me anything about Shaurya's projects, skills, AI/ML work, experience, resume, or internship hunt. I can also help you send him a message.`
+    return `Hey, I'm here. Ask me anything about Shaurya's projects, skills, AI/ML work, experience, resume, or availability. I can also help you send him a message.`
   }
 
   if (matchedProject) {
@@ -322,59 +223,55 @@ function fallbackReply(text, history = []) {
   }
 
   if (isUnknownProfileFactQuestion(text)) {
-    return `I do not have Shaurya's age or date of birth in the profile, so I should not guess. I can answer verified things like his education, MyPerro experience, IEEE CS-VIT role, projects, skills, and internship hunt status.`
+    return `I do not have Shaurya's age or date of birth in the profile, so I should not guess. I can answer verified things like his education, MyPerro experience, IEEE CS-VIT role, projects, skills, and project scopes.`
   }
 
-  if (q.includes('internship') || q.includes('intern')) {
-    return `Shaurya is seeking Software Development, Frontend, Full-Stack, and AI/ML internship roles. His strongest fit is product engineering work that needs React/Next.js interfaces, Node or FastAPI backends, PostgreSQL/Redis data flows, and practical AI/ML features.`
-  }
-
-  if (q.includes('experience') || q.includes('myperro') || q.includes('job')) {
-    return `Shaurya has experience at MyPerro since August 2024 as a Frontend Developer and UI/UX Designer, where he designed product flows, brand creatives, launch collateral, and presentation assets for a smart pet-tech startup. He is also a Senior Core Member at IEEE CS-VIT in Technical & Design, contributing to chapter platforms and event interfaces such as HackBattle for 500+ users.`
+  if (q.includes('experience') || q.includes('myperro') || q.includes('ieee') || q.includes('senior core') || q.includes('job') || q.includes('intern')) {
+    return experienceSummary()
   }
 
   if (q.includes('education') || q.includes('college') || q.includes('cgpa') || q.includes('gpa')) {
-    return `Shaurya is a third-year B.Tech CSE student specializing in AI & Data Engineering at VIT Vellore, from August 2024 to May 2028, with a CGPA of 9.02/10. His listed coursework includes DSA, OOP, database systems, machine learning, probability and statistics, and computer organization.`
+    return `${PROFILE.role}. ${PROFILE.education.join(' ')}.`
   }
 
   if (asksFollowUp && previousProject) {
-    return `${previousProject.name} is worth expanding on because it shows both execution and product thinking. ${previousProject.desc} The stack is ${previousProject.stack.join(', ')}, so visitors can see the technical choices instead of just a polished UI.${previousProject.url && previousProject.url !== '#' ? ` You can open it here: ${previousProject.url}` : ''}`
+    return projectSummary(previousProject)
   }
 
   if (asksForOpinion(text)) {
-    return `Based on this portfolio, Shaurya looks strongest for roles or collaborations that need product engineering plus AI/security thinking. I would judge him by DevBoard for full-stack execution, ExamChain for ambitious secure infrastructure, SentinelMesh for edge AI and IoT security, and Vivayu or SpendLens for practical AI product work.`
+    return `I’d assess fit through the implementation evidence in these dossiers:\n\n${PROJECTS.filter(project => project.featured).slice(0, 3).map(project => `${project.name} — ${project.status}. ${project.scope}`).join('\n\n')}\n\nIndividual responsibilities and project scope matter when evaluating team work.`
   }
 
   if ((q.includes('best') || q.includes('strongest') || q.includes('which one')) && (previousTopic === 'projects' || q.includes('project'))) {
     const best = bestProjectForQuestion(text)
-    return `For a first impression, I would lead with ${best.name}. ${best.desc} It gives Shaurya a strong story because it connects real problem-solving with a clear technical stack: ${best.stack.join(', ')}.`
+    return `One relevant starting point is ${best.name} — ${best.status}. ${best.problem} ${best.scope} Technologies: ${best.stack.join(', ')}.`
   }
 
   if (q.includes('project') || q.includes('work') || q.includes('portfolio')) {
     const topProjects = PROJECTS.slice(0, 4)
-      .map((project) => `${project.name}: ${project.desc}`)
+      .map((project) => `${project.name} — ${project.status}: ${project.desc}`)
       .join('\n\n')
-    return `Here are strong portfolio highlights:\n\n${topProjects}\n\nAsk about any project name and I can break down stack, purpose, and impact.`
+    return `Here are strong portfolio highlights:\n\n${topProjects}\n\nAsk about any project name and I can explain the implementation, contribution and scope.`
   }
 
   if (asksFollowUp && previousTopic === 'skills') {
-    return `The strongest combination is frontend polish plus full-stack and AI/ML systems. Shaurya can design the interface, build it in React/Next.js/Tailwind, connect Node or FastAPI APIs, and add AI pieces like LangChain, FAISS, Groq, XGBoost, scikit-learn, or TensorFlow Lite Micro when the product needs intelligence.`
+    return `The profile lists frontend tools including ${PROFILE.skills.frontend.join(', ')}; backend tools including ${PROFILE.skills.backend.join(', ')}; and AI/ML tools including ${PROFILE.skills.aiMl.join(', ')}. A listed tool does not establish production experience; individual dossiers describe the implementation and its limits.`
   }
 
   if (asksFollowUp && previousTopic === 'ai') {
-    return `The AI/ML side is strongest around practical applied systems: Vivayu for RAG and crop guidance, SpendLens for AI-assisted spend auditing, SentinelMesh for edge inference with TensorFlow Lite Micro, and Serenova Engine for deterministic computation plus guarded LLM interpretation.`
+    return PROJECTS.filter(project => project.category === 'Applied AI').slice(0, 2).map(projectSummary).join('\n\n')
   }
 
   if (q.includes('skill') || q.includes('tech') || q.includes('stack')) {
-    return `Shaurya's core stack includes Python, Java, JavaScript/TypeScript, SQL, C/C++, Solidity, React, Next.js, Tailwind, Node.js, Express, FastAPI, PostgreSQL, Redis, LangChain, FAISS, Groq, TensorFlow Lite Micro, XGBoost, scikit-learn, Web3.py, Hardhat, Docker, Railway, and Vercel. His strongest mix is polished frontend execution plus practical AI/ML and full-stack product thinking.`
+    return Object.entries(PROFILE.skills).map(([category, skills]) => `${category}: ${skills.join(', ')}`).join('\n')
   }
 
   if (q.includes('ai') || q.includes('ml') || q.includes('rag') || q.includes('genai')) {
-    return `On AI/ML, Shaurya has worked with LangChain, FAISS, Groq, TensorFlow Lite Micro, XGBoost, scikit-learn, pandas, and NumPy. Vivayu shows RAG and crop-disease intelligence; SentinelMesh shows on-device AI inference; SpendLens shows AI-assisted SaaS spend auditing.`
+    return `The profile lists ${PROFILE.skills.aiMl.join(', ')}. Applied AI work includes:\n\n${PROJECTS.filter(project => project.category === 'Applied AI').map(project => `${project.name} — ${project.status}. ${project.decisions[0]} ${project.scope}`).join('\n\n')}`
   }
 
   if (q.includes('about') || q.includes('who') || q.includes('shaurya')) {
-    return `${PROFILE.summary} He focuses on polished web interfaces, full-stack products, AI/ML systems, and creative interactive experiences like this Grand Line portfolio.`
+    return `Shaurya’s introduction: “${PROFILE.summary}”`
   }
 
   if (q.includes('resume')) {
@@ -385,7 +282,7 @@ function fallbackReply(text, history = []) {
     return `Anytime. I can keep going on projects, skills, resume fit, or help you send Shaurya a message.`
   }
 
-  return `I can help with Shaurya's projects, skills, AI/ML work, frontend/design experience, resume, or contact handoff. Try asking about DevBoard, Vivayu, SentinelMesh, or how to reach Shaurya.`
+  return `I can help with Shaurya's projects, skills, AI/ML work, frontend/design experience, resume, or contact handoff. Try asking about DevBoard, Vivayu, MTR-KV, TopoPatch, or how to reach Shaurya.`
 }
 
 function buildSystemInstruction() {
@@ -518,9 +415,11 @@ export default function OnePieceChatbot() {
     lead: { name: '', email: '', phone: '', message: '' },
   })
   const chatEndRef = useRef(null)
+  const dialogRef = useDialog(isOpen, () => setIsOpen(false))
 
   const inputPlaceholder = useMemo(() => {
     if (!contactFlow.active) return 'Ask about Shaurya...'
+    if (contactFlow.expectedField === 'confirm') return 'Send or cancel'
     return contactFlow.expectedField === 'contact'
       ? 'Phone number or email'
       : contactFlow.expectedField === 'name'
@@ -529,7 +428,7 @@ export default function OnePieceChatbot() {
   }, [contactFlow])
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    chatEndRef.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
   }, [messages, isTyping])
 
   useEffect(() => {
@@ -565,7 +464,12 @@ export default function OnePieceChatbot() {
     }
   }
 
-  const beginContactFlow = async (userText, chat) => {
+  const requestLeadConfirmation = lead => {
+    setContactFlow({ active: true, expectedField: 'confirm', lead })
+    appendBot(`Please check the handoff: ${lead.name}; ${lead.email || lead.phone}; ${lead.message}. Reply ‘send’ to send it to Shaurya, or ‘cancel’ to discard it.`)
+  }
+
+  const beginContactFlow = async (userText) => {
     const lead = mergeLeadFromText(
       { name: '', email: '', phone: '', message: '' },
       userText,
@@ -583,13 +487,19 @@ export default function OnePieceChatbot() {
       return
     }
 
-    await sendLeadNow(lead, chat)
+    requestLeadConfirmation(lead)
   }
 
   const handleContactStep = async (userText, chat) => {
     if (isNegative(userText)) {
       resetContactFlow()
       appendBot('No problem. I cancelled the handoff. You can still ask me anything about Shaurya.')
+      return
+    }
+
+    if (contactFlow.expectedField === 'confirm') {
+      if (confirmsHandoff(contactFlow.expectedField, userText)) await sendLeadNow(contactFlow.lead, chat)
+      else appendBot('Reply ‘send’ to send the prepared handoff, or ‘cancel’ to discard it.')
       return
     }
 
@@ -606,7 +516,7 @@ export default function OnePieceChatbot() {
       return
     }
 
-    await sendLeadNow(lead, chat)
+    requestLeadConfirmation(lead)
   }
 
   const submitText = async (rawText) => {
@@ -654,8 +564,8 @@ export default function OnePieceChatbot() {
   return (
     <div
       data-chatbot-root="true"
-      onKeyDownCapture={(event) => event.stopPropagation()}
-      onKeyUpCapture={(event) => event.stopPropagation()}
+      onKeyDown={(event) => event.stopPropagation()}
+      onKeyUp={(event) => event.stopPropagation()}
       style={{
         position: 'fixed',
         bottom: '30px',
@@ -670,6 +580,11 @@ export default function OnePieceChatbot() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Portfolio assistant"
+            tabIndex={-1}
             className="portfolio-assistant-panel"
             initial={{ opacity: 0, scale: 0.92, y: 20, transformOrigin: 'bottom right' }}
             animate={{ opacity: 1, scale: 1, y: 0 }}

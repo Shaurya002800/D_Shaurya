@@ -1,6 +1,7 @@
+import { portfolioKnowledge } from '../src/data/knowledge.js'
 // Server-side proxy for portfolio chatbot LLM calls.
 // Holds the Groq and Gemini API keys so they never ship to the browser.
-// Body shape: { provider: 'groq' | 'gemini' | 'auto', messages: [{ role, content }], system?: string }
+// Body shape: { provider: 'groq' | 'gemini' | 'auto', messages: [{ role, content }] }. Knowledge is server-owned.
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY || ''
 const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile'
@@ -110,7 +111,7 @@ async function callGemini({ system, messages }) {
   return data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || ''
 }
 
-export default async function handler(event) {
+async function handleChatEvent(event) {
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: CORS_HEADERS, body: '' }
   }
@@ -125,7 +126,10 @@ export default async function handler(event) {
     return jsonResponse(400, { error: 'Invalid JSON' })
   }
 
-  const { provider = 'auto', system, messages } = payload
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return jsonResponse(400, { error: 'Invalid request body' })
+  const { provider = 'auto', messages } = payload
+  if (!Array.isArray(messages) || !messages.length) return jsonResponse(400, { error: 'Messages are required' })
+  const system = portfolioKnowledge()
   if (!system || typeof system !== 'string') {
     return jsonResponse(400, { error: 'Missing system prompt' })
   }
@@ -164,4 +168,26 @@ export default async function handler(event) {
     error: `LLM proxy failed: ${errors.join(' | ')}`,
     text: '',
   })
+}
+
+// Support the deployed Vercel/Node request-response contract as well as the
+// existing event contract used by local tests. The factual prompt is server-owned.
+export default async function handler(request, response) {
+  const legacyEvent = typeof request.httpMethod === 'string'
+  let event = request
+  if (!legacyEvent) {
+    let body = request.body
+    if (typeof request.json === 'function' && request.method === 'POST') {
+      try { body = await request.json() } catch { body = '{invalid-json' }
+    }
+    event = { httpMethod: request.method, body: typeof body === 'string' ? body : JSON.stringify(body ?? {}) }
+  }
+  const result = await handleChatEvent(event)
+  if (response) {
+    response.writeHead(result.statusCode, result.headers)
+    response.end(result.body)
+    return
+  }
+  if (!legacyEvent) return new Response(result.statusCode === 204 ? null : result.body, { status: result.statusCode, headers: result.headers })
+  return result
 }

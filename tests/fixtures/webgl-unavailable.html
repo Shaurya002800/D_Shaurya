@@ -1,0 +1,7 @@
+<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Portfolio WebGL failure verification</title></head><body><div id="root"></div><script>
+const originalGetContext = HTMLCanvasElement.prototype.getContext;
+HTMLCanvasElement.prototype.getContext = function(type, ...args) {
+  if (type === 'webgl2' || type === 'webgl' || type === 'experimental-webgl') return null;
+  return originalGetContext.call(this, type, ...args);
+};
+</script><script type="module" src="/src/main.jsx"></script></body></html>

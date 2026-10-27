@@ -1,10 +1,11 @@
+import { useDialog } from '../hooks/useDialog.js'
 import './GrandLineMap.css'
 
 const ROUTES = [
   {
     object: 'Wanted Posters',
     destination: 'Projects',
-    clue: 'Open the bounty files behind the strongest builds.',
+    clue: 'Read project problems, implementation decisions and source evidence.',
     action: 'Open Posters',
     key: 'projects',
   },
@@ -48,6 +49,7 @@ export default function GrandLineMap({
   onExperience,
   onContact,
 }) {
+  const dialogRef = useDialog(open, () => onOpenChange(false))
   if (!visible && !open) return null
 
   const actions = {
@@ -83,6 +85,8 @@ export default function GrandLineMap({
 
       {open && (
         <div
+          ref={dialogRef}
+          tabIndex={-1}
           className="grand-map"
           role="dialog"
           aria-modal="true"

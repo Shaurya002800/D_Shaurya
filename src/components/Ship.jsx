@@ -5,6 +5,7 @@ import { RigidBody, CuboidCollider, CylinderCollider } from '@react-three/rapier
 import * as THREE from 'three'
 import { configureTextBuilder } from 'troika-three-text'
 import { AnimatedSail } from './AboutSection.jsx'
+import { useReducedMotion } from '../hooks/useReducedMotion.js'
 import { PROJECTS, PROJECT_GALLERY_SPOTS } from '../data/projects.js'
 import { SHIP_ARTIFACTS } from '../data/shipArtifacts.js'
 import {
@@ -1160,11 +1161,11 @@ function useWantedPosterTexture(project) {
 
     ctx.fillStyle = accent
     ctx.font = '900 38px Georgia, serif'
-    ctx.fillText(`BOUNTY ${project.bounty}`, W / 2, 908)
+    ctx.fillText(project.status.toUpperCase(), W / 2, 908)
 
     ctx.fillStyle = '#4d210d'
     ctx.font = '800 30px Georgia, serif'
-    ctx.fillText(`DEAD OR ALIVE - ${project.year}`, W / 2, 960)
+    ctx.fillText(`PROJECT ARCHIVE - ${project.year}`, W / 2, 960)
 
     ctx.fillStyle = '#5f2b12'
     ctx.font = '24px Georgia, serif'
@@ -2136,12 +2137,13 @@ function SunnySideDeckTrim() {
 // signature — add skillsActive to whatever props Ship already receives
 export default function Ship({ aboutActive = false, skillsActive = false, weatherId = 'sunny', onProjectSelect, onArtifactOpen }){
   const shipRef = useRef()
+  const reducedMotion = useReducedMotion()
   const isNightWeather = weatherId === 'night'
 
   // Gentle ocean rocking — kinematic physics body moves with waves
   useFrame(({ clock }) => {
     if (!shipRef.current) return
-    const t = clock.getElapsedTime()
+    const t = reducedMotion ? 0 : clock.getElapsedTime()
     shipRef.current.setNextKinematicTranslation({
       x: 0,
       y: Math.sin(t * 0.5) * 0.15,

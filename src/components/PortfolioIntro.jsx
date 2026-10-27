@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { PROFILE } from '../data/profile.js'
 import { PROJECTS } from '../data/projects.js'
 import './PortfolioIntro.css'
@@ -27,6 +27,8 @@ export default function PortfolioIntro({
   worldRequested = true,
   mobileProofFirst = false,
   onRequestWorld,
+  worldUnavailable = false,
+  onOpenMap,
   onEnter,
   onViewProjects,
   onShowSkills,
@@ -35,22 +37,18 @@ export default function PortfolioIntro({
   onContact,
 }) {
   const [showOnboarding, setShowOnboarding] = useState(false)
-  const worldPending = worldRequested && !worldReady
+  const worldPending = !worldUnavailable && worldRequested && !worldReady
   const worldOptional = mobileProofFirst && !worldRequested
-  const voyageStatus = worldOptional
+  const voyageStatus = worldUnavailable ? 'The 3D ship is unavailable. All dossiers and the Captain Log remain accessible.' : worldOptional
     ? 'Proof route ready. 3D voyage optional.'
     : worldReady
       ? (mobileProofFirst ? 'Drag to move · Swipe to look · Tap OPEN near objects' : 'Ship deck ready.')
       : 'Preparing ship deck...'
-  const voyageLabel = worldOptional
+  const voyageLabel = worldUnavailable ? 'Open Map' : worldOptional
     ? 'Load Grand Line'
     : worldReady
       ? 'Enter Grand Line'
       : 'Preparing...'
-
-  useEffect(() => {
-    if (!visible) setShowOnboarding(false)
-  }, [visible])
 
   const closeOnboarding = () => {
     markOnboardingSeen()
@@ -58,6 +56,7 @@ export default function PortfolioIntro({
   }
 
   const handleEnter = () => {
+    if (worldUnavailable) { onOpenMap?.(); return }
     if (!worldRequested) {
       onRequestWorld?.()
       return
@@ -159,15 +158,15 @@ export default function PortfolioIntro({
             <div className="portfolio-intro__content">
               <p className="portfolio-intro__eyebrow">Interactive portfolio</p>
               <h1 id="portfolio-intro-title">{PROFILE.name}</h1>
-              <p className="portfolio-intro__role">Full-stack developer, AI/ML builder, frontend engineer</p>
+              <p className="portfolio-intro__role">{PROFILE.role}</p>
               <p className="portfolio-intro__summary">
-                Building polished products, practical AI systems, and interactive web experiences.
+                {PROFILE.summary}
               </p>
 
               <div className="portfolio-intro__proof" aria-label="Profile highlights">
-                <span>{PROJECTS.length} shipped project dossiers</span>
-                <span>AI/ML + full-stack + Web3 systems</span>
-                <span>Live demos, GitHub proof, resume-ready details</span>
+                <span>{PROJECTS.length} project dossiers</span>
+                <span>VIT Vellore · Class of 2028</span>
+                <span>{PROFILE.academics.dsa} DSA problems · CGPA {PROFILE.academics.cgpa}</span>
               </div>
 
               <div className="portfolio-intro__actions">
@@ -207,6 +206,7 @@ export default function PortfolioIntro({
                 >
                   {voyageLabel}
                 </button>
+                {!worldUnavailable && <button type="button" className="portfolio-intro__map-shortcut" onClick={onOpenMap}>Open Map</button>}
               </div>
             </div>
 

@@ -915,6 +915,7 @@ function Luffy3D({
   }, [onNavigate, onSkillsClimbingChange])
 
   const triggerInteraction = useCallback(() => {
+    if (aboutActive || skillsActive || cameraLocked || document.querySelector('[role="dialog"][aria-modal="true"]')) return
     const zone = zoneRef.current
     if (!zone || animSM.current.locked || climbRef.current.active) return
 
@@ -939,7 +940,7 @@ function Luffy3D({
     }
 
     animSM.current.playOnce(zone.state, 0.2)
-  }, [beginClimb, onArtifactOpen, onNavigate])
+  }, [aboutActive, skillsActive, cameraLocked, beginClimb, onArtifactOpen, onNavigate])
 
   useEffect(() => {
     const handleInteraction = (event) => {

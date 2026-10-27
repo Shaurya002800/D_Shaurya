@@ -17,7 +17,7 @@ export function useKeyboard() {
     }
 
     const down = (e) => {
-      if (window.__PORTFOLIO_CHAT_ACTIVE__) {
+      if (window.__PORTFOLIO_CHAT_ACTIVE__ || document.querySelector('[role="dialog"][aria-modal="true"]')) {
         releaseKeys()
         return
       }
@@ -28,7 +28,7 @@ export function useKeyboard() {
       }
     }
     const up = (e) => {
-      if (window.__PORTFOLIO_CHAT_ACTIVE__) {
+      if (window.__PORTFOLIO_CHAT_ACTIVE__ || document.querySelector('[role="dialog"][aria-modal="true"]')) {
         releaseKeys()
         return
       }
@@ -39,6 +39,7 @@ export function useKeyboard() {
     }
     const virtualKey = (e) => {
       const { key, pressed } = e.detail ?? {}
+      if (pressed && (window.__PORTFOLIO_CHAT_ACTIVE__ || document.querySelector('[role="dialog"][aria-modal="true"]'))) return
       if (!Object.prototype.hasOwnProperty.call(keys.current, key)) return
       keys.current[key] = Boolean(pressed)
     }
@@ -46,11 +47,13 @@ export function useKeyboard() {
     window.addEventListener('keyup', up)
     window.addEventListener('portfolio-virtual-key', virtualKey)
     window.addEventListener('portfolio-chat-state-change', releaseKeys)
+    window.addEventListener('portfolio-dialog-state-change', releaseKeys)
     return () => {
       window.removeEventListener('keydown', down)
       window.removeEventListener('keyup', up)
       window.removeEventListener('portfolio-virtual-key', virtualKey)
       window.removeEventListener('portfolio-chat-state-change', releaseKeys)
+      window.removeEventListener('portfolio-dialog-state-change', releaseKeys)
     }
   }, [])
 

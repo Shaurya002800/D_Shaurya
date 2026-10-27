@@ -23,3 +23,6 @@ canvas {
     transform-origin: bottom right;
   }
 }
+
+.scene-unavailable { position: fixed; top: 40%; left: 50%; transform: translateX(-50%); width: min(540px, calc(100% - 40px)); padding: 24px; border: 1px solid #9c7b44; background: #eedcbc; color: #302211; border-radius: 6px; font: 16px/1.65 system-ui, sans-serif; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; } }

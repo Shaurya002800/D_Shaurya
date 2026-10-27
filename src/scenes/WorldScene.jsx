@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, Suspense, useMemo } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 // Added OrbitControls to the drei import
 import { Sky, Sparkles, OrbitControls } from '@react-three/drei'
 import { Physics } from '@react-three/rapier'
@@ -8,6 +8,7 @@ import * as THREE from 'three'
 import { LuffyCharacter3D } from '../components/LuffyCharacter'
 import Ship from '../components/Ship'
 import { AboutCameraController } from '../components/AboutSection'
+import { useReducedMotion } from '../hooks/useReducedMotion.js'
 
 // ─── SKILLS CAMERA CONTROLLER ────────────────────────────────────────────────
 const CAM_EXPLORE = {
@@ -74,6 +75,17 @@ const VOYAGE_TOUR_STEPS = [
     fov: 58,
   },
 ]
+
+function ContextHealth({ onUnavailable }) {
+  const { gl } = useThree()
+  useEffect(() => {
+    const canvas = gl.domElement
+    const lost = event => { event.preventDefault(); onUnavailable?.() }
+    canvas.addEventListener('webglcontextlost', lost)
+    return () => canvas.removeEventListener('webglcontextlost', lost)
+  }, [gl, onUnavailable])
+  return null
+}
 
 const WEATHER_DURATION_MS = 180000
 const WEATHER_SEQUENCE = [
@@ -163,6 +175,7 @@ export function SkillsCameraTransition({
   cameraClaimedByOtherSection = false,
   onCameraLockChange,
 }) {
+  const reducedMotion = useMemo(() => window.matchMedia('(prefers-reduced-motion: reduce)'), [])
   const isAnimating = useRef(false)
   const cameraLocked = useRef(false)
   const currentTarget = useRef(new THREE.Vector3(0, 1.5, 0))
@@ -176,7 +189,7 @@ export function SkillsCameraTransition({
   useEffect(() => () => onCameraLockChange?.(false), [onCameraLockChange])
 
   useFrame((state, delta) => {
-    const speed = 1 - Math.exp(-delta * 4.2)
+    const speed = reducedMotion.matches ? 1 : 1 - Math.exp(-delta * 4.2)
     const view = CROWS_NEST_CAMERA.views[direction] ?? CROWS_NEST_CAMERA.views.north
 
     if (!active && cameraClaimedByOtherSection) {
@@ -314,6 +327,7 @@ const CAM_WORK = {
 }
 
 export function WorkCameraTransition({ active }) {
+  const reducedMotion = useReducedMotion()
   const isAnimating   = useRef(false)
   const hasEntered    = useRef(false)
   const currentTarget = useRef(new THREE.Vector3(0, 1.5, 0))
@@ -322,7 +336,7 @@ export function WorkCameraTransition({ active }) {
   const fogCleared    = useRef(false)
 
   useFrame((state, delta) => {
-    const speed = 2.8 * delta
+    const speed = reducedMotion ? 1 : Math.min(1, 2.8 * delta)
 
     if (active) {
       isAnimating.current = true
@@ -365,6 +379,7 @@ export function WorkCameraTransition({ active }) {
 
 // ─── STYLIZED "GRAND LINE" OCEAN ──────────────────────────────────────────────
 function Ocean({ weather }) {
+  const reducedMotion = useReducedMotion()
   const matRef = useRef()
   const targetColors = useMemo(() => ({
     deep: new THREE.Color(),
@@ -471,7 +486,7 @@ function Ocean({ weather }) {
     if (!matRef.current) return
     const uniforms = matRef.current.uniforms
     const blend = 1 - Math.exp(-delta * 0.75)
-    uniforms.uTime.value = clock.getElapsedTime()
+    uniforms.uTime.value = reducedMotion ? 0 : clock.getElapsedTime()
     targetColors.deep.set(weather.ocean[0])
     targetColors.surface.set(weather.ocean[1])
     targetColors.shallow.set(weather.ocean[2])
@@ -495,6 +510,7 @@ function Ocean({ weather }) {
 }
 
 function WeatherEnvironment({ weather, workActive }) {
+  const reducedMotion = useReducedMotion()
   const skyRef = useRef()
   const ambientRef = useRef()
   const sunRef = useRef()
@@ -543,7 +559,7 @@ function WeatherEnvironment({ weather, workActive }) {
       uniforms.sunPosition.value.lerp(sunTarget, blend)
     }
 
-    if (weather.id === 'storm') {
+    if (weather.id === 'storm' && !reducedMotion) {
       lightningTimer.current += delta
       if (lightningTimer.current >= nextLightning.current) {
         lightningTimer.current = 0
@@ -665,16 +681,18 @@ export default function WorldScene({
   onGuidedTourStepChange,
   onGuidedTourComplete,
   onReady,
+  onUnavailable,
   mobileView = false,
 }) {
   const [skillsCameraLocked, setSkillsCameraLocked] = useState(false)
+  const reducedMotion = useReducedMotion()
   const [tourCameraLocked, setTourCameraLocked] = useState(false)
   const [weatherIndex, setWeatherIndex] = useState(getInitialWeatherIndex)
   const weather = WEATHER_SEQUENCE[weatherIndex]
   const effectsEnabled = useMemo(() => {
     if (typeof window === 'undefined') return true
-    return !mobileView && !window.matchMedia('(max-width: 760px), (prefers-reduced-motion: reduce)').matches
-  }, [mobileView])
+    return !mobileView && !reducedMotion && !window.matchMedia('(max-width: 760px)').matches
+  }, [mobileView, reducedMotion])
   
   // ─── NEW: Global Free Camera State ───
   const [freeCam, setFreeCam] = useState(false)
@@ -684,11 +702,12 @@ export default function WorldScene({
   }, [onReady, mobileView])
 
   useEffect(() => {
+    if (reducedMotion) return undefined
     const interval = setInterval(() => {
       setWeatherIndex((current) => (current + 1) % WEATHER_SEQUENCE.length)
     }, WEATHER_DURATION_MS)
     return () => clearInterval(interval)
-  }, [])
+  }, [reducedMotion])
 
   // ─── NEW: Keyboard Listener for 'O' key ───
   useEffect(() => {
@@ -716,6 +735,7 @@ export default function WorldScene({
   gl={{ antialias: false, powerPreference: 'high-performance', toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.84 }}
   style={{ position: 'absolute', inset: 0, zIndex: 1 }}
 >
+  <ContextHealth onUnavailable={onUnavailable} />
   {/* 1. OrbitControls is ALWAYS mounted, but disabled until you press 'O' */}
   {freeCam && <OrbitControls makeDefault enabled target={[0, 0, 0]} />}
 
@@ -740,7 +760,7 @@ export default function WorldScene({
   )}
   {/* 3. The rest of your scene... */}
   <WeatherEnvironment weather={weather} workActive={workActive} />
-  {!workActive && (
+  {!workActive && !reducedMotion && (
     <Sparkles
       count={weather.id === 'night' ? 180 : 70}
       scale={weather.id === 'night' ? [220, 82, 220] : 52}

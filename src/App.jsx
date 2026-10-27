@@ -9,6 +9,8 @@ import PortfolioIntro from './components/PortfolioIntro.jsx'
 import SwordCursor from './components/SwordCursor.jsx'
 import LuffyUI from './components/LuffyUI.jsx'
 import './mobile-game.css'
+import WorldBoundary from './components/WorldBoundary.jsx'
+import { PROFILE } from './data/profile.js'
 
 const WorldScene = lazy(() => import('./scenes/WorldScene'))
 const AboutSection = lazy(() => import('./components/AboutSection'))
@@ -33,11 +35,23 @@ function prefersMobileProofFirst() {
   return window.matchMedia('(max-width: 760px), (max-width: 1024px) and (pointer: coarse)').matches
 }
 
+function supportsWebGL2() {
+  if (typeof document === 'undefined') return true
+  try {
+    const canvas = document.createElement('canvas')
+    const context = canvas.getContext('webgl2')
+    if (!context) return false
+    context.getExtension('WEBGL_lose_context')?.loseContext()
+    return true
+  } catch { return false }
+}
+
 function App() {
   const [loaderComplete,  setLoaderComplete]  = useState(false)
   const [worldReady,      setWorldReady]      = useState(false)
+  const [worldFailed, setWorldFailed] = useState(() => !supportsWebGL2())
   const [mobileProofFirst, setMobileProofFirst] = useState(prefersMobileProofFirst)
-  const [worldRequested,  setWorldRequested]  = useState(true)
+  const [worldRequested,  setWorldRequested]  = useState(() => !prefersMobileProofFirst())
   const [activeSection,   setActiveSection]   = useState('explore')
   const [aboutActive,     setAboutActive]     = useState(false)
   const [skillsActive,    setSkillsActive]    = useState(false)
@@ -54,8 +68,8 @@ function App() {
   const [charState,       setCharState]       = useState('idle')
   const [speed,           setSpeed]           = useState(0)
   const debugRef   = useRef(null)
-  const loaded = loaderComplete && worldReady
-  const shouldMountWorld = !mobileProofFirst || worldRequested
+  const loaded = (loaderComplete || worldFailed) && (worldReady || worldFailed || (mobileProofFirst && !worldRequested))
+  const shouldMountWorld = !worldFailed && (!mobileProofFirst || worldRequested)
   const sectionActive = aboutActive || skillsActive || skillsClimbing || workActive
   const introVisible = !sectionActive && !introDismissed && !selectedArtifact
 
@@ -87,6 +101,8 @@ function App() {
 
   // Stable callback so WorkSection doesn't re-render on every project change
   const handleProjectClose = useCallback(() => setSelectedProject(null), [])
+  const handleWorldUnavailable = useCallback(() => { setWorldFailed(true); setWorldReady(false); setLoaderComplete(true) }, [])
+  const handleOpenMap = useCallback(() => setMapOpen(true), [])
   const handleWorldReady = useCallback(() => setWorldReady(true), [])
   const handleLoaderComplete = useCallback(() => setLoaderComplete(true), [])
   const handleRequestWorld = useCallback(() => setWorldRequested(true), [])
@@ -132,7 +148,7 @@ function App() {
     setGuidedTourActive(false)
     setIntroDismissed(!mobileProofFirst || worldReady)
     setActiveSection(section)
-    setAboutActive(section === 'about')
+    setAboutActive(section === 'about' || section === 'experience')
     setSkillsActive(section === 'skills')
     setWorkActive(section === 'work')
     if (section !== 'work') setSelectedProject(null)
@@ -170,34 +186,36 @@ function App() {
   }, [handleNavigate])
 
   const handleShowExperience = useCallback(() => {
-    handleNavigate('about')
+    handleNavigate('experience')
   }, [handleNavigate])
 
   const handleShowResume = useCallback(() => {
     setMapOpen(false)
     setGuidedTourActive(false)
     setIntroDismissed(!mobileProofFirst || worldReady)
-    window.open('/resume.pdf', '_blank', 'noopener,noreferrer')
+    window.open(PROFILE.links.resume, '_blank', 'noopener,noreferrer')
   }, [mobileProofFirst, worldReady])
 
   const handleContact = useCallback(() => {
     setMapOpen(false)
     setGuidedTourActive(false)
     setIntroDismissed(!mobileProofFirst || worldReady)
-    window.location.href = 'mailto:kunwarshaurya28@gmail.com'
+    window.location.href = `mailto:${PROFILE.email}`
   }, [mobileProofFirst, worldReady])
 
   return (
     <div style={{ width: '100%', height: '100%' }}>
       {shouldMountWorld && (
+        <WorldBoundary onUnavailable={handleWorldUnavailable}>
         <Suspense fallback={null}>
           <WorldScene
+            onUnavailable={handleWorldUnavailable}
             mobileView={mobileProofFirst}
             debugRef={debugRef}
             onZoneChange={setHintLabel}
             onStateChange={setCharState}
             onNavigate={handleNavigate}
-            aboutActive={aboutActive}
+            aboutActive={aboutActive && activeSection === 'about'}
             skillsActive={skillsActive}
             onSkillsClimbingChange={setSkillsClimbing}
             skillsDirection={skillsDirection}
@@ -210,11 +228,8 @@ function App() {
             onReady={handleWorldReady}
           />
         </Suspense>
+        </WorldBoundary>
       )}
-
-      {loaded && (
-        <>
-          <OceanMusic visible={loaded && !introVisible && !guidedTourActive && !sectionActive && !selectedArtifact && !mapOpen} />
 
           <GrandLineMap
             visible={loaded && !introVisible && !guidedTourActive && !sectionActive && !selectedArtifact}
@@ -227,6 +242,12 @@ function App() {
             onContact={handleContact}
           />
 
+      {loaded && (
+        <>
+          <OceanMusic visible={loaded && !introVisible && !guidedTourActive && !sectionActive && !selectedArtifact && !mapOpen} />
+
+
+
           {!sectionActive && !introVisible && !guidedTourActive && (
             <>
               <NavWheels
@@ -236,16 +257,16 @@ function App() {
                 onContact={handleContact}
               />
               <Suspense fallback={null}>
-                {!mobileProofFirst && <ControlsOverlay />}
+                {!mobileProofFirst && !worldFailed && <ControlsOverlay />}
               </Suspense>
-              <LuffyUI
+              {!worldFailed && <LuffyUI
                 hintLabel={hintLabel}
                 speed={speed}
                 charState={charState}
                 mobile={mobileProofFirst}
-              />
+              />}
               <WindCompass visible />
-              <MobileControls visible={!selectedArtifact && !mapOpen} hintLabel={hintLabel} />
+              <MobileControls visible={worldReady && !worldFailed && !selectedArtifact && !mapOpen} hintLabel={hintLabel} />
             </>
           )}
 
@@ -277,6 +298,8 @@ function App() {
         worldReady={worldReady}
         worldRequested={worldRequested}
         mobileProofFirst={mobileProofFirst}
+        worldUnavailable={worldFailed}
+        onOpenMap={handleOpenMap}
         onRequestWorld={handleRequestWorld}
         onEnter={handleEnterGrandLine}
         onViewProjects={handleViewProjects}
@@ -289,7 +312,7 @@ function App() {
       {/* ── Section overlays ── */}
       {aboutActive && (
         <Suspense fallback={null}>
-          <AboutSection active={aboutActive} onClose={handleAboutClose} />
+          <AboutSection active={aboutActive} onClose={handleAboutClose} showJournal={activeSection === 'experience' || worldFailed || mobileProofFirst} />
         </Suspense>
       )}
 
@@ -307,6 +330,7 @@ function App() {
         <Suspense fallback={null}>
           <WorkSection
             active={workActive}
+            worldAvailable={worldReady && !worldFailed}
             onClose={handleWorkClose}
             selectedProject={selectedProject}
             onProjectClose={handleProjectClose}
@@ -328,10 +352,11 @@ function App() {
       <AboutTransitionOverlay active={aboutActive} />
       <SectionTransitionLabel active={aboutActive} label="ABOUT" />
 
-      {!loaderComplete && (
+      {!loaderComplete && !worldFailed && (
         <LoadingScreen onComplete={handleLoaderComplete} />
       )}
 
+      {worldFailed && !introVisible && !sectionActive && <p className="scene-unavailable" role="status">The 3D ship is unavailable. Use Open Map or the navigation to read the Captain Log and browse every project.</p>}
       <SwordCursor />
     </div>
   )

@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useReducedMotion } from '../hooks/useReducedMotion.js';
 
 export default function LoadingScreen({ onComplete }) {
   const [exit, setExit] = useState(false);
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
-    const totalDuration = 2200;
-    const exitDuration = 650;
+    const totalDuration = reducedMotion ? 0 : 2200;
+    const exitDuration = reducedMotion ? 0 : 650;
     let completionTimer;
 
     const timer = setTimeout(() => {
@@ -21,7 +23,7 @@ export default function LoadingScreen({ onComplete }) {
       clearTimeout(timer);
       clearTimeout(completionTimer);
     };
-  }, [onComplete]);
+  }, [onComplete, reducedMotion]);
 
   // Layered fiery smoke particles and fierce crimson embers
   const smokeParticles = Array.from({ length: 6 });
@@ -32,7 +34,7 @@ export default function LoadingScreen({ onComplete }) {
 
   return (
     <AnimatePresence>
-      {!exit && (
+      {!exit && !reducedMotion && (
         <motion.div
           initial={{ opacity: 1 }}
           exit={{

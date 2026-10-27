@@ -1,28 +1,15 @@
+import CaptainLog from './CaptainLog.jsx'
+import { useDialog } from '../hooks/useDialog.js'
 /**
  * ═══════════════════════════════════════════════════════════════════════════
  * ABOUT SECTION — Grand Line Portfolio (High-Res 3D Crisp Sail)
  * ═══════════════════════════════════════════════════════════════════════════
  */
 import { useRef, useEffect, useState, useMemo } from 'react'
-import { useFrame, useThree } from '@react-three/fiber'
+import { useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import gsap from 'gsap'
-import { PROFILE } from '../data/profile.js'
-let _sailTexCache = null
-let _blankTexCache = null
-
-const ABOUT = {
-  title:    "I'M SHAURYA.",
-  tagline1: 'I build things that look good and work well.',
-  tagline2: 'Designer by instinct. Developer by choice. AI/ML by curiosity.',
-  photo: '/shaurya.png', 
-  links: [
-    { label: 'GitHub',   href: PROFILE.links.github   },
-    { label: 'LinkedIn', href: PROFILE.links.linkedin  },
-    { label: 'Resume',   href: PROFILE.links.resume    },
-  ],
-}
-
+import { PROFILE, EXPERIENCE } from '../data/profile.js'
 // Precise camera angles for the 4:3 aspect sail layout
 const CAM_EXPLORE = { position: new THREE.Vector3(0, 8.5, 16), target: new THREE.Vector3(0, 1.5, 0), fov: 68 }
 const CAM_ABOUT   = { position: new THREE.Vector3(0, 20.2, 33.5), target: new THREE.Vector3(0, 16.5, -1.8), fov: 26 }
@@ -31,7 +18,7 @@ function lerpV3(out, a, b, t) {
   out.set(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t)
 }
 
-export function useAboutCamera(active) {
+function useAboutCamera(active) {
   const { camera, size } = useThree()
   const portraitAspect = size.width <= 760 ? Math.min(1, size.width / size.height) : 1
   const aboutFov = portraitAspect < 1
@@ -51,7 +38,7 @@ export function useAboutCamera(active) {
     tlRef.current = gsap.to(proxy, {
       p:        1,
       fov:      active ? aboutFov : CAM_EXPLORE.fov,
-      duration: active ? 2.0 : 1.5,
+      duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : (active ? 2.0 : 1.5),
       ease:     'power3.inOut',
       onUpdate: () => {
         const e = proxy.p < 0.5 ? 4 * proxy.p ** 3 : 1 - (-2 * proxy.p + 2) ** 3 / 2
@@ -197,32 +184,25 @@ export function AnimatedSail({ position = [0, 20.5, -2.5] }) {
     ctx.fillText('I build things that look good and work well.', 118, 268)
     ctx.font = 'italic 42px Georgia, serif'
     ctx.fillStyle = 'rgba(20,10,2,0.65)'
-    ctx.fillText('Designer by instinct. Developer by choice. AI/ML by curiosity.', 118, 325)
+    ctx.fillText('Pre-final-year CSE at VIT Vellore. Class of 2028.', 118, 325)
 
     // Separator
     ctx.strokeStyle = 'rgba(60,38,12,0.38)'; ctx.lineWidth = 2
     ctx.beginPath(); ctx.moveTo(118, 352); ctx.lineTo(W*0.50, 352); ctx.stroke()
 
-    // Bio paragraphs
-    const lines = [
-      'Currently 3rd year at VIT Vellore —',
-      'working full-time at a startup since day one.',
-      '',
-      "I'm obsessed with building things that feel alive —",
-      'interfaces that respond, systems that think,',
-      'and experiences that people remember.',
-      'This portfolio is one of those things.',
-      '',
-      "When I'm not shipping code or pushing pixels,",
-      "I'm going deep on AI/ML theory,",
-      'blockchain fundamentals, or thinking about',
-      'the next thing worth building.',
-      '',
-      "The ship you're exploring? That's how my brain works —",
-      'everything connected, every section with a reason',
-      'for being exactly where it is.',
-    ]
+    // Same factual introduction as the HTML profile; preserve the original poster typography.
     ctx.font = '44px Georgia, serif'
+    const lines = []
+    for (const paragraph of [PROFILE.summary, ...PROFILE.aboutStory]) {
+      if (lines.length) lines.push('')
+      let line = ''
+      for (const word of paragraph.split(' ')) {
+        const next = line ? `${line} ${word}` : word
+        if (ctx.measureText(next).width > 900 && line) { lines.push(line); line = word }
+        else line = next
+      }
+      if (line) lines.push(line)
+    }
     ctx.fillStyle = 'rgba(18,8,1,0.85)'
     let py2 = 408
     lines.forEach(line => {
@@ -280,10 +260,11 @@ export function AnimatedSail({ position = [0, 20.5, -2.5] }) {
     ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke()
   }
 
-  // ── Grain noise ──
+  // Deterministic linen grain preserves the original texture across renders.
   for (let i = 0; i < 14000; i++) {
-    const x = Math.random() * W, y = Math.random() * H
-    ctx.fillStyle = `rgba(70,48,18,${Math.random() * 0.035})`
+    const noise = offset => { const value = Math.sin((i + offset) * 43.71) * 10000; return value - Math.floor(value) }
+    const x = noise(1) * W, y = noise(2) * H
+    ctx.fillStyle = `rgba(70,48,18,${noise(3) * 0.035})`
     ctx.fillRect(x, y, 1.2, 1.2)
   }
 
@@ -548,11 +529,19 @@ export function AnimatedSail({ position = [0, 20.5, -2.5] }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // TRANSPARENT CLICK OUTSIDE INTERACTION HANDLING
 // ─────────────────────────────────────────────────────────────────────────────
-export default function AboutSection({ active, onClose }) {
+export default function AboutSection({ active, onClose, showJournal = false }) {
+  const dialogRef = useDialog(active && !showJournal, onClose)
   if (!active) return null
+  if (showJournal) return <CaptainLog onClose={onClose} />
 
   return (
-    <>
+    <div ref={dialogRef} className="about-poster-view" role="dialog" aria-modal="true" aria-label="Captain profile" tabIndex={-1}>
+      <div className="about-poster-copy">
+        <h1>I'm Shaurya.</h1><p>{PROFILE.summary}</p>
+        {PROFILE.aboutStory.map(paragraph => <p key={paragraph}>{paragraph}</p>)}
+        <h2>Education</h2>{PROFILE.education.map(item => <p key={item}>{item}</p>)}
+        <h2>Experience</h2>{EXPERIENCE.map(item => <section key={item.org + item.title}><h3>{item.org}: {item.title}</h3><p>{item.period} · {item.status}</p>{item.details.map(detail => <p key={detail}>{detail}</p>)}</section>)}
+      </div>
       <button className="about-close" onClick={onClose} aria-label="Return to deck">
         <span>×</span>
         <small>DECK</small>
@@ -571,6 +560,9 @@ export default function AboutSection({ active, onClose }) {
       <div className="about-return-hint">PRESS ESC TO RETURN</div>
 
       <style>{`
+        .about-poster-view { position: fixed; inset: 0; z-index: 9390; pointer-events: none; }
+        .about-poster-copy { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+        .about-poster-view .about-close { pointer-events: auto; }
         .about-close {
           position: fixed;
           top: clamp(16px, 2.5vh, 28px);
@@ -654,6 +646,6 @@ export default function AboutSection({ active, onClose }) {
           }
         }
       `}</style>
-    </>
+    </div>
   )
 }

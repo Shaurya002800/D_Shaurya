@@ -1,0 +1,408 @@
+{
+  "checkedOn": "2026-10-26",
+  "method": "Read-only GET requests against all current project, evidence and profile URLs; no forms or messages submitted",
+  "results": [
+    {
+      "url": "https://github.com/Shaurya002800/ExamChain",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/ExamChain",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://exam-chain-pi.vercel.app",
+      "status": "200",
+      "resolved": "https://exam-chain-pi.vercel.app/",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/ExamChain/blob/main/README.md",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/ExamChain/blob/main/README.md",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/ExamChain/blob/main/backend/routers/exams.py",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/ExamChain/blob/main/backend/routers/exams.py",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/ExamChain/blob/main/frontend/src/pages/ExamRoom.jsx",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/ExamChain/blob/main/frontend/src/pages/ExamRoom.jsx",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/Sentinelmesh",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/Sentinelmesh",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/Sentinelmesh/blob/main/hardware/ai_model.py",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/Sentinelmesh/blob/main/hardware/ai_model.py",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/Sentinelmesh/blob/main/hardware/main.py",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/Sentinelmesh/blob/main/hardware/main.py",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/Sentinelmesh/blob/main/backend/ai_classifier.py",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/Sentinelmesh/blob/main/backend/ai_classifier.py",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/devboard",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/devboard",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://devboard-gamma-gilt.vercel.app",
+      "status": "200",
+      "resolved": "https://devboard-gamma-gilt.vercel.app/",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/devboard/blob/main/README.md",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/devboard/blob/main/README.md",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/devboard/blob/main/server/routes/auth.js",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/devboard/blob/main/server/routes/auth.js",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/devboard/blob/main/client/lib/api.js",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/devboard/blob/main/client/lib/api.js",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/AstroMl",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/AstroMl",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://astroml.onrender.com/",
+      "status": "000",
+      "resolved": "https://astroml.onrender.com/",
+      "note": "curl: (28) Operation timed out after 25002 milliseconds with 0 bytes received"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/AstroMl/blob/main/README.md",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/AstroMl/blob/main/README.md",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/AstroMl/blob/main/src/astrology_model.py",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/AstroMl/blob/main/src/astrology_model.py",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/AstroMl/blob/main/tests/test_deployment_readiness.py",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/AstroMl/blob/main/tests/test_deployment_readiness.py",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/ai-spend-audit",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/ai-spend-audit",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://ai-spend-audit-blush.vercel.app",
+      "status": "200",
+      "resolved": "https://ai-spend-audit-blush.vercel.app/",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/ai-spend-audit/blob/main/lib/audit-engine.ts",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/ai-spend-audit/blob/main/lib/audit-engine.ts",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/ai-spend-audit/blob/main/app/api/audit/route.ts",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/ai-spend-audit/blob/main/app/api/audit/route.ts",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/ai-spend-audit/blob/main/README.md",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/ai-spend-audit/blob/main/README.md",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/AI-powered-learning-universe",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/AI-powered-learning-universe",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://ai-powered-learning-universe.vercel.app/",
+      "status": "200",
+      "resolved": "https://ai-powered-learning-universe.vercel.app/",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/AI-powered-learning-universe/blob/main/README.md",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/AI-powered-learning-universe/blob/main/README.md",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/AI-powered-learning-universe/blob/main/lib/ai.ts",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/AI-powered-learning-universe/blob/main/lib/ai.ts",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/AI-powered-learning-universe/blob/main/lib/store.ts",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/AI-powered-learning-universe/blob/main/lib/store.ts",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/Consultancy",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/Consultancy",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://serenova-rho.vercel.app/",
+      "status": "200",
+      "resolved": "https://serenova-rho.vercel.app/",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/Consultancy/blob/main/src/lib/bookingRules.ts",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/Consultancy/blob/main/src/lib/bookingRules.ts",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/Consultancy/blob/main/src/lib/bookingValidation.ts",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/Consultancy/blob/main/src/lib/bookingValidation.ts",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/Consultancy/blob/main/src/lib/bookingLifecycle.ts",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/Consultancy/blob/main/src/lib/bookingLifecycle.ts",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/ML-project",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/Vivayu-gpt",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/ML-project/blob/main/models/train_disease.py",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/Vivayu-gpt/blob/main/models/train_disease.py",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/ML-project/blob/main/agrigpt/rag_pipeline.py",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/Vivayu-gpt/blob/main/agrigpt/rag_pipeline.py",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/ML-project/blob/main/dashboard/streamlit_app.py",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/Vivayu-gpt/blob/main/dashboard/streamlit_app.py",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/LoadRight",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/LoadRight",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/LoadRight/blob/main/README.md",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/LoadRight/blob/main/README.md",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/LoadRight/blob/main/backend/rules.py",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/LoadRight/blob/main/backend/rules.py",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/LoadRight/blob/main/tests/test_fixtures.py",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/LoadRight/blob/main/tests/test_fixtures.py",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/MTR-KV",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/MTR-KV",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/MTR-KV/blob/main/README.md",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/MTR-KV/blob/main/README.md",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/MTR-KV/blob/main/mtr_kv/controller.py",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/MTR-KV/blob/main/mtr_kv/controller.py",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/MTR-KV/blob/main/mtr_kv/memory.py",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/MTR-KV/blob/main/mtr_kv/memory.py",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/TopoPatch",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/TopoPatch",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/TopoPatch/blob/main/README.md",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/TopoPatch/blob/main/README.md",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/TopoPatch/blob/main/topopatch/engine.py",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/TopoPatch/blob/main/topopatch/engine.py",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/TopoPatch/blob/main/topopatch/models.py",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/TopoPatch/blob/main/topopatch/models.py",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/Aura",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/Aura",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/Aura/blob/main/README.md",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/Aura/blob/main/README.md",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/Aura/blob/main/services/vision/src/aura_vision/binding.py",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/Aura/blob/main/services/vision/src/aura_vision/binding.py",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/Aura/blob/main/apps/dashboard/app/page.tsx",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/Aura/blob/main/apps/dashboard/app/page.tsx",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/AstraSafe",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/AstraSafe",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/AstraSafe/blob/main/README.md",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/AstraSafe/blob/main/README.md",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/AstraSafe/blob/main/src/domain/risk-engine.js",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/AstraSafe/blob/main/src/domain/risk-engine.js",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/AstraSafe/blob/main/src/domain/scenario.js",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/AstraSafe/blob/main/src/domain/scenario.js",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/webnest",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/webnest",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://webnest-theta.vercel.app",
+      "status": "200",
+      "resolved": "https://webnest-theta.vercel.app/",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/webnest/blob/main/src/App.jsx",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/webnest/blob/main/src/App.jsx",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/webnest/blob/main/src/Accessibility.test.tsx",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/webnest/blob/main/src/Accessibility.test.tsx",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800/webnest/blob/main/src/prototype/motion-policy.ts",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800/webnest/blob/main/src/prototype/motion-policy.ts",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://d-shaurya.vercel.app",
+      "status": "200",
+      "resolved": "https://d-shaurya.vercel.app/",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://github.com/Shaurya002800",
+      "status": "200",
+      "resolved": "https://github.com/Shaurya002800",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://www.linkedin.com/in/kunwar-shaurya-24581529b/",
+      "status": "999",
+      "resolved": "https://www.linkedin.com/in/kunwar-shaurya-24581529b/",
+      "note": "read-only request; no form submitted"
+    },
+    {
+      "url": "https://www.instagram.com/kunwar_shaurya_28/",
+      "status": "200",
+      "resolved": "https://www.instagram.com/kunwar_shaurya_28/",
+      "note": "read-only request; no form submitted"
+    }
+  ]
+}
