@@ -1,14 +1,16 @@
-import { useState, useEffect, useRef, Suspense, useMemo } from 'react'
+import { useState, useEffect, useRef, Suspense, useMemo, useCallback } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 // Added OrbitControls to the drei import
-import { Sky, Sparkles, OrbitControls } from '@react-three/drei'
+import { Sky, Sparkles, OrbitControls, useProgress } from '@react-three/drei'
 import { Physics } from '@react-three/rapier'
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing'
 import * as THREE from 'three'
+import { Text as TroikaText } from 'troika-three-text'
 import { LuffyCharacter3D } from '../components/LuffyCharacter'
 import Ship from '../components/Ship'
 import { AboutCameraController } from '../components/AboutSection'
 import { useReducedMotion } from '../hooks/useReducedMotion.js'
+import { prepareWorldScene } from '../utils/prepareWorldScene.js'
 
 // ─── SKILLS CAMERA CONTROLLER ────────────────────────────────────────────────
 const CAM_EXPLORE = {
@@ -84,6 +86,60 @@ function ContextHealth({ onUnavailable }) {
     canvas.addEventListener('webglcontextlost', lost)
     return () => canvas.removeEventListener('webglcontextlost', lost)
   }, [gl, onUnavailable])
+  return null
+}
+
+// Mounted inside Suspense, so textures, fonts and physics must resolve first.
+function WorldReady({ characterReady, shipReady, onReady, onUnavailable }) {
+  const renderedFrames = useRef(0)
+  const reported = useRef(false)
+  const preparation = useRef(null)
+  const gpuReady = useRef(false)
+
+  useEffect(() => () => {
+    preparation.current?.abort()
+    preparation.current = null
+    gpuReady.current = false
+    renderedFrames.current = 0
+  }, [])
+
+  useFrame(({ gl, scene, camera }) => {
+    if (reported.current) return
+    if (!characterReady || !shipReady || useProgress.getState().active) {
+      preparation.current?.abort()
+      preparation.current = null
+      gpuReady.current = false
+      renderedFrames.current = 0
+      return
+    }
+    let textReady = true
+    scene.traverse((object) => {
+      if (object instanceof TroikaText && !object.textRenderInfo) textReady = false
+    })
+    if (!textReady) {
+      preparation.current?.abort()
+      preparation.current = null
+      gpuReady.current = false
+      renderedFrames.current = 0
+      return
+    }
+    if (!preparation.current) {
+      const controller = new AbortController()
+      preparation.current = controller
+      prepareWorldScene(gl, scene, camera, controller.signal).then(() => {
+        if (!controller.signal.aborted) gpuReady.current = true
+      }).catch((error) => {
+        if (!controller.signal.aborted) onUnavailable?.(error)
+      })
+    }
+    if (!gpuReady.current) return
+    // useFrame runs before drawing. Wait for a complete frame with all assets.
+    renderedFrames.current += 1
+    if (renderedFrames.current < 2) return
+    reported.current = true
+    onReady?.()
+  })
+
   return null
 }
 
@@ -685,6 +741,10 @@ export default function WorldScene({
   mobileView = false,
 }) {
   const [skillsCameraLocked, setSkillsCameraLocked] = useState(false)
+  const [characterReady, setCharacterReady] = useState(false)
+  const handleCharacterReady = useCallback(() => setCharacterReady(true), [])
+  const [shipReady, setShipReady] = useState(false)
+  const handleShipReady = useCallback(() => setShipReady(true), [])
   const reducedMotion = useReducedMotion()
   const [tourCameraLocked, setTourCameraLocked] = useState(false)
   const [weatherIndex, setWeatherIndex] = useState(getInitialWeatherIndex)
@@ -696,10 +756,6 @@ export default function WorldScene({
   
   // ─── NEW: Global Free Camera State ───
   const [freeCam, setFreeCam] = useState(false)
-
-  useEffect(() => {
-    if (!mobileView) onReady?.()
-  }, [onReady, mobileView])
 
   useEffect(() => {
     if (reducedMotion) return undefined
@@ -782,6 +838,7 @@ export default function WorldScene({
         aboutActive={aboutActive}
         skillsActive={skillsActive}
         weatherId={weather.id}
+        onReady={handleShipReady}
       />
       <LuffyCharacter3D
         position={[0, 0.15, 5]}
@@ -799,9 +856,11 @@ export default function WorldScene({
         workActive={workActive}
         freeCam={freeCam}
         mobileView={mobileView}
-        onReady={mobileView ? onReady : undefined}
+        onReady={handleCharacterReady}
+        onUnavailable={onUnavailable}
       />
     </Physics>
+    <WorldReady characterReady={characterReady} shipReady={shipReady} onReady={onReady} onUnavailable={onUnavailable} />
   </Suspense>
 
   {effectsEnabled && (

@@ -2,28 +2,23 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useReducedMotion } from '../hooks/useReducedMotion.js';
 
-export default function LoadingScreen({ onComplete }) {
+export default function LoadingScreen({ ready = false, onComplete }) {
   const [exit, setExit] = useState(false);
   const reducedMotion = useReducedMotion();
 
   useEffect(() => {
-    const totalDuration = reducedMotion ? 0 : 2200;
-    const exitDuration = reducedMotion ? 0 : 650;
-    let completionTimer;
+    if (!ready) return;
+    let cancelled = false;
 
-    const timer = setTimeout(() => {
-      setExit(true);
-
-      completionTimer = setTimeout(() => {
-        onComplete();
-      }, exitDuration);
-    }, totalDuration);
+    // The world has rendered; also wait for the landing page's fonts.
+    Promise.resolve(document.fonts?.ready).then(() => {
+      if (!cancelled) setExit(true);
+    });
 
     return () => {
-      clearTimeout(timer);
-      clearTimeout(completionTimer);
+      cancelled = true;
     };
-  }, [onComplete, reducedMotion]);
+  }, [ready]);
 
   // Layered fiery smoke particles and fierce crimson embers
   const smokeParticles = Array.from({ length: 6 });
@@ -33,11 +28,15 @@ export default function LoadingScreen({ onComplete }) {
   const premiumEase = [0.16, 1, 0.3, 1];
 
   return (
-    <AnimatePresence>
-      {!exit && !reducedMotion && (
+    <AnimatePresence onExitComplete={onComplete}>
+      {!exit && (
         <motion.div
+          key="loading-screen"
+          role="status"
+          aria-label="Loading Grand Line world"
+          aria-busy="true"
           initial={{ opacity: 1 }}
-          exit={{
+          exit={reducedMotion ? { opacity: 0, transition: { duration: 0 } } : {
             opacity: 0,
             scale: 1.02,
             filter: "blur(14px)",
@@ -59,6 +58,10 @@ export default function LoadingScreen({ onComplete }) {
             justifyContent: "center",
           }}
         >
+          {reducedMotion ? (
+            <span style={{ color: 'rgba(255, 90, 90, 0.6)', fontFamily: 'Inter, system-ui, sans-serif', fontSize: 11, letterSpacing: '0.45em' }}>AWAKENING</span>
+          ) : (
+          <>
           {/* BACKGROUND TEXTURE GRID OVERLAY */}
           <div 
             style={{
@@ -370,6 +373,8 @@ export default function LoadingScreen({ onComplete }) {
               </motion.span>
             ))}
           </div>
+          </>
+          )}
         </motion.div>
       )}
     </AnimatePresence>

@@ -826,6 +826,7 @@ function Luffy3D({
   freeCam = false,
   mobileView = false,
   onReady,
+  onUnavailable,
 }) {
   const groupRef     = useRef()
   const mixerRef     = useRef(null)
@@ -1038,8 +1039,6 @@ function Luffy3D({
     let fbxMesh   = null
     let mixer     = null
     let disposed  = false
-    let optionalIdleHandle = null
-    let optionalTimer = null
 
     const loadAndRegisterAnimations = async (animKeys) => {
       const results = await Promise.allSettled(
@@ -1052,19 +1051,6 @@ function Luffy3D({
           animSM.current.register(animKeys[i], result.value)
         }
       })
-    }
-
-    const scheduleOptionalAnimations = () => {
-      const loadOptional = () => {
-        void loadAndRegisterAnimations(OPTIONAL_ANIMATIONS)
-      }
-
-      if ('requestIdleCallback' in window) {
-        optionalIdleHandle = window.requestIdleCallback(loadOptional, { timeout: 5000 })
-        return
-      }
-
-      optionalTimer = window.setTimeout(loadOptional, 1800)
     }
 
     loader.load(
@@ -1096,26 +1082,22 @@ function Luffy3D({
         stateRef.current = STATE.IDLE
 
         loadedRef.current = true
-        await loadAndRegisterAnimations(CRITICAL_ANIMATIONS)
+        await loadAndRegisterAnimations([...CRITICAL_ANIMATIONS, ...OPTIONAL_ANIMATIONS])
         if (!disposed) {
           onReady?.()
-          scheduleOptionalAnimations()
         }
       },
       undefined,
       (err) => {
-        if (!disposed) console.error('[Luffy] Failed to load base mesh:', err)
+        if (!disposed) {
+          console.error('[Luffy] Failed to load base mesh:', err)
+          onUnavailable?.(err)
+        }
       }
     )
 
     return () => {
       disposed = true
-      if (optionalIdleHandle !== null && 'cancelIdleCallback' in window) {
-        window.cancelIdleCallback(optionalIdleHandle)
-      }
-      if (optionalTimer !== null) {
-        window.clearTimeout(optionalTimer)
-      }
       if (mixer) {
         mixer.stopAllAction()
         mixer.uncacheRoot(fbxMesh)
@@ -1131,7 +1113,7 @@ function Luffy3D({
       }
       loadedRef.current = false
     }
-  }, [glbScene, onReady])
+  }, [glbScene, onReady, onUnavailable])
 
   useEffect(() => {
     if (!groupRef.current) return

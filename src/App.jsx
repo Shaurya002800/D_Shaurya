@@ -51,7 +51,7 @@ function App() {
   const [worldReady,      setWorldReady]      = useState(false)
   const [worldFailed, setWorldFailed] = useState(() => !supportsWebGL2())
   const [mobileProofFirst, setMobileProofFirst] = useState(prefersMobileProofFirst)
-  const [worldRequested,  setWorldRequested]  = useState(() => !prefersMobileProofFirst())
+  const [worldRequested,  setWorldRequested]  = useState(true)
   const [activeSection,   setActiveSection]   = useState('explore')
   const [aboutActive,     setAboutActive]     = useState(false)
   const [skillsActive,    setSkillsActive]    = useState(false)
@@ -68,7 +68,7 @@ function App() {
   const [charState,       setCharState]       = useState('idle')
   const [speed,           setSpeed]           = useState(0)
   const debugRef   = useRef(null)
-  const loaded = (loaderComplete || worldFailed) && (worldReady || worldFailed || (mobileProofFirst && !worldRequested))
+  const loaded = (loaderComplete || worldFailed) && (worldReady || worldFailed)
   const shouldMountWorld = !worldFailed && (!mobileProofFirst || worldRequested)
   const sectionActive = aboutActive || skillsActive || skillsClimbing || workActive
   const introVisible = !sectionActive && !introDismissed && !selectedArtifact
@@ -353,7 +353,7 @@ function App() {
       <SectionTransitionLabel active={aboutActive} label="ABOUT" />
 
       {!loaderComplete && !worldFailed && (
-        <LoadingScreen onComplete={handleLoaderComplete} />
+        <LoadingScreen ready={worldReady} onComplete={handleLoaderComplete} />
       )}
 
       {worldFailed && !introVisible && !sectionActive && <p className="scene-unavailable" role="status">The 3D ship is unavailable. Use Open Map or the navigation to read the Captain Log and browse every project.</p>}

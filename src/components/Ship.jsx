@@ -2135,7 +2135,7 @@ function SunnySideDeckTrim() {
 }
 
 // signature — add skillsActive to whatever props Ship already receives
-export default function Ship({ aboutActive = false, skillsActive = false, weatherId = 'sunny', onProjectSelect, onArtifactOpen }){
+export default function Ship({ aboutActive = false, skillsActive = false, weatherId = 'sunny', onProjectSelect, onArtifactOpen, onReady }){
   const shipRef = useRef()
   const reducedMotion = useReducedMotion()
   const isNightWeather = weatherId === 'night'
@@ -2418,7 +2418,7 @@ export default function Ship({ aboutActive = false, skillsActive = false, weathe
           </mesh>
           {/* Main printed sail */}
           {/* THE REAL MULTI-TEXTURED SHADER SAIL */}
-          <AnimatedSail position={[0, 18, -2.5]} active={aboutActive} />
+          <AnimatedSail position={[0, 18, -2.5]} active={aboutActive} onReady={onReady} />
         </>
       )}
       {/* ════════════════════════════════════════════════════════════

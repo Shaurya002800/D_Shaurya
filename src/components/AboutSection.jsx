@@ -62,7 +62,7 @@ export function AboutCameraController({ active }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // 3D SAIL COMPONENT WITH CRISP ANTI-ALIASED TEXTURE PIPELINE
 // ─────────────────────────────────────────────────────────────────────────────
-export function AnimatedSail({ position = [0, 20.5, -2.5] }) {
+export function AnimatedSail({ position = [0, 20.5, -2.5], onReady }) {
   const meshRef = useRef()
 
   const sailGeo = useMemo(() => {
@@ -84,12 +84,19 @@ export function AnimatedSail({ position = [0, 20.5, -2.5] }) {
   const [aboutTex, setAboutTex] = useState(null)
 
   useEffect(() => {
+    if (aboutTex) onReady?.()
+  }, [aboutTex, onReady])
+
+  useEffect(() => {
+    let disposed = false
+    let texture
     const W = 2048, H = 1400
     const canvas = document.createElement('canvas')
     canvas.width = W; canvas.height = H
     const ctx = canvas.getContext('2d')
 
     const drawAll = (photoImg) => {
+    if (disposed) return
     // Base linen
     const baseGrad = ctx.createLinearGradient(0, 0, W, H)
     baseGrad.addColorStop(0,   '#ece0bc')
@@ -226,16 +233,17 @@ export function AnimatedSail({ position = [0, 20.5, -2.5] }) {
     }
 
     const tex = new THREE.CanvasTexture(canvas)
+    texture = tex
     tex.needsUpdate = true
     setAboutTex(tex)
     }
 
-    // Load photo then draw
-    const img = new window.Image()
-    img.crossOrigin = 'anonymous'
-    img.onload = () => drawAll(img)
-    img.onerror = () => drawAll(null) // draw without photo if it fails
-    img.src = '/image copy.png'
+    // Track the photo with the same manager as the rest of the ship assets.
+    new THREE.ImageLoader().load('/image copy.png', drawAll, undefined, () => drawAll(null))
+    return () => {
+      disposed = true
+      texture?.dispose()
+    }
   }, [])
 
   // Blank linen sail texture (for the other two sails)
