@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { PROFILE } from '../data/profile.js'
 import { PROJECTS } from '../data/projects.js'
+import { GRAND_LINE_MAP_ARTWORK } from '../data/mapArtwork.js'
 import './PortfolioIntro.css'
 
 const STORAGE_KEY = 'grand-line-onboarding-seen'
@@ -12,6 +13,43 @@ const ROUTE_MARKERS = [
   { label: 'Experience', meta: 'Captain Log', className: 'is-experience' },
   { label: 'Contact', meta: 'Signal Line', className: 'is-contact' },
 ]
+
+function ChartSeal() {
+  return (
+    <svg viewBox="0 0 80 80" fill="none" aria-hidden="true">
+      <circle cx="40" cy="40" r="36" stroke="currentColor" />
+      <circle cx="40" cy="40" r="32" stroke="currentColor" strokeDasharray="1 3" />
+      <path d="M21 58 59 31M21 31 59 58" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+      <path d="M27 38c0-16 26-16 26 0 0 7-5 9-8 11v6H35v-6c-3-2-8-4-8-11Z" fill="#ead9ad" stroke="currentColor" strokeWidth="2" />
+      <circle cx="34" cy="39" r="3" fill="currentColor" />
+      <circle cx="46" cy="39" r="3" fill="currentColor" />
+      <path d="m40 44-2 3h4Z" fill="currentColor" />
+      <path d="M29 29c0-14 22-14 22 0" fill="#d3ad5b" stroke="currentColor" strokeWidth="2" />
+      <path d="M29 27h22v5H29Z" fill="#973c2b" />
+      <path d="M20 32c9-4 31-4 40 0-5 5-35 5-40 0Z" fill="#d3ad5b" stroke="currentColor" strokeWidth="2" />
+    </svg>
+  )
+}
+
+function CompassRose() {
+  return (
+    <svg viewBox="0 0 120 120" fill="none" aria-hidden="true">
+      <circle cx="60" cy="60" r="38" stroke="currentColor" strokeWidth=".7" />
+      <circle cx="60" cy="60" r="32" stroke="currentColor" strokeWidth=".5" />
+      {Array.from({ length: 8 }, (_, index) => (
+        <g key={index} transform={`rotate(${index * 45} 60 60)`}>
+          <path d="M60 13 67 60 60 56Z" fill={index % 2 ? '#977447' : '#763a29'} />
+          <path d="M60 13 53 60 60 56Z" fill="#e7d4a3" stroke="currentColor" strokeWidth=".6" />
+        </g>
+      ))}
+      <circle cx="60" cy="60" r="4" fill="currentColor" />
+      <g fill="currentColor" textAnchor="middle" fontFamily="Georgia, serif" fontSize="10">
+        <text x="60" y="11">N</text><text x="60" y="116">S</text>
+        <text x="112" y="63">E</text><text x="8" y="63">W</text>
+      </g>
+    </svg>
+  )
+}
 
 function markOnboardingSeen() {
   try {
@@ -115,48 +153,13 @@ export default function PortfolioIntro({
         >
           <div className="portfolio-intro__shade" aria-hidden="true" />
           <div className="portfolio-intro__layout">
-            <div className="portfolio-intro__map-canvas" aria-hidden="true">
-              <svg viewBox="0 0 1440 820" preserveAspectRatio="none">
-                <path
-                  className="portfolio-intro__paper-fold is-fold-a"
-                  d="M0 158 C232 120 367 184 545 142 C741 96 897 137 1082 102 C1238 72 1342 93 1440 64"
-                />
-                <path
-                  className="portfolio-intro__paper-fold is-fold-b"
-                  d="M-20 676 C178 628 357 694 524 648 C742 588 929 628 1127 586 C1253 559 1354 575 1460 536"
-                />
-                <path
-                  className="portfolio-intro__coast is-main"
-                  d="M536 164 C602 88 729 110 781 173 C830 232 918 213 985 266 C1052 319 1048 416 997 462 C948 506 978 596 905 638 C832 681 745 626 691 663 C628 706 522 670 505 589 C490 517 399 504 386 425 C374 347 481 320 477 251 C474 214 502 195 536 164 Z"
-                />
-                <path
-                  className="portfolio-intro__coast is-west"
-                  d="M104 230 C180 166 288 184 322 254 C356 326 295 391 214 389 C132 387 58 312 104 230 Z"
-                />
-                <path
-                  className="portfolio-intro__coast is-south"
-                  d="M884 622 C934 579 1018 588 1053 648 C1088 708 1031 759 962 744 C904 731 846 684 884 622 Z"
-                />
-                <path
-                  className="portfolio-intro__global-route-shadow"
-                  d="M112 674 C242 596 371 646 486 548 S658 410 811 360 S983 570 1138 258 C1179 176 1261 164 1323 216"
-                />
-                <path
-                  className="portfolio-intro__global-route"
-                  d="M112 674 C242 596 371 646 486 548 S658 410 811 360 S983 570 1138 258 C1179 176 1261 164 1323 216"
-                />
-                <g className="portfolio-intro__map-ornaments">
-                  <circle cx="116" cy="674" r="8" />
-                  <circle cx="486" cy="548" r="8" />
-                  <circle cx="811" cy="360" r="8" />
-                  <circle cx="1138" cy="258" r="8" />
-                  <path d="M1196 632 h92 m-46 -46 v92" />
-                  <path d="M1242 554 l12 78 -12 78 -12 -78 Z" />
-                </g>
-              </svg>
-            </div>
+            <header className="portfolio-intro__masthead">
+              <div className="portfolio-intro__chart-seal"><ChartSeal /><span>A captain’s<br />personal atlas</span></div>
+              <div className="portfolio-intro__chart-title"><span>A voyage through work & craft</span><p>The Grand Line</p></div>
+              <div className="portfolio-intro__chart-edition"><span>Portfolio chart</span><strong>No. 001</strong><small>Explore · Discover · Connect</small></div>
+            </header>
             <div className="portfolio-intro__content">
-              <p className="portfolio-intro__eyebrow">Interactive portfolio</p>
+              <p className="portfolio-intro__eyebrow"><span /> Meet the captain</p>
               <h1 id="portfolio-intro-title">{PROFILE.name}</h1>
               <p className="portfolio-intro__role">{PROFILE.role}</p>
               <p className="portfolio-intro__summary">
@@ -204,7 +207,8 @@ export default function PortfolioIntro({
                   disabled={worldPending}
                   aria-disabled={worldPending}
                 >
-                  {voyageLabel}
+                  <span>{voyageLabel}</span>
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="1.5" /></svg>
                 </button>
                 {!worldUnavailable && <button type="button" className="portfolio-intro__map-shortcut" onClick={onOpenMap}>Open Map</button>}
               </div>
@@ -212,46 +216,48 @@ export default function PortfolioIntro({
 
             <aside className="portfolio-intro__route-map" aria-label="Grand Line portfolio route map">
               <div className="portfolio-intro__map-topline">
-                <span>Grand Line Route</span>
-                <strong>{PROJECTS.length} dossiers logged</strong>
+                <span><i /> Choose your next destination</span>
+                <strong>5 ports · {PROJECTS.length} projects</strong>
               </div>
 
               <div className="portfolio-intro__map-field">
-                <svg className="portfolio-intro__route-line" viewBox="0 0 520 360" aria-hidden="true">
-                  <path
-                    className="portfolio-intro__route-shadow"
-                    d="M58 282 C114 202 176 252 216 180 S330 92 386 136 S428 246 472 90"
-                  />
+                <img className="portfolio-intro__chart-art" src={GRAND_LINE_MAP_ARTWORK} alt="" width="1536" height="1024" loading="eager" decoding="sync" />
+                <svg className="portfolio-intro__route-line" viewBox="0 0 1000 666.67" aria-hidden="true">
                   <path
                     className="portfolio-intro__route-path"
-                    d="M58 282 C114 202 176 252 216 180 S330 92 386 136 S428 246 472 90"
+                    d="M180 506 C230 520 240 360 380 353 S480 120 530 186 S670 550 800 486 S990 340 840 253"
                   />
+                  <g className="portfolio-intro__sea-labels"><text x="220" y="190" transform="rotate(-10 220 190)">EAST BLUE</text><text x="835" y="585" transform="rotate(-8 835 585)">NEW WORLD</text></g>
                 </svg>
 
-                {ROUTE_MARKERS.map((marker) => (
+                {ROUTE_MARKERS.map((marker, index) => (
                   <button
                     key={marker.label}
                     type="button"
                     className={`portfolio-intro__marker ${marker.className}`}
                     onClick={routeActions[marker.label]}
                   >
-                    <span>{marker.meta}</span>
-                    <strong>{marker.label}</strong>
+                    <span className="portfolio-intro__marker-number">0{index + 1}</span>
+                    <span className="portfolio-intro__marker-copy"><span>{marker.meta}</span><strong>{marker.label}</strong></span>
                   </button>
                 ))}
 
                 <div className="portfolio-intro__compass" aria-hidden="true">
-                  <span>N</span>
-                  <i />
-                  <small>S</small>
+                  <CompassRose />
                 </div>
               </div>
 
               <div className="portfolio-intro__map-footer">
-                <span>Fast proof route</span>
-                <strong>Projects {'->'} Resume {'->'} Contact</strong>
+                <span><i /> Your course</span>
+                <p>Follow the red route. Every island holds a story.</p>
+                <span className="portfolio-intro__chart-scale" aria-hidden="true">0 ├────┼────┤ 100 nm</span>
               </div>
             </aside>
+            <footer className="portfolio-intro__chart-footer">
+              <span><b>✦</b> Not all treasure is silver and gold.</span>
+              <span>Select an island to explore, or board the ship.</span>
+              <span>Charted by <strong>Shaurya</strong></span>
+            </footer>
           </div>
         </section>
       )}

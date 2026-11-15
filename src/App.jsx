@@ -11,7 +11,8 @@ import LuffyUI from './components/LuffyUI.jsx'
 import './mobile-game.css'
 import WorldBoundary from './components/WorldBoundary.jsx'
 import { PROFILE } from './data/profile.js'
-import { preloadSkillCharacters } from './utils/skillsImages.js'
+import { preloadImages, preloadSkillCharacters } from './utils/skillsImages.js'
+import { GRAND_LINE_MAP_ARTWORK } from './data/mapArtwork.js'
 
 const WorldScene = lazy(() => import('./scenes/WorldScene'))
 const AboutSection = lazy(() => import('./components/AboutSection'))
@@ -54,7 +55,7 @@ function supportsWebGL2() {
 function App() {
   const [loaderComplete,  setLoaderComplete]  = useState(false)
   const [worldReady,      setWorldReady]      = useState(false)
-  const [skillsImagesReady, setSkillsImagesReady] = useState(false)
+  const [entryAssetsReady, setEntryAssetsReady] = useState(false)
   const [worldFailed, setWorldFailed] = useState(() => !supportsWebGL2())
   const [mobileProofFirst, setMobileProofFirst] = useState(prefersMobileProofFirst)
   const [worldRequested,  setWorldRequested]  = useState(true)
@@ -81,8 +82,8 @@ function App() {
 
   useEffect(() => {
     let mounted = true
-    preloadSkillCharacters().then(() => {
-      if (mounted) setSkillsImagesReady(true)
+    Promise.all([preloadSkillCharacters(), preloadImages([GRAND_LINE_MAP_ARTWORK])]).then(() => {
+      if (mounted) setEntryAssetsReady(true)
     })
     // Fetch the section and its small skill icons while the world prepares.
     loadSkillsSection().catch(() => {})
@@ -369,7 +370,7 @@ function App() {
       <SectionTransitionLabel active={aboutActive} label="ABOUT" />
 
       {!loaderComplete && !worldFailed && (
-        <LoadingScreen ready={worldReady && skillsImagesReady} onComplete={handleLoaderComplete} />
+        <LoadingScreen ready={worldReady && entryAssetsReady} onComplete={handleLoaderComplete} />
       )}
 
       {worldFailed && !introVisible && !sectionActive && <p className="scene-unavailable" role="status">The 3D ship is unavailable. Use Open Map or the navigation to read the Captain Log and browse every project.</p>}
