@@ -82,7 +82,7 @@ export default function PortfolioIntro({
     : worldReady
       ? (mobileProofFirst ? 'Drag to move · Swipe to look · Tap OPEN near objects' : 'Ship deck ready.')
       : 'Preparing ship deck...'
-  const voyageLabel = worldUnavailable ? 'Open Map' : worldOptional
+  const voyageLabel = worldUnavailable ? 'Bounty Board' : worldOptional
     ? 'Load Grand Line'
     : worldReady
       ? 'Enter Grand Line'
@@ -210,7 +210,7 @@ export default function PortfolioIntro({
                   <span>{voyageLabel}</span>
                   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="1.5" /></svg>
                 </button>
-                {!worldUnavailable && <button type="button" className="portfolio-intro__map-shortcut" onClick={onOpenMap}>Open Map</button>}
+                {!worldUnavailable && <button type="button" className="portfolio-intro__map-shortcut" onClick={onOpenMap}>Open Bounty Board</button>}
               </div>
             </div>
 

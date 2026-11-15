@@ -19,7 +19,7 @@ const TOUR_COPY = {
   interact: {
     eyebrow: 'How to use the ship',
     title: 'Press E to interact',
-    body: 'Walk near checkpoints and press E, or use the map for a direct recruiter route.',
+    body: 'Walk near checkpoints and press E, or pick a destination from the Bounty Board.',
   },
 }
 
@@ -49,7 +49,7 @@ export default function GuidedVoyageOverlay({ active, step, onSkip, onOpenMap })
             Skip
           </button>
           <button type="button" onClick={onOpenMap}>
-            Open Map
+            Bounty Board
           </button>
         </div>
       </div>

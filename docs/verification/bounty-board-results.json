@@ -1,0 +1,86 @@
+[
+  {
+    "scenario": "desktop",
+    "passed": true,
+    "autoScroll": {
+      "before": 2,
+      "after": 9
+    },
+    "pageOverflow": false,
+    "panelWidth": 1320,
+    "panelScrollWidth": 1318,
+    "panelClientWidth": 1318,
+    "trackWidth": 1278,
+    "trackScrollWidth": 1672
+  },
+  {
+    "scenario": "tablet",
+    "passed": true,
+    "autoScroll": {
+      "before": 4,
+      "after": 12
+    },
+    "pageOverflow": false,
+    "panelWidth": 976,
+    "panelScrollWidth": 974,
+    "panelClientWidth": 974,
+    "trackWidth": 934,
+    "trackScrollWidth": 1512
+  },
+  {
+    "scenario": "mobile",
+    "passed": true,
+    "autoScroll": {
+      "before": 5,
+      "after": 22
+    },
+    "pageOverflow": false,
+    "panelWidth": 370,
+    "panelScrollWidth": 368,
+    "panelClientWidth": 368,
+    "trackWidth": 356,
+    "trackScrollWidth": 1420
+  },
+  {
+    "scenario": "narrow",
+    "passed": true,
+    "autoScroll": {
+      "before": 6,
+      "after": 26
+    },
+    "pageOverflow": false,
+    "panelWidth": 300,
+    "panelScrollWidth": 298,
+    "panelClientWidth": 298,
+    "trackWidth": 286,
+    "trackScrollWidth": 1336
+  },
+  {
+    "scenario": "landscape",
+    "passed": true,
+    "autoScroll": {
+      "before": 5,
+      "after": 22
+    },
+    "pageOverflow": false,
+    "panelWidth": 796,
+    "panelScrollWidth": 794,
+    "panelClientWidth": 794,
+    "trackWidth": 754,
+    "trackScrollWidth": 1512
+  },
+  {
+    "scenario": "reduced-motion",
+    "passed": true,
+    "autoScroll": {
+      "before": 0,
+      "after": 0
+    },
+    "pageOverflow": false,
+    "panelWidth": 1320,
+    "panelScrollWidth": 1318,
+    "panelClientWidth": 1318,
+    "trackWidth": 1278,
+    "trackScrollWidth": 1672
+  }
+]

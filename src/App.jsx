@@ -13,6 +13,7 @@ import WorldBoundary from './components/WorldBoundary.jsx'
 import { PROFILE } from './data/profile.js'
 import { preloadImages, preloadSkillCharacters } from './utils/skillsImages.js'
 import { GRAND_LINE_MAP_ARTWORK } from './data/mapArtwork.js'
+import { BOUNTY_ROUTES, BOUNTY_PAPER_TEXTURE } from './data/bountyBoard.js'
 
 const WorldScene = lazy(() => import('./scenes/WorldScene'))
 const AboutSection = lazy(() => import('./components/AboutSection'))
@@ -82,7 +83,11 @@ function App() {
 
   useEffect(() => {
     let mounted = true
-    Promise.all([preloadSkillCharacters(), preloadImages([GRAND_LINE_MAP_ARTWORK])]).then(() => {
+    Promise.all([
+      preloadSkillCharacters(),
+      preloadImages([GRAND_LINE_MAP_ARTWORK, BOUNTY_PAPER_TEXTURE, ...BOUNTY_ROUTES.map((route) => route.image)]),
+      document.fonts.load('400 60px "Bounty Wanted"').catch(() => []),
+    ]).then(() => {
       if (mounted) setEntryAssetsReady(true)
     })
     // Fetch the section and its small skill icons while the world prepares.
@@ -373,7 +378,7 @@ function App() {
         <LoadingScreen ready={worldReady && entryAssetsReady} onComplete={handleLoaderComplete} />
       )}
 
-      {worldFailed && !introVisible && !sectionActive && <p className="scene-unavailable" role="status">The 3D ship is unavailable. Use Open Map or the navigation to read the Captain Log and browse every project.</p>}
+      {worldFailed && !introVisible && !sectionActive && <p className="scene-unavailable" role="status">The 3D ship is unavailable. Use the Bounty Board or navigation to read the Captain Log and browse every project.</p>}
       <SwordCursor />
     </div>
   )
