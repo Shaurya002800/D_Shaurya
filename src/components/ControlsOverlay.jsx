@@ -99,7 +99,7 @@ export default function ControlsOverlay() {
                 </span>
                 <span style={{ color: activeAction === 'move' ? '#ef4444' : 'rgba(255,255,255,0.4)', fontSize: '14px' }}>]</span>
               </div>
-              <span style={{ fontFamily: 'sans-serif', fontSize: '11px', letterSpacing: '0.1em', color: '#ffffff', textTransform: 'uppercase' }}>
+              <span style={{ fontFamily: 'var(--atlas-body)', fontSize: '11px', letterSpacing: '0.1em', color: '#ffffff', textTransform: 'uppercase' }}>
                 Move
               </span>
             </motion.div>
@@ -123,7 +123,7 @@ export default function ControlsOverlay() {
                 </span>
                 <span style={{ color: activeAction === 'interact' ? '#ef4444' : 'rgba(255,255,255,0.4)', fontSize: '14px' }}>]</span>
               </div>
-              <span style={{ fontFamily: 'sans-serif', fontSize: '11px', letterSpacing: '0.1em', color: '#ffffff', textTransform: 'uppercase' }}>
+              <span style={{ fontFamily: 'var(--atlas-body)', fontSize: '11px', letterSpacing: '0.1em', color: '#ffffff', textTransform: 'uppercase' }}>
                 Interact
               </span>
             </motion.div>
@@ -143,7 +143,7 @@ export default function ControlsOverlay() {
                 </div>
                 <span style={{ color: activeAction === 'drag' ? '#ef4444' : 'rgba(255,255,255,0.4)', fontSize: '14px' }}>]</span>
               </div>
-              <span style={{ fontFamily: 'sans-serif', fontSize: '11px', letterSpacing: '0.1em', color: '#ffffff', textTransform: 'uppercase' }}>
+              <span style={{ fontFamily: 'var(--atlas-body)', fontSize: '11px', letterSpacing: '0.1em', color: '#ffffff', textTransform: 'uppercase' }}>
                 Orbit View
               </span>
             </motion.div>

@@ -59,7 +59,7 @@ export default function LoadingScreen({ ready = false, onComplete }) {
           }}
         >
           {reducedMotion ? (
-            <span style={{ color: 'rgba(255, 90, 90, 0.6)', fontFamily: 'Inter, system-ui, sans-serif', fontSize: 11, letterSpacing: '0.45em' }}>AWAKENING</span>
+            <span style={{ color: 'rgba(255, 90, 90, 0.6)', fontFamily: 'var(--atlas-label)', fontSize: 11, letterSpacing: '0.45em' }}>AWAKENING</span>
           ) : (
           <>
           {/* BACKGROUND TEXTURE GRID OVERLAY */}
@@ -351,7 +351,7 @@ export default function LoadingScreen({ ready = false, onComplete }) {
               fontWeight: 500, // Slightly bolder to pop against the red glow
               // 🔴 CHANGED: Given the text a glowing deep crimson/coral color palette
               color: "rgba(255, 90, 90, 0.6)",
-              fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+              fontFamily: 'var(--atlas-label)',
               textShadow: "0 0 14px rgba(255,0,0,0.4)"
             }}
           >

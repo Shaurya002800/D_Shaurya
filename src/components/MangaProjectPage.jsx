@@ -168,7 +168,7 @@ export default function MangaProjectPage({ project, onClose }) {
           <ProjectCoverArt project={project} ink={ink} paper={paper} />
 
           <h2 style={{
-            fontFamily: '"Anton", Georgia, sans-serif',
+            fontFamily: 'var(--atlas-display)',
             fontSize: 'clamp(1.6rem, 3.4vw, 2.5rem)',
             color: ink, textAlign: 'center', lineHeight: 1.04,
             textTransform: 'uppercase', marginBottom: '10px',
@@ -190,8 +190,8 @@ export default function MangaProjectPage({ project, onClose }) {
             filter: 'url(#inkRough)', opacity: 0.9, pointerEvents: 'none',
           }}>
             <div style={{ position: 'absolute', inset: '4px', border: `1px solid rgba(193,39,45,0.5)`, borderRadius: '50%' }} />
-            <span style={{ fontFamily: '"Anton", Georgia, sans-serif', fontSize: '13px', letterSpacing: '1px' }}>SOURCE</span>
-            <span style={{ fontFamily: '"Anton", Georgia, sans-serif', fontSize: '13px', letterSpacing: '1px' }}>ON FILE</span>
+            <span style={{ fontFamily: 'var(--atlas-display)', fontSize: '13px', letterSpacing: '1px' }}>SOURCE</span>
+            <span style={{ fontFamily: 'var(--atlas-display)', fontSize: '13px', letterSpacing: '1px' }}>ON FILE</span>
           </div>
         </div>
 
@@ -208,7 +208,7 @@ export default function MangaProjectPage({ project, onClose }) {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px' }}>
-            <span style={{ fontFamily: '"Anton", Georgia, sans-serif', fontSize: '1.8rem', color: paper, letterSpacing: '0.02em' }}>
+            <span style={{ fontFamily: 'var(--atlas-display)', fontSize: '1.8rem', color: paper, letterSpacing: '0.02em' }}>
               DOSSIER
             </span>
             <span style={{ fontFamily: '"Courier New", monospace', fontSize: '10px', color: 'rgba(243,238,226,0.55)', letterSpacing: '2px', textTransform: 'uppercase' }}>
@@ -218,7 +218,7 @@ export default function MangaProjectPage({ project, onClose }) {
 
           <div style={{
             position: 'relative',
-            fontFamily: '"Bangers", "Anton", cursive', fontSize: '11px',
+            fontFamily: 'var(--atlas-body)', fontSize: '11px',
             color: ink, background: hanko,
             padding: '6px 14px', transform: 'rotate(6deg)',
             clipPath: 'polygon(8% 0%, 92% 5%, 100% 50%, 94% 100%, 6% 95%, 0% 50%)',
@@ -247,7 +247,7 @@ export default function MangaProjectPage({ project, onClose }) {
           </div>
           <p style={{
             color: inkSoft, fontSize: '1.02rem', lineHeight: 1.75,
-            margin: 0, fontFamily: 'system-ui, -apple-system, sans-serif', fontWeight: 400,
+            margin: 0, fontFamily: 'var(--atlas-body)', fontWeight: 400,
           }}>
             {project.problem}
           </p>
@@ -284,7 +284,7 @@ export default function MangaProjectPage({ project, onClose }) {
                   background: paper,
                   border: `2.5px solid ${ink}`,
                   color: ink,
-                  fontFamily: '"Anton", Georgia, sans-serif',
+                  fontFamily: 'var(--atlas-display)',
                   fontSize: '11.5px', letterSpacing: '0.5px',
                   textTransform: 'uppercase',
                   clipPath: 'polygon(4% 0, 100% 0, 96% 100%, 0% 100%)',
@@ -349,7 +349,7 @@ export default function MangaProjectPage({ project, onClose }) {
       </div>
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Anton&family=Bangers&display=swap');
+
         @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
         @keyframes pageSlam {
           0% { opacity: 0; transform: scale(0.86) rotate(-2deg); }

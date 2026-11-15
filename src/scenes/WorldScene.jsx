@@ -708,7 +708,7 @@ function WeatherOverlay({ weather }) {
         .world-weather__lightning { background: rgba(220,235,255,.72); mix-blend-mode: screen; }
         .world-weather__badge { position: fixed; top: 78px; right: 18px; display: grid; grid-template-columns: 26px auto; column-gap: 8px; min-width: 170px; padding: 8px 12px; border: 1px solid rgba(255,255,255,.16); border-radius: 12px; opacity: .78; background: rgba(4,12,18,.5); color: #eef8ff; backdrop-filter: blur(8px); box-shadow: 0 12px 30px rgba(0,0,0,.18); transition: border-color 2s ease, background 2s ease; }
         .world-weather__badge span { grid-row: 1 / 3; align-self: center; color: #e8c75a; font-size: 22px; text-align: center; }
-        .world-weather__badge strong { font: 400 13px/1.1 "Pirata One", serif; letter-spacing: .1em; }
+        .world-weather__badge strong { font: 400 13px/1.1 "Atlas Display", serif; letter-spacing: .1em; }
         .world-weather__badge small { margin-top: 2px; color: rgba(255,255,255,.48); font: 8px/1.2 monospace; letter-spacing: .05em; }
         .world-weather--storm .world-weather__badge { border-color: rgba(158,186,255,.36); background: rgba(5,9,18,.7); }
         @keyframes weather-rain { to { transform: translate(18vw, 125vh) rotate(12deg); } }

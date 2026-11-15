@@ -478,7 +478,7 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
       <SkillsCloseButton visible={controlsIn} onClose={onClose} accentColor={data.accentColor} />
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Pirata+One&family=IM+Fell+English:ital@0;1&display=swap');
+
 
         .skills-overlay {
           --paper: #ead8ac;
@@ -490,7 +490,7 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
           pointer-events: none;
           color: #fff;
           transition: opacity .65s ease;
-          font-family: "IM Fell English", Georgia, serif;
+          font-family: var(--atlas-body);
         }
 
         .skills-overlay.is-visible {
@@ -686,7 +686,7 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
 
         .bearing-header strong {
           color: var(--accent);
-          font: 400 clamp(15px, 1.4vw, 21px)/1 "Pirata One", cursive;
+          font: 400 clamp(15px, 1.4vw, 21px)/1 "Atlas Display", cursive;
           letter-spacing: .24em;
           text-shadow: 0 0 18px var(--accent);
         }
@@ -874,7 +874,7 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
           margin-bottom: 4px;
           padding-bottom: 3px;
           border-bottom: 1px solid rgba(90,55,12,.24);
-          font: 400 clamp(8px, .72vw, 12px)/1 "Pirata One", cursive;
+          font: 400 clamp(8px, .72vw, 12px)/1 "Atlas Display", cursive;
           letter-spacing: .14em;
         }
 
@@ -888,7 +888,7 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
           border: 1px solid rgba(73,45,11,.18);
           border-radius: 4px;
           background: rgba(36,22,6,.06);
-          font: 400 clamp(12px, 1vw, 18px)/1 "Pirata One", cursive;
+          font: 400 clamp(12px, 1vw, 18px)/1 "Atlas Display", cursive;
         }
 
         .wanted-card__portrait img {
@@ -979,7 +979,7 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
 
         .skill-intel__name {
           margin: 1px 0 2px;
-          font: 400 clamp(12px, 1.05vw, 17px)/1 "Pirata One", cursive;
+          font: 400 clamp(12px, 1.05vw, 17px)/1 "Atlas Display", cursive;
           letter-spacing: .08em;
         }
 
@@ -1059,7 +1059,7 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
         .crow-compass__rose span {
           position: absolute;
           color: rgba(247,222,165,.62);
-          font: 400 10px/1 "Pirata One", cursive;
+          font: 400 10px/1 "Atlas Display", cursive;
         }
 
         .crow-compass__rose span:nth-child(1) { top: 8px; left: 50%; transform: translateX(-50%); }
@@ -1114,7 +1114,7 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
         }
 
         .crow-compass__buttons small { font-size: 8px; letter-spacing: .16em; }
-        .crow-compass__buttons span { font: 400 13px/1.2 "Pirata One", cursive; letter-spacing: .05em; }
+        .crow-compass__buttons span { font: 400 13px/1.2 "Atlas Display", cursive; letter-spacing: .05em; }
 
         .turn-control {
           position: fixed;

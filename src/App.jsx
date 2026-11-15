@@ -9,6 +9,7 @@ import PortfolioIntro from './components/PortfolioIntro.jsx'
 import SwordCursor from './components/SwordCursor.jsx'
 import LuffyUI from './components/LuffyUI.jsx'
 import './mobile-game.css'
+import './styles/atlas-theme.css'
 import WorldBoundary from './components/WorldBoundary.jsx'
 import { PROFILE } from './data/profile.js'
 import { preloadImages, preloadSkillCharacters } from './utils/skillsImages.js'
@@ -87,6 +88,7 @@ function App() {
       preloadSkillCharacters(),
       preloadImages([GRAND_LINE_MAP_ARTWORK, BOUNTY_PAPER_TEXTURE, ...BOUNTY_ROUTES.map((route) => route.image)]),
       document.fonts.load('400 60px "Bounty Wanted"').catch(() => []),
+      document.fonts.load('400 44px "Atlas Display"').catch(() => []),
     ]).then(() => {
       if (mounted) setEntryAssetsReady(true)
     })
@@ -226,7 +228,7 @@ function App() {
   }, [mobileProofFirst, worldReady])
 
   return (
-    <div style={{ width: '100%', height: '100%' }}>
+    <div className="atlas-theme" style={{ width: '100%', height: '100%' }}>
       {shouldMountWorld && (
         <WorldBoundary onUnavailable={handleWorldUnavailable}>
         <Suspense fallback={null}>

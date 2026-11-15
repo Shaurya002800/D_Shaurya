@@ -1,0 +1,32 @@
+[
+  {
+    "scenario": "nav-desktop",
+    "originalColoursAndSurfaces": true,
+    "passed": true
+  },
+  {
+    "scenario": "tour-desktop",
+    "originalColoursAndSurfaces": true,
+    "passed": true
+  },
+  {
+    "scenario": "nav-mobile",
+    "originalColoursAndSurfaces": true,
+    "passed": true
+  },
+  {
+    "scenario": "nav-narrow",
+    "originalColoursAndSurfaces": true,
+    "passed": true
+  },
+  {
+    "scenario": "tour-mobile",
+    "originalColoursAndSurfaces": true,
+    "passed": true
+  },
+  {
+    "scenario": "skills",
+    "originalColoursAndSurfaces": true,
+    "passed": true
+  }
+]

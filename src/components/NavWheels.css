@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Pirata+One&display=swap');
+
 
 .nav-wheels {
   position: fixed;
@@ -91,7 +91,7 @@
   display: block;
   margin-top: 3px;
   color: #fff8e8;
-  font: 400 22px/1 "Pirata One", Georgia, serif;
+  font: 400 22px/1 "Atlas Display", Georgia, serif;
   letter-spacing: .06em;
 }
 

@@ -571,7 +571,7 @@ export default function OnePieceChatbot() {
         bottom: '30px',
         right: '30px',
         zIndex: 999999,
-        fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+        fontFamily: 'var(--atlas-body)',
         display: 'flex',
         alignItems: 'flex-end',
         justifyContent: 'flex-end',
@@ -642,7 +642,7 @@ export default function OnePieceChatbot() {
                   }}
                 />
                 <div>
-                  <div style={{ fontFamily: "'Cinzel', Georgia, serif", fontSize: '1.04rem', color: '#321806', fontWeight: 800 }}>
+                  <div style={{ fontFamily: 'var(--atlas-display)', fontSize: '1.4rem', color: '#321806', fontWeight: 400 }}>
                     Shaurya Assistant
                   </div>
                   <div style={{ fontSize: '0.74rem', color: '#765640', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -703,7 +703,7 @@ export default function OnePieceChatbot() {
                         color: isUser ? '#fff4dd' : '#281305',
                         border: isUser ? 'none' : '1px solid rgba(92,58,31,0.08)',
                         lineHeight: 1.48,
-                        fontSize: '0.9rem',
+                        fontSize: '1rem',
                         boxShadow: isUser ? '0 5px 14px rgba(74,43,24,0.18)' : '0 5px 14px rgba(0,0,0,0.035)',
                         wordBreak: 'break-word',
                       }}
@@ -796,7 +796,7 @@ export default function OnePieceChatbot() {
                     background: 'transparent',
                     outline: 'none',
                     color: '#281305',
-                    fontSize: '0.9rem',
+                    fontSize: '1rem',
                     lineHeight: '1.35',
                     padding: '8px 8px 7px 0',
                     fontFamily: 'inherit',
@@ -814,7 +814,7 @@ export default function OnePieceChatbot() {
                     background: input.trim() && !isTyping ? '#4a2b18' : '#d5c8b5',
                     color: '#fff',
                     cursor: input.trim() && !isTyping ? 'pointer' : 'default',
-                    fontSize: '0.9rem',
+                    fontSize: '1rem',
                   }}
                   aria-label="Send message"
                 >

@@ -171,7 +171,7 @@ export default function ArtifactDossier({ artifact, onClose }) {
 
             .artifact-dossier h2 {
               margin-top: 8px;
-              font: 400 clamp(28px, 4.5vw, 42px)/.95 "Pirata One", Georgia, serif;
+              font: 400 clamp(28px, 4.5vw, 42px)/.95 "Atlas Display", Georgia, serif;
               letter-spacing: 0;
               color: #2a1505;
             }
