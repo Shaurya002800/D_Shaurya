@@ -1,0 +1,44 @@
+[
+  {
+    "scenario": "desktop",
+    "passed": true,
+    "autoScroll": {
+      "before": 3,
+      "after": 9
+    },
+    "pageOverflow": false,
+    "panelWidth": 1320,
+    "panelScrollWidth": 1318,
+    "panelClientWidth": 1318,
+    "trackWidth": 1278,
+    "trackScrollWidth": 1674
+  },
+  {
+    "scenario": "mobile",
+    "passed": true,
+    "autoScroll": {
+      "before": 4,
+      "after": 19
+    },
+    "pageOverflow": false,
+    "panelWidth": 370,
+    "panelScrollWidth": 368,
+    "panelClientWidth": 368,
+    "trackWidth": 356,
+    "trackScrollWidth": 1420
+  },
+  {
+    "scenario": "narrow",
+    "passed": true,
+    "autoScroll": {
+      "before": 3,
+      "after": 21
+    },
+    "pageOverflow": false,
+    "panelWidth": 300,
+    "panelScrollWidth": 298,
+    "panelClientWidth": 298,
+    "trackWidth": 286,
+    "trackScrollWidth": 1336
+  }
+]

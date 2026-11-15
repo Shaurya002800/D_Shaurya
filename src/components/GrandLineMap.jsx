@@ -157,7 +157,7 @@ function BountyBoard({ onClose, onRoute }) {
               <div className="bounty-poster__destination">
                 <span className="grand-map__object">PORTFOLIO FILE № 00{index + 1} · {route.object}</span>
                 <h3 className="bounty-poster__sr-only">{route.destination}</h3>
-                <button type="button" className="bounty-poster__action" onClick={() => onRoute(route.key)} aria-label={`${route.destination}: ${route.action}`} aria-describedby={`bounty-clue-${route.key}`}><span className="bounty-poster__currency" aria-hidden="true">฿</span><span>{route.destination}</span><Arrow /></button>
+                <button type="button" className="bounty-poster__action" onClick={() => onRoute(route.key)} aria-label={`${route.destination}: ${route.action}`} aria-describedby={`bounty-clue-${route.key}`}><span>{route.action}</span><Arrow /></button>
                 <p id={`bounty-clue-${route.key}`} className="bounty-poster__clue">{route.clue}</p>
               </div>
               <div className="bounty-poster__footnote"><span>ANY INFORMATION REGARDING THIS<br />PERSON’S WHEREABOUTS IS REQUESTED.</span><span className="bounty-poster__stamp">✦<small>ISSUED</small></span><strong>MARINE</strong></div>

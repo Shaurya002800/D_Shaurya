@@ -163,11 +163,11 @@
 .grand-map__object { display: block; color: #634325; font: 5px/1.3 'Courier New', monospace; letter-spacing: .02em; text-transform: uppercase; text-align: center; }
 .bounty-poster__sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .bounty-poster__clue { flex: 1; min-height: 28px; margin: 2px 0 0; color: #543a23; font: 9px/1.5 Georgia, serif; text-align: center; }
-.bounty-poster__action { position: relative; display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; min-height: 48px; padding: 5px 0 2px; border: 0; border-radius: 0; background: transparent; color: #2e2015; font: 900 31px/1 'Times New Roman', Georgia, serif; text-transform: uppercase; letter-spacing: -.055em; cursor: pointer; transition: color .2s ease; }
-.bounty-poster__currency { flex: 0 0 auto; padding-right: 2px; font: 24px Georgia, serif; }
-.bounty-poster__action svg { width: 21px; height: 21px; flex: 0 0 auto; margin-left: auto; transition: transform .2s ease; }
-.bounty-poster__action > span:nth-child(2) { flex: 1; text-align: left; }
-.bounty-poster__action:hover { color: #70281d; }
+.bounty-poster__action { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 48px; margin: 9px 0 8px; padding: 11px 13px; border: 1px solid #b38653; border-radius: 2px; background: linear-gradient(135deg, #71352a, #431d18); color: #fff0d0; font: 700 14px/1.25 Georgia, serif; letter-spacing: .01em; cursor: pointer; box-shadow: inset 0 0 0 2px #d4aa6d24, 0 3px 0 #29150f, 0 6px 9px #29150f40; transition: background .2s ease, border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+.bounty-poster__action svg { width: 20px; height: 20px; flex: 0 0 auto; transition: transform .2s ease; }
+.bounty-poster__action > span { flex: 1; text-align: left; }
+.bounty-poster__action:hover { background: linear-gradient(135deg, #8a4331, #5e2820); border-color: #e6bf80; transform: translateY(-2px); box-shadow: inset 0 0 0 2px #e7c28a33, 0 5px 0 #29150f, 0 8px 12px #29150f4d; }
+.bounty-poster__action:active { transform: translateY(2px); box-shadow: inset 0 0 0 2px #d4aa6d24, 0 1px 0 #29150f; }
 .bounty-poster__action:hover svg { transform: translateX(3px); }
 .bounty-poster__footnote { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 10px; padding-top: 7px; border-top: 1px solid #60411f80; color: #5d3f25; font: 4px/1.5 'Courier New', monospace; letter-spacing: 0; }
 .bounty-poster__footnote > strong { color: #352619; font: 900 21px/1 'Times New Roman', Georgia, serif; letter-spacing: -.075em; }
@@ -235,7 +235,7 @@
   .bounty-poster__paper { min-height: 537px; padding-inline: 20px; }
   .bounty-poster__character { font-size: 20px; }
   .bounty-poster__verdict { font-size: 13px; }
-  .bounty-poster__action { font-size: 27px; }
+  .bounty-poster__action { font-size: 14px; }
   .grand-map__footer { align-items: flex-start; gap: 14px; flex-wrap: wrap; }
   .grand-map__scroll-hint { gap: 9px; }
   .grand-map__scroll-hint strong { font-size: 11px; }
@@ -270,5 +270,6 @@
   .bounty-poster__paper { transition: none; }
   .bounty-poster__action, .bounty-poster__action svg { transition: none; }
   .bounty-poster__action:hover svg { transform: none; }
+  .bounty-poster__action:hover, .bounty-poster__action:active { transform: none; }
   .grand-map__route:hover .bounty-poster__paper, .grand-map__route:focus-within .bounty-poster__paper { transform: none; }
 }
