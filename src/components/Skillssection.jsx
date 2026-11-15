@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { preloadImages, SKILL_CHARACTER_IMAGES } from '../utils/skillsImages.js'
 
 const DIRECTIONS = {
   NORTH: 'north',
@@ -23,7 +24,7 @@ const SKILL_DATA = {
     subtitle: 'SKILLS · ZORO ARSENAL',
     bearing: 'NORTH BLUE',
     symbol: '三',
-    characterImg: '/characters/zoro.png',
+    characterImg: SKILL_CHARACTER_IMAGES.zoro,
     boardRect: { left: '9.5%', top: '28%', width: '80.5%', height: '58%' },
     accentColor: '#54e58a',
     accentSoft: 'rgba(84,229,138,0.22)',
@@ -45,7 +46,7 @@ const SKILL_DATA = {
     subtitle: 'SKILLS · SANJI CRAFT',
     bearing: 'EAST BLUE',
     symbol: '火',
-    characterImg: '/characters/sanji.png',
+    characterImg: SKILL_CHARACTER_IMAGES.sanji,
     boardRect: { left: '10%', top: '28%', width: '80%', height: '57%' },
     accentColor: '#ffbf47',
     accentSoft: 'rgba(255,191,71,0.22)',
@@ -67,7 +68,7 @@ const SKILL_DATA = {
     subtitle: 'SKILLS · BOA TOOLKIT',
     bearing: 'CALM BELT',
     symbol: '心',
-    characterImg: '/characters/boa.png',
+    characterImg: SKILL_CHARACTER_IMAGES.boa,
     boardRect: { left: '15.5%', top: '27%', width: '74%', height: '58%' },
     accentColor: '#ef77c8',
     accentSoft: 'rgba(239,119,200,0.22)',
@@ -89,7 +90,7 @@ const SKILL_DATA = {
     subtitle: 'SKILLS · SHANKS POWER',
     bearing: 'NEW WORLD',
     symbol: '覇',
-    characterImg: '/characters/shanks.png',
+    characterImg: SKILL_CHARACTER_IMAGES.shanks,
     boardRect: { left: '16%', top: '30%', width: '74%', height: '59%' },
     accentColor: '#ef6161',
     accentSoft: 'rgba(239,97,97,0.22)',
@@ -110,6 +111,9 @@ const SKILL_DATA = {
     ],
   },
 }
+
+// Warm the icons for every bearing before the first visit, including fallbacks.
+void preloadImages(Object.values(SKILL_DATA).flatMap((data) => data.skills.map((skill) => skill.iconUrl)))
 
 const DIR_META = [
   { dir: DIRECTIONS.NORTH, compass: 'N', shortName: 'Languages' },
@@ -233,7 +237,18 @@ function CharacterStage({ data, characterVisible, boardVisible, contentVisible, 
       style={{ '--glow': data.accentSoft }}
     >
       <div className="character-stage__art">
-        <img src={data.characterImg} alt={data.character} />
+        {Object.values(SKILL_DATA).map((character) => (
+          <img
+            key={character.characterImg}
+            src={character.characterImg}
+            alt={character.character}
+            hidden={character.characterImg !== data.characterImg}
+            width="1536"
+            height="1024"
+            loading="eager"
+            decoding="sync"
+          />
+        ))}
         <div
           className={`character-stage__glass ${boardVisible ? 'is-visible' : ''}`}
           style={{
@@ -714,6 +729,10 @@ function SkillsOverlay({ active, onClose, onDirectionChange }) {
           opacity: .76;
           filter: saturate(.92) contrast(1.06) drop-shadow(0 20px 34px rgba(0,0,0,.36));
           mask-image: linear-gradient(180deg, #000 0%, #000 88%, rgba(0,0,0,.72) 96%, transparent 100%);
+        }
+
+        .character-stage__art > img[hidden] {
+          display: none;
         }
 
         .character-stage__glass {

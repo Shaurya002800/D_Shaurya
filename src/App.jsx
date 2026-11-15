@@ -11,13 +11,18 @@ import LuffyUI from './components/LuffyUI.jsx'
 import './mobile-game.css'
 import WorldBoundary from './components/WorldBoundary.jsx'
 import { PROFILE } from './data/profile.js'
+import { preloadSkillCharacters } from './utils/skillsImages.js'
 
 const WorldScene = lazy(() => import('./scenes/WorldScene'))
 const AboutSection = lazy(() => import('./components/AboutSection'))
 const ArtifactDossier = lazy(() => import('./components/ArtifactDossier.jsx'))
 const ControlsOverlay = lazy(() => import('./components/ControlsOverlay'))
 const DevilFruitChat = lazy(() => import('./components/DevilFruitChat.jsx'))
-const SkillsSection = lazy(() => import('./components/Skillssection'))
+const loadSkillsSection = () => import('./components/Skillssection')
+const SkillsSection = lazy(async () => {
+  const [module] = await Promise.all([loadSkillsSection(), preloadSkillCharacters()])
+  return module
+})
 const WorkSection = lazy(() => import('./components/WorkSection'))
 const WorkTransitionOverlay = lazy(() => (
   import('./components/WorkSection').then((module) => ({ default: module.WorkTransitionOverlay }))
@@ -49,6 +54,7 @@ function supportsWebGL2() {
 function App() {
   const [loaderComplete,  setLoaderComplete]  = useState(false)
   const [worldReady,      setWorldReady]      = useState(false)
+  const [skillsImagesReady, setSkillsImagesReady] = useState(false)
   const [worldFailed, setWorldFailed] = useState(() => !supportsWebGL2())
   const [mobileProofFirst, setMobileProofFirst] = useState(prefersMobileProofFirst)
   const [worldRequested,  setWorldRequested]  = useState(true)
@@ -72,6 +78,16 @@ function App() {
   const shouldMountWorld = !worldFailed && (!mobileProofFirst || worldRequested)
   const sectionActive = aboutActive || skillsActive || skillsClimbing || workActive
   const introVisible = !sectionActive && !introDismissed && !selectedArtifact
+
+  useEffect(() => {
+    let mounted = true
+    preloadSkillCharacters().then(() => {
+      if (mounted) setSkillsImagesReady(true)
+    })
+    // Fetch the section and its small skill icons while the world prepares.
+    loadSkillsSection().catch(() => {})
+    return () => { mounted = false }
+  }, [])
 
   // ── Close handlers ────────────────────────────────────────────────
   const handleAboutClose = useCallback(() => {
@@ -353,7 +369,7 @@ function App() {
       <SectionTransitionLabel active={aboutActive} label="ABOUT" />
 
       {!loaderComplete && !worldFailed && (
-        <LoadingScreen ready={worldReady} onComplete={handleLoaderComplete} />
+        <LoadingScreen ready={worldReady && skillsImagesReady} onComplete={handleLoaderComplete} />
       )}
 
       {worldFailed && !introVisible && !sectionActive && <p className="scene-unavailable" role="status">The 3D ship is unavailable. Use Open Map or the navigation to read the Captain Log and browse every project.</p>}
