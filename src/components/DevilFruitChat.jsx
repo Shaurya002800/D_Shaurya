@@ -1,11 +1,10 @@
 import { useMemo, useRef, useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { send } from '@emailjs/browser'
-import { PROJECTS } from '../data/projects.js'
 import { PROFILE } from '../data/profile.js'
 import { useDialog } from '../hooks/useDialog.js'
-import { confirmsHandoff } from '../data/contact.js'
-import { portfolioKnowledge, projectSummary, experienceSummary, findProject } from '../data/knowledge.js'
+import { confirmsHandoff, wantsContact } from '../data/contact.js'
+import { CHAT_WELCOME, CHAT_PLACEHOLDER, fallbackReply, messagesForApi } from '../data/assistant.js'
 
 const EMAILJS = {
   serviceId: import.meta.env.VITE_EMAILJS_SERVICE_ID || 'service_qeqrp17',
@@ -15,13 +14,13 @@ const EMAILJS = {
 const CHAT_REQUEST_TIMEOUT_MS = 18000
 
 function initialAssistantStatus() {
-  return 'Server conversation mode'
+  return 'Ready to chat'
 }
 
 const QUICK_PROMPTS = [
+  'Let’s chat',
   'Tell me about Shaurya',
   'Show strongest projects',
-  'What AI/ML skills does he have?',
   'I want to contact Shaurya',
 ]
 
@@ -41,24 +40,6 @@ function transcriptFrom(messages) {
   return messages
     .map((msg) => `${msg.sender === 'user' ? 'Visitor' : 'Portfolio Assistant'}: ${msg.text}`)
     .join('\n')
-}
-
-function wantsContact(text) {
-  const q = normalize(text)
-  const hasPhone = Boolean(extractPhone(text))
-  const hasInternshipOffer = q.includes('internship') && [
-    'got', 'have', 'offer', 'opportunity', 'for him', 'for shaurya',
-  ].some((term) => q.includes(term))
-
-  if (hasPhone || hasInternshipOffer) return true
-
-  return [
-    'contact', 'hire', 'recruit', 'interview', 'collaborate', 'collab',
-    'message shaurya', 'reach out', 'get in touch', 'email shaurya',
-    'talk to shaurya', 'work with', 'call me', 'call back', 'call on',
-    'my number', 'phone number', 'whatsapp', 'opportunity for him',
-    'opportunity for shaurya',
-  ].some((term) => q.includes(term))
 }
 
 function isGenericContactIntent(text) {
@@ -153,164 +134,6 @@ function mergeLeadFromText(lead, text, expectedField) {
   return next
 }
 
-const projectMatch = findProject
-
-function lastUserMessages(history) {
-  return history
-    .filter((msg) => msg.sender === 'user')
-    .map((msg) => msg.text)
-}
-
-function lastMentionedProject(history) {
-  const userMessages = lastUserMessages(history).reverse()
-  for (const text of userMessages) {
-    const matched = projectMatch(text)
-    if (matched) return matched
-  }
-  return null
-}
-
-function lastPortfolioTopic(history) {
-  const joined = lastUserMessages(history).slice(-4).join(' ')
-  const q = normalize(joined)
-  if (q.includes('ai') || q.includes('ml') || q.includes('rag') || q.includes('genai')) return 'ai'
-  if (q.includes('project') || q.includes('work') || q.includes('portfolio')) return 'projects'
-  if (q.includes('skill') || q.includes('tech') || q.includes('stack')) return 'skills'
-  if (q.includes('about') || q.includes('who') || q.includes('shaurya')) return 'about'
-  return null
-}
-
-function bestProjectForQuestion(text) {
-  const q = normalize(text)
-  if (q.includes('exam') || q.includes('credential') || q.includes('verifiable')) return PROJECTS.find((project) => project.name === 'ExamChain') || PROJECTS[0]
-  if (q.includes('ai') || q.includes('ml') || q.includes('rag') || q.includes('crop') || q.includes('agri')) return PROJECTS.find((project) => project.id === 'vivayu') || PROJECTS[7]
-  if (q.includes('astrology')) return PROJECTS.find((project) => project.name === 'Serenova Engine') || PROJECTS[3]
-  if (q.includes('full stack') || q.includes('backend') || q.includes('marketplace')) return PROJECTS.find((project) => project.name === 'DevBoard') || PROJECTS[2]
-  if (q.includes('startup') || q.includes('spend') || q.includes('saas')) return PROJECTS.find((project) => project.name === 'SpendLens') || PROJECTS[4]
-  if (q.includes('notes') || q.includes('auth') || q.includes('productivity')) return PROJECTS.find((project) => project.name === 'Peblo Notes') || PROJECTS[5]
-  if (q.includes('blockchain') || q.includes('iot') || q.includes('security')) return PROJECTS.find((project) => project.name === 'SentinelMesh') || PROJECTS[0]
-  return PROJECTS.find((project) => project.name === 'ExamChain') || PROJECTS[0]
-}
-
-
-
-function isUnknownProfileFactQuestion(text) {
-  const q = normalize(text)
-  return /\b(age|date of birth|dob|birthday|salary)\b/.test(q)
-}
-
-function asksForOpinion(text) {
-  const q = normalize(text)
-  return ['should i', 'would you', 'is he good', 'fit for', 'hire him', 'recommend', 'worth'].some((term) => q.includes(term))
-}
-
-function fallbackReply(text, history = []) {
-  const q = normalize(text)
-  const matchedProject = projectMatch(text)
-  const previousProject = lastMentionedProject(history.slice(0, -1))
-  const previousTopic = lastPortfolioTopic(history.slice(0, -1))
-  const asksFollowUp = [
-    'tell me more', 'more about it', 'explain', 'why', 'how', 'what about',
-    'details', 'which one', 'best', 'strongest', 'that project', 'it',
-  ].some((term) => q.includes(term))
-
-  if (/^(hi|hello|hey|yo|sup|gm|good morning|good evening|good afternoon)\b/.test(q)) {
-    return `Hey, I'm here. Ask me anything about Shaurya's projects, skills, AI/ML work, experience, resume, or availability. I can also help you send him a message.`
-  }
-
-  if (matchedProject) {
-    return projectSummary(matchedProject)
-  }
-
-  if (isUnknownProfileFactQuestion(text)) {
-    return `I do not have Shaurya's age or date of birth in the profile, so I should not guess. I can answer verified things like his education, MyPerro experience, IEEE CS-VIT role, projects, skills, and project scopes.`
-  }
-
-  if (q.includes('experience') || q.includes('myperro') || q.includes('ieee') || q.includes('senior core') || q.includes('job') || q.includes('intern')) {
-    return experienceSummary()
-  }
-
-  if (q.includes('education') || q.includes('college') || q.includes('cgpa') || q.includes('gpa')) {
-    return `${PROFILE.role}. ${PROFILE.education.join(' ')}.`
-  }
-
-  if (asksFollowUp && previousProject) {
-    return projectSummary(previousProject)
-  }
-
-  if (asksForOpinion(text)) {
-    return `I’d assess fit through the implementation evidence in these dossiers:\n\n${PROJECTS.filter(project => project.featured).slice(0, 3).map(project => `${project.name} — ${project.status}. ${project.scope}`).join('\n\n')}\n\nIndividual responsibilities and project scope matter when evaluating team work.`
-  }
-
-  if ((q.includes('best') || q.includes('strongest') || q.includes('which one')) && (previousTopic === 'projects' || q.includes('project'))) {
-    const best = bestProjectForQuestion(text)
-    return `One relevant starting point is ${best.name} — ${best.status}. ${best.problem} ${best.scope} Technologies: ${best.stack.join(', ')}.`
-  }
-
-  if (q.includes('project') || q.includes('work') || q.includes('portfolio')) {
-    const topProjects = PROJECTS.slice(0, 4)
-      .map((project) => `${project.name} — ${project.status}: ${project.desc}`)
-      .join('\n\n')
-    return `Here are strong portfolio highlights:\n\n${topProjects}\n\nAsk about any project name and I can explain the implementation, contribution and scope.`
-  }
-
-  if (asksFollowUp && previousTopic === 'skills') {
-    return `The profile lists frontend tools including ${PROFILE.skills.frontend.join(', ')}; backend tools including ${PROFILE.skills.backend.join(', ')}; and AI/ML tools including ${PROFILE.skills.aiMl.join(', ')}. A listed tool does not establish production experience; individual dossiers describe the implementation and its limits.`
-  }
-
-  if (asksFollowUp && previousTopic === 'ai') {
-    return PROJECTS.filter(project => project.category === 'Applied AI').slice(0, 2).map(projectSummary).join('\n\n')
-  }
-
-  if (q.includes('skill') || q.includes('tech') || q.includes('stack')) {
-    return Object.entries(PROFILE.skills).map(([category, skills]) => `${category}: ${skills.join(', ')}`).join('\n')
-  }
-
-  if (q.includes('ai') || q.includes('ml') || q.includes('rag') || q.includes('genai')) {
-    return `The profile lists ${PROFILE.skills.aiMl.join(', ')}. Applied AI work includes:\n\n${PROJECTS.filter(project => project.category === 'Applied AI').map(project => `${project.name} — ${project.status}. ${project.decisions[0]} ${project.scope}`).join('\n\n')}`
-  }
-
-  if (q.includes('about') || q.includes('who') || q.includes('shaurya')) {
-    return `Shaurya’s introduction: “${PROFILE.summary}”`
-  }
-
-  if (q.includes('resume')) {
-    return `You can open Shaurya's resume from the portfolio at ${PROFILE.links.resume}. I can also summarize his projects or skills here.`
-  }
-
-  if (q.includes('thanks') || q.includes('thank you')) {
-    return `Anytime. I can keep going on projects, skills, resume fit, or help you send Shaurya a message.`
-  }
-
-  return `I can help with Shaurya's projects, skills, AI/ML work, frontend/design experience, resume, or contact handoff. Try asking about DevBoard, Vivayu, MTR-KV, TopoPatch, or how to reach Shaurya.`
-}
-
-function buildSystemInstruction() {
-  return `
-You are Shaurya's live portfolio assistant.
-Act like a smaller, focused ChatGPT: conversational, spontaneous, context-aware, and natural, not a menu bot.
-Answer the user's exact question first, then add useful detail from the portfolio.
-Use the recent chat to understand pronouns and follow-ups like "what about it", "tell me more", "which is best", and "why".
-For greetings, reply warmly and briefly instead of dumping the whole profile.
-If the portfolio does not verify something, say that clearly. Never invent internships, education, company history, phone number, email, awards, or private facts.
-Tone: warm, confident, clear, lightly adventurous only when it fits. Do not force pirate language.
-Length: usually 2-5 sentences. Longer only when the user asks for deep detail.
-
-PORTFOLIO KNOWLEDGE:
-${portfolioKnowledge()}
-`.trim()
-}
-
-function messagesForApi(history) {
-  return history
-    .filter((msg) => msg.text && msg.sender !== 'system')
-    .slice(-14)
-    .map((msg) => ({
-      role: msg.sender === 'user' ? 'user' : 'assistant',
-      content: msg.text,
-    }))
-}
-
 async function generateServerReply(history) {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), CHAT_REQUEST_TIMEOUT_MS)
@@ -325,7 +148,6 @@ async function generateServerReply(history) {
       signal: controller.signal,
       body: JSON.stringify({
         provider: 'auto',
-        system: buildSystemInstruction(),
         messages: messagesForApi(history),
       }),
     })
@@ -346,7 +168,7 @@ async function generateServerReply(history) {
   const data = await response.json()
   return {
     text: data?.text?.trim(),
-    provider: data?.provider ? `${data.provider} server mode` : 'Server conversation mode',
+    provider: 'Online',
   }
 }
 
@@ -360,7 +182,7 @@ async function generateReply(userText, history) {
 
   return {
     text: fallbackReply(userText, history),
-    provider: 'Local fallback - check server API',
+    provider: 'Limited mode',
   }
 }
 
@@ -403,7 +225,8 @@ export default function OnePieceChatbot() {
   const [messages, setMessages] = useState([
     message(
       'crew',
-      "Ahoy. I'm Shaurya's portfolio assistant. Ask me about his projects, skills, AI/ML work, or I can help you send him a message.",
+      CHAT_WELCOME,
+      { intro: true },
     ),
   ])
   const [input, setInput] = useState('')
@@ -418,7 +241,7 @@ export default function OnePieceChatbot() {
   const dialogRef = useDialog(isOpen, () => setIsOpen(false))
 
   const inputPlaceholder = useMemo(() => {
-    if (!contactFlow.active) return 'Ask about Shaurya...'
+    if (!contactFlow.active) return CHAT_PLACEHOLDER
     if (contactFlow.expectedField === 'confirm') return 'Send or cancel'
     return contactFlow.expectedField === 'contact'
       ? 'Phone number or email'
@@ -493,7 +316,7 @@ export default function OnePieceChatbot() {
   const handleContactStep = async (userText, chat) => {
     if (isNegative(userText)) {
       resetContactFlow()
-      appendBot('No problem. I cancelled the handoff. You can still ask me anything about Shaurya.')
+      appendBot('No problem—the message is cancelled. What would you like to chat about?')
       return
     }
 
@@ -542,7 +365,7 @@ export default function OnePieceChatbot() {
       }
     } catch (err) {
       console.error(err)
-      setAssistantStatus('Local fallback - check server API')
+      setAssistantStatus('Limited mode')
       appendBot(fallbackReply(userText, chat))
     } finally {
       setIsTyping(false)

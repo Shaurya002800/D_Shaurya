@@ -3,11 +3,12 @@ import { portfolioKnowledge } from '../src/data/knowledge.js'
 // Holds the Groq and Gemini API keys so they never ship to the browser.
 // Body shape: { provider: 'groq' | 'gemini' | 'auto', messages: [{ role, content }] }. Knowledge is server-owned.
 
-const GROQ_API_KEY = process.env.GROQ_API_KEY || ''
-const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile'
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash'
-const LLM_TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS || 8000)
+const DEFAULT_GROQ_MODEL = 'openai/gpt-oss-120b'
+// Older deployments may still have the retired default in their environment.
+function groqModel() {
+  const configured = process.env.GROQ_MODEL
+  return !configured || configured === 'llama-3.3-70b-versatile' ? DEFAULT_GROQ_MODEL : configured
+}
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -32,7 +33,7 @@ function clampMessages(messages, limit) {
     .map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content.slice(0, 4000) }))
 }
 
-async function fetchWithTimeout(url, options = {}, timeoutMs = LLM_TIMEOUT_MS) {
+async function fetchWithTimeout(url, options = {}, timeoutMs = Number(process.env.LLM_TIMEOUT_MS || 8000)) {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
 
@@ -52,22 +53,26 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = LLM_TIMEOUT_MS) {
 }
 
 async function callGroq({ system, messages }) {
-  if (!GROQ_API_KEY) throw new Error('GROQ_API_KEY not configured')
+  const apiKey = process.env.GROQ_API_KEY
+  if (!apiKey) throw new Error('GROQ_API_KEY not configured')
+  const model = groqModel()
   const response = await fetchWithTimeout('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${GROQ_API_KEY}`,
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: GROQ_MODEL,
+      model,
       messages: [
         { role: 'system', content: system },
         ...clampMessages(messages, 14),
       ],
-      temperature: 0.82,
+      temperature: 0.7,
       top_p: 0.95,
-      max_tokens: 430,
+      ...(model.startsWith('openai/gpt-oss-')
+        ? { max_completion_tokens: 2048, reasoning_effort: 'low', include_reasoning: false }
+        : { max_tokens: 800 }),
       presence_penalty: 0.2,
       frequency_penalty: 0.15,
     }),
@@ -81,13 +86,16 @@ async function callGroq({ system, messages }) {
 }
 
 async function callGemini({ system, messages }) {
-  if (!GEMINI_API_KEY) throw new Error('GEMINI_API_KEY not configured')
+  const apiKey = process.env.GEMINI_API_KEY
+  const configuredModel = process.env.GEMINI_MODEL
+  const model = !configuredModel || configuredModel === 'gemini-2.0-flash' ? 'gemini-3.1-flash-lite' : configuredModel
+  if (!apiKey) throw new Error('GEMINI_API_KEY not configured')
   const contents = clampMessages(messages, 12).map((m) => ({
     role: m.role === 'assistant' ? 'model' : 'user',
     parts: [{ text: m.content }],
   }))
   const response = await fetchWithTimeout(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -98,7 +106,7 @@ async function callGemini({ system, messages }) {
           temperature: 0.78,
           topP: 0.95,
           topK: 40,
-          maxOutputTokens: 360,
+          maxOutputTokens: 1200,
         },
       }),
     },
@@ -108,7 +116,7 @@ async function callGemini({ system, messages }) {
     throw new Error(`Gemini ${response.status}: ${text.slice(0, 200)}`)
   }
   const data = await response.json()
-  return data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || ''
+  return data?.candidates?.[0]?.content?.parts?.filter(part => !part.thought).map(part => part.text || '').join('').trim() || ''
 }
 
 async function handleChatEvent(event) {
@@ -127,8 +135,9 @@ async function handleChatEvent(event) {
   }
 
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return jsonResponse(400, { error: 'Invalid request body' })
-  const { provider = 'auto', messages } = payload
-  if (!Array.isArray(messages) || !messages.length) return jsonResponse(400, { error: 'Messages are required' })
+  const { provider = 'auto' } = payload
+  const messages = clampMessages(payload.messages, 14)
+  if (!messages.length || messages.at(-1).role !== 'user') return jsonResponse(400, { error: 'A user message is required' })
   const system = portfolioKnowledge()
   if (!system || typeof system !== 'string') {
     return jsonResponse(400, { error: 'Missing system prompt' })
@@ -138,12 +147,12 @@ async function handleChatEvent(event) {
 
   const providers = preferred === 'gemini'
     ? [
-      ['gemini', GEMINI_API_KEY, callGemini],
-      ['groq', GROQ_API_KEY, callGroq],
+      ['gemini', process.env.GEMINI_API_KEY, callGemini],
+      ['groq', process.env.GROQ_API_KEY, callGroq],
     ]
     : [
-      ['groq', GROQ_API_KEY, callGroq],
-      ['gemini', GEMINI_API_KEY, callGemini],
+      ['groq', process.env.GROQ_API_KEY, callGroq],
+      ['gemini', process.env.GEMINI_API_KEY, callGemini],
     ]
   const configuredProviders = providers.filter(([, apiKey]) => apiKey)
 
@@ -154,18 +163,18 @@ async function handleChatEvent(event) {
     })
   }
 
-  const errors = []
   for (const [name, , callProvider] of configuredProviders) {
     try {
       const text = await callProvider({ system, messages })
+      if (!text) throw new Error('Provider returned an empty reply')
       return jsonResponse(200, { text, provider: name })
-    } catch (err) {
-      errors.push(`${name}: ${err?.message || 'provider failed'}`)
+    } catch {
+      // Try the other configured provider before returning the limited fallback.
     }
   }
 
   return jsonResponse(502, {
-    error: `LLM proxy failed: ${errors.join(' | ')}`,
+    error: 'The assistant is temporarily unavailable. Please try again.',
     text: '',
   })
 }

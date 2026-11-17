@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "provider": "intercepted mock only",
+  "requests": 7,
+  "externalRequests": [],
+  "checks": [
+    "neutral greeting",
+    "general conversation",
+    "follow-up history",
+    "interview question not a handoff",
+    "contact question not a handoff",
+    "explicit contact review and cancel",
+    "offline greeting",
+    "honest offline limitation"
+  ]
+}
