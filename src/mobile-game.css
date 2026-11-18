@@ -94,7 +94,6 @@
   .mobile-about-dossier { left: 45%; max-height: calc(100dvh - 76px); }
 }
 @media (max-width: 760px), (max-width: 1024px) and (pointer: coarse) {
-  .world-weather .world-weather__badge { display: none; }
   .nav-wheels .nav-wheel__image-wrap { display: none; }
   .nav-wheels .nav-wheel__copy { width: 100%; text-align: center; }
   .nav-wheels .nav-wheel__eyebrow { overflow: visible; text-overflow: clip; font-size: 10px; }

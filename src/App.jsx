@@ -245,6 +245,7 @@ function App() {
             skillsDirection={skillsDirection}
             workActive={workActive}
             guidedTourActive={guidedTourActive}
+            weatherControlsVisible={loaded && !introVisible && !guidedTourActive && !sectionActive && !selectedArtifact && !mapOpen}
             onGuidedTourStepChange={setGuidedTourStep}
             onGuidedTourComplete={() => setGuidedTourActive(false)}
             onProjectSelect={setSelectedProject}

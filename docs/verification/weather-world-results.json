@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "checks": [
+    "control hidden during intro",
+    "all four choices update actual world",
+    "control hidden while bounty board open",
+    "selection kept after closing board",
+    "mobile selection updates actual world"
+  ],
+  "errors": []
+}

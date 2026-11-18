@@ -11,6 +11,8 @@ import Ship from '../components/Ship'
 import { AboutCameraController } from '../components/AboutSection'
 import { useReducedMotion } from '../hooks/useReducedMotion.js'
 import { prepareWorldScene } from '../utils/prepareWorldScene.js'
+import { useWeather } from '../hooks/useWeather.js'
+import WeatherControl from '../components/WeatherControl.jsx'
 
 // ─── SKILLS CAMERA CONTROLLER ────────────────────────────────────────────────
 const CAM_EXPLORE = {
@@ -141,88 +143,6 @@ function WorldReady({ characterReady, shipReady, onReady, onUnavailable }) {
   })
 
   return null
-}
-
-const WEATHER_DURATION_MS = 180000
-const WEATHER_SEQUENCE = [
-  {
-    id: 'sunny',
-    label: 'Sunny Seas',
-    sky: '#9fd5f2',
-    fog: '#d9edf6',
-    fogNear: 72,
-    fogFar: 300,
-    ambient: 0.48,
-    sun: 1.85,
-    hemi: 0.78,
-    exposure: 0.84,
-    rayleigh: 0.78,
-    turbidity: 4.6,
-    sunPosition: [82, 18, 46],
-    ocean: ['#022640', '#085c91', '#10a4db', '#ffffff'],
-    waveStrength: 1,
-    waveSpeed: 1,
-  },
-  {
-    id: 'rain',
-    label: 'Grand Line Rain',
-    sky: '#637b8c',
-    fog: '#8295a0',
-    fogNear: 38,
-    fogFar: 190,
-    ambient: 0.3,
-    sun: 0.55,
-    hemi: 0.46,
-    exposure: 0.68,
-    rayleigh: 1.8,
-    turbidity: 12,
-    sunPosition: [18, 4, 30],
-    ocean: ['#021725', '#063d59', '#0b6982', '#c6d9dc'],
-    waveStrength: 1.28,
-    waveSpeed: 1.25,
-  },
-  {
-    id: 'night',
-    label: 'Moonlit Watch',
-    sky: '#020917',
-    fog: '#09182a',
-    fogNear: 60,
-    fogFar: 235,
-    ambient: 0.16,
-    sun: 0.34,
-    hemi: 0.3,
-    exposure: 0.5,
-    rayleigh: 0.18,
-    turbidity: 1.8,
-    sunPosition: [-55, -8, -35],
-    ocean: ['#010711', '#031a32', '#08415d', '#9ec7dc'],
-    waveStrength: 0.78,
-    waveSpeed: 0.72,
-  },
-  {
-    id: 'storm',
-    label: 'Thunderstorm',
-    sky: '#1d2630',
-    fog: '#394550',
-    fogNear: 24,
-    fogFar: 145,
-    ambient: 0.2,
-    sun: 0.25,
-    hemi: 0.34,
-    exposure: 0.58,
-    rayleigh: 2.8,
-    turbidity: 18,
-    sunPosition: [-25, 2, 12],
-    ocean: ['#010b12', '#042a3b', '#075166', '#b9d2d5'],
-    waveStrength: 1.72,
-    waveSpeed: 1.65,
-  },
-]
-
-function getInitialWeatherIndex() {
-  const requestedWeather = new URLSearchParams(window.location.search).get('weather')
-  const requestedIndex = WEATHER_SEQUENCE.findIndex((weather) => weather.id === requestedWeather)
-  return requestedIndex >= 0 ? requestedIndex : 0
 }
 
 export function SkillsCameraTransition({
@@ -683,11 +603,6 @@ function WeatherOverlay({ weather }) {
       <div className="world-weather__mist" />
       <div className="world-weather__moon" />
       <div className="world-weather__lightning" />
-      <div className="world-weather__badge">
-        <span>{weather.id === 'storm' ? 'ϟ' : weather.id === 'night' ? '☾' : weather.id === 'rain' ? '☂' : '☀'}</span>
-        <strong>{weather.label}</strong>
-        <small>Grand Line weather · 3 min cycle</small>
-      </div>
       <style>{`
         .world-weather { position: fixed; inset: 0; z-index: 6; overflow: hidden; pointer-events: none; transition: background 4s ease; }
         .world-weather__clouds, .world-weather__rain, .world-weather__mist, .world-weather__moon, .world-weather__lightning { position: absolute; inset: 0; opacity: 0; transition: opacity 3.5s ease; }
@@ -706,11 +621,6 @@ function WeatherOverlay({ weather }) {
         .world-weather__rain i { position: absolute; top: -14vh; width: 1px; height: 13vh; background: linear-gradient(transparent, rgba(220,240,255,.78)); transform: rotate(12deg); animation: weather-rain linear infinite; }
         .world-weather--storm .world-weather__lightning { opacity: 1; animation: weather-lightning 6.7s steps(1) infinite; }
         .world-weather__lightning { background: rgba(220,235,255,.72); mix-blend-mode: screen; }
-        .world-weather__badge { position: fixed; top: 78px; right: 18px; display: grid; grid-template-columns: 26px auto; column-gap: 8px; min-width: 170px; padding: 8px 12px; border: 1px solid rgba(255,255,255,.16); border-radius: 12px; opacity: .78; background: rgba(4,12,18,.5); color: #eef8ff; backdrop-filter: blur(8px); box-shadow: 0 12px 30px rgba(0,0,0,.18); transition: border-color 2s ease, background 2s ease; }
-        .world-weather__badge span { grid-row: 1 / 3; align-self: center; color: #e8c75a; font-size: 22px; text-align: center; }
-        .world-weather__badge strong { font: 400 13px/1.1 "Atlas Display", serif; letter-spacing: .1em; }
-        .world-weather__badge small { margin-top: 2px; color: rgba(255,255,255,.48); font: 8px/1.2 monospace; letter-spacing: .05em; }
-        .world-weather--storm .world-weather__badge { border-color: rgba(158,186,255,.36); background: rgba(5,9,18,.7); }
         @keyframes weather-rain { to { transform: translate(18vw, 125vh) rotate(12deg); } }
         @keyframes weather-mist { from { transform: translateY(2vh); } to { transform: translateY(-2vh); } }
         @keyframes weather-cloud-drift { from { transform: translateX(-3%) scale(1.05); } to { transform: translateX(4%) scale(1.12); } }
@@ -739,6 +649,7 @@ export default function WorldScene({
   onReady,
   onUnavailable,
   mobileView = false,
+  weatherControlsVisible = true,
 }) {
   const [skillsCameraLocked, setSkillsCameraLocked] = useState(false)
   const [characterReady, setCharacterReady] = useState(false)
@@ -747,8 +658,7 @@ export default function WorldScene({
   const handleShipReady = useCallback(() => setShipReady(true), [])
   const reducedMotion = useReducedMotion()
   const [tourCameraLocked, setTourCameraLocked] = useState(false)
-  const [weatherIndex, setWeatherIndex] = useState(getInitialWeatherIndex)
-  const weather = WEATHER_SEQUENCE[weatherIndex]
+  const { weather, mode: weatherMode, selectWeather } = useWeather(reducedMotion)
   const effectsEnabled = useMemo(() => {
     if (typeof window === 'undefined') return true
     return !mobileView && !reducedMotion && !window.matchMedia('(max-width: 760px)').matches
@@ -756,14 +666,6 @@ export default function WorldScene({
   
   // ─── NEW: Global Free Camera State ───
   const [freeCam, setFreeCam] = useState(false)
-
-  useEffect(() => {
-    if (reducedMotion) return undefined
-    const interval = setInterval(() => {
-      setWeatherIndex((current) => (current + 1) % WEATHER_SEQUENCE.length)
-    }, WEATHER_DURATION_MS)
-    return () => clearInterval(interval)
-  }, [reducedMotion])
 
   // ─── NEW: Keyboard Listener for 'O' key ───
   useEffect(() => {
@@ -871,6 +773,7 @@ export default function WorldScene({
   )}
 </Canvas>
       {!workActive && <WeatherOverlay weather={weather} />}
+      {weatherControlsVisible && <WeatherControl weather={weather} mode={weatherMode} onSelect={selectWeather} />}
     </div>
   )
 }

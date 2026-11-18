@@ -1,0 +1,55 @@
+.weather-control {
+  position: fixed;
+  top: 78px;
+  right: max(18px, env(safe-area-inset-right));
+  z-index: 9400;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 225px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, .2);
+  border-radius: 10px;
+  background: rgba(4, 12, 18, .72);
+  color: #eef8ff;
+  font: 13px/1.2 var(--atlas-body, Georgia, serif);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+}
+
+.weather-control:hover { border-color: rgba(232, 199, 90, .6); }
+.weather-control:focus-within { outline: 2px solid #e8c75a; outline-offset: 3px; }
+.weather-control__icon { color: #e8c75a; font-size: 20px; width: 20px; text-align: center; }
+.weather-control__label { color: #eef8ff; }
+.weather-control__chevron { flex-shrink: 0; margin-left: auto; pointer-events: none; }
+.weather-control select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  appearance: none;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: right;
+  padding: 0 30px 0 92px;
+  cursor: pointer;
+  outline: none;
+}
+.weather-control option { background: #101b23; color: #eef8ff; }
+
+@media (max-width: 1240px) { .weather-control { top: 192px; } }
+@media (max-width: 760px), (max-width: 1024px) and (pointer: coarse) {
+  .weather-control {
+    top: calc(170px + env(safe-area-inset-top));
+    right: max(10px, env(safe-area-inset-right));
+  }
+  .weather-control select { font-size: 16px; }
+}
+@media (max-width: 760px) and (max-height: 480px), (max-width: 1024px) and (pointer: coarse) and (max-height: 480px) {
+  .weather-control { top: calc(72px + env(safe-area-inset-top)); }
+}

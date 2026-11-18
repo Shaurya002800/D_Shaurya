@@ -31,8 +31,6 @@
 .atlas-theme .guided-voyage__copy strong { font: bold clamp(19px, 2vw, 23px)/1.12 var(--atlas-body); letter-spacing: -.025em; }
 .atlas-theme .guided-voyage__copy p { font: 13px/1.5 var(--atlas-body); }
 .atlas-theme .guided-voyage__actions button { font: bold 11px/1.2 var(--atlas-body); letter-spacing: 0; text-transform: none; }
-.atlas-theme .world-weather__badge strong { font: bold 15px/1.15 var(--atlas-body); letter-spacing: -.015em; }
-.atlas-theme .world-weather__badge small { font-family: var(--atlas-label); }
 .atlas-theme .ocean-music__copy strong { font: bold 14px/1.2 var(--atlas-body); letter-spacing: -.015em; }
 .atlas-theme .ocean-music__copy small { font-family: var(--atlas-label); }
 .atlas-theme .grand-map-trigger strong { font-family: var(--atlas-display); }
@@ -61,6 +59,5 @@
   .atlas-theme .luffy-interaction-hint { font: bold 13px/1.5 var(--atlas-body) !important; }
   .atlas-theme .mobile-about-dossier { font-family: var(--atlas-body); }
   .atlas-theme .mobile-about-dossier > h1 { font-family: var(--atlas-display); font-weight: 400; }
-  .atlas-theme .world-weather__badge strong { font-size: 13px; }
   .atlas-theme .grand-map-trigger strong { font-size: 16px; }
 }

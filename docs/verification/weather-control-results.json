@@ -1,0 +1,242 @@
+{
+  "passed": true,
+  "checks": [
+    "four manual choices",
+    "manual mode pauses cycle",
+    "auto resumes current cycle",
+    "URL weather supported",
+    "reduced motion honored",
+    "keyboard isolated from world",
+    "desktop/mobile/landscape layout"
+  ],
+  "results": [
+    {
+      "viewport": {
+        "w": 1440,
+        "h": 900
+      },
+      "layout": {
+        "control": {
+          "x": 1197,
+          "y": 78,
+          "right": 1422,
+          "bottom": 122,
+          "width": 225,
+          "height": 44
+        },
+        "nav": {
+          "x": 280,
+          "y": 18,
+          "right": 1160,
+          "bottom": 84,
+          "width": 880,
+          "height": 66
+        },
+        "music": {
+          "x": 1197,
+          "y": 132,
+          "right": 1422,
+          "bottom": 182,
+          "width": 225,
+          "height": 50
+        },
+        "board": {
+          "x": 20,
+          "y": 814,
+          "right": 224.671875,
+          "bottom": 876,
+          "width": 204.671875,
+          "height": 62
+        },
+        "overflow": false,
+        "text": "Auto · Night",
+        "available": 101,
+        "textWidth": 70.052734375
+      },
+      "passed": true
+    },
+    {
+      "viewport": {
+        "w": 1024,
+        "h": 768
+      },
+      "layout": {
+        "control": {
+          "x": 781,
+          "y": 192,
+          "right": 1006,
+          "bottom": 236,
+          "width": 225,
+          "height": 44
+        },
+        "nav": {
+          "x": 72,
+          "y": 15.359375,
+          "right": 952,
+          "bottom": 81.359375,
+          "width": 880,
+          "height": 66
+        },
+        "music": {
+          "x": 781,
+          "y": 132,
+          "right": 1006,
+          "bottom": 182,
+          "width": 225,
+          "height": 50
+        },
+        "board": {
+          "x": 20,
+          "y": 682,
+          "right": 224.671875,
+          "bottom": 744,
+          "width": 204.671875,
+          "height": 62
+        },
+        "overflow": false,
+        "text": "Auto · Night",
+        "available": 101,
+        "textWidth": 70.052734375
+      },
+      "passed": true
+    },
+    {
+      "viewport": {
+        "w": 390,
+        "h": 844,
+        "mobile": true
+      },
+      "layout": {
+        "control": {
+          "x": 155,
+          "y": 170,
+          "right": 380,
+          "bottom": 214,
+          "width": 225,
+          "height": 44
+        },
+        "nav": {
+          "x": 10,
+          "y": 8,
+          "right": 380,
+          "bottom": 115,
+          "width": 370,
+          "height": 107
+        },
+        "music": {
+          "x": 336,
+          "y": 116,
+          "right": 380,
+          "bottom": 160,
+          "width": 44,
+          "height": 44
+        },
+        "board": {
+          "x": 10,
+          "y": 116,
+          "right": 146,
+          "bottom": 160,
+          "width": 136,
+          "height": 44
+        },
+        "overflow": false,
+        "text": "Auto · Night",
+        "available": 101,
+        "textWidth": 86.21875
+      },
+      "passed": true
+    },
+    {
+      "viewport": {
+        "w": 320,
+        "h": 568,
+        "mobile": true
+      },
+      "layout": {
+        "control": {
+          "x": 85,
+          "y": 170,
+          "right": 310,
+          "bottom": 214,
+          "width": 225,
+          "height": 44
+        },
+        "nav": {
+          "x": 10,
+          "y": 8,
+          "right": 310,
+          "bottom": 115,
+          "width": 300,
+          "height": 107
+        },
+        "music": {
+          "x": 266,
+          "y": 116,
+          "right": 310,
+          "bottom": 160,
+          "width": 44,
+          "height": 44
+        },
+        "board": {
+          "x": 10,
+          "y": 116,
+          "right": 146,
+          "bottom": 160,
+          "width": 136,
+          "height": 44
+        },
+        "overflow": false,
+        "text": "Auto · Night",
+        "available": 101,
+        "textWidth": 86.21875
+      },
+      "passed": true
+    },
+    {
+      "viewport": {
+        "w": 844,
+        "h": 390,
+        "mobile": true
+      },
+      "layout": {
+        "control": {
+          "x": 609,
+          "y": 72,
+          "right": 834,
+          "bottom": 116,
+          "width": 225,
+          "height": 44
+        },
+        "nav": {
+          "x": 172,
+          "y": 8,
+          "right": 672,
+          "bottom": 66,
+          "width": 500,
+          "height": 58
+        },
+        "music": {
+          "x": 790,
+          "y": 10,
+          "right": 834,
+          "bottom": 54,
+          "width": 44,
+          "height": 44
+        },
+        "board": {
+          "x": 10,
+          "y": 10,
+          "right": 54,
+          "bottom": 58,
+          "width": 44,
+          "height": 48
+        },
+        "overflow": false,
+        "text": "Auto · Night",
+        "available": 101,
+        "textWidth": 86.21875
+      },
+      "passed": true
+    }
+  ]
+}
